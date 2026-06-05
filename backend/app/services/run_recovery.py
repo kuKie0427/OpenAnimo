@@ -165,7 +165,7 @@ async def _checkpoint_history(database_url: str, run: AgentRun) -> list[Any]:
             compiled_graph = build_phase2_graph().compile(checkpointer=cast(Any, checkpointer))
             graph_run = cast(Any, SimpleNamespace(id=run.id, thread_id=_thread_id_for_run(run)))
             return await get_checkpoint_history(compiled_graph, graph_run, limit=8)
-    except Exception:
+    except (RuntimeError, ValueError):
         return []
 
 

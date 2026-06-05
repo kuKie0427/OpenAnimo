@@ -68,7 +68,7 @@ async def compute_face_embedding(image_url: str) -> list[float] | None:
             response = await client.get(image_url)
             response.raise_for_status()
             image_bytes = response.content
-    except Exception as e:
+    except httpx.HTTPError as e:
         logger.warning("Failed to download image for embedding: %s", e)
         return None
 
@@ -187,7 +187,7 @@ async def auto_populate_visual_notes(
         if visual_notes:
             return visual_notes
         return None
-    except Exception as e:
+    except (RuntimeError, ValueError) as e:
         logger.warning("Failed to auto-populate visual notes for %s: %s", character.name, e)
         return None
 

@@ -1,4 +1,5 @@
 from app.models.agent_run import AgentMessage, AgentRun
+from app.models.agent_trace import AgentTrace
 from app.models.artifact import Artifact
 from app.models.config_item import ConfigItem
 from app.models.consistency_report import ConsistencyReport
@@ -12,6 +13,7 @@ from app.models.universe import SharedCharacter, Universe, UniverseProjectLink
 __all__ = [
     "AgentMessage",
     "AgentRun",
+    "AgentTrace",
     "Artifact",
     "Character",
     "ConfigItem",

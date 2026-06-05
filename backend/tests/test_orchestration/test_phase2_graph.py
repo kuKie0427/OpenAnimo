@@ -119,6 +119,7 @@ async def test_manual_approval_node_auto_mode_short_circuits() -> None:
             ),
             orchestrator=SimpleNamespace(
                 _set_run=AsyncMock(return_value=SimpleNamespace()),
+                set_run_state=AsyncMock(return_value=SimpleNamespace()),
                 ws=SimpleNamespace(send_event=AsyncMock()),
                 session=None,
             ),
@@ -151,6 +152,7 @@ async def test_manual_approval_node_normalizes_interrupt_resume(monkeypatch) -> 
             ),
             orchestrator=SimpleNamespace(
                 _set_run=AsyncMock(return_value=SimpleNamespace()),
+                set_run_state=AsyncMock(return_value=SimpleNamespace()),
                 ws=SimpleNamespace(send_event=AsyncMock()),
                 session=None,
             ),
@@ -185,6 +187,7 @@ async def test_manual_approval_node_routes_to_review_when_feedback_present(monke
             ),
             orchestrator=SimpleNamespace(
                 _set_run=AsyncMock(return_value=SimpleNamespace()),
+                set_run_state=AsyncMock(return_value=SimpleNamespace()),
                 ws=SimpleNamespace(send_event=AsyncMock()),
                 session=None,
             ),
@@ -267,6 +270,15 @@ class _Orchestrator:
         for key, value in fields.items():
             setattr(run, key, value)
         return run
+
+    async def set_run_state(self, run: Any, **fields: Any) -> Any:
+        return await self._set_run(run, **fields)
+
+    def get_agent(self, name: str) -> _NoopAgent:
+        return self.agents[self._agent_index(name)]
+
+    async def cleanup_for_rerun(self, project_id: int, start_agent: str, mode: str = "full") -> None:
+        return None
 
 
 def _initial_state(start_stage: str) -> dict[str, Any]:

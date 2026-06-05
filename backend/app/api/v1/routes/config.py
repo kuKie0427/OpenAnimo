@@ -4,6 +4,8 @@ import ipaddress
 from typing import Any
 from urllib.parse import urlparse
 
+import httpx
+
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -55,7 +57,7 @@ def _is_safe_url(url: str) -> bool:
                 return False
 
         return True
-    except Exception:
+    except OSError:
         return False
 
 
@@ -79,6 +81,8 @@ _ALLOWED_OVERRIDE_FIELDS = {
     "image_base_url",
     "image_model",
     "image_endpoint",
+    "image_size",
+    "image_output_format",
     "enable_image_to_image",
     "fake_image_fixture_url",
     # 视频生成
@@ -219,7 +223,7 @@ async def _test_llm_connection(settings) -> TestConnectionResponse:
             status=probe.status,
             capabilities=ConnectionCapabilities(generate=probe.generate, stream=probe.stream),
         )
-    except Exception as e:
+    except (RuntimeError, ValueError) as e:
         return TestConnectionResponse(
             success=False,
             message="连接失败",
@@ -240,14 +244,14 @@ async def _test_image_connection(settings) -> TestConnectionResponse:
         # 尝试发送最小请求
         try:
             # 使用完整参数避免 400 错误
-            await service.generate(prompt="test", size="1024x1024", n=1)
+            await service.generate(prompt="test")
             # 成功
             return TestConnectionResponse(
                 success=True,
                 message="图像服务连接成功",
                 details=f"提供商: {settings.image_provider}, 模型: {settings.image_model}",
             )
-        except Exception as e:
+        except (RuntimeError, ValueError, httpx.HTTPError) as e:
             # 检查是否是认证错误
             error_str = str(e).lower()
             if "401" in error_str or "unauthorized" in error_str or "authentication" in error_str:
@@ -271,7 +275,7 @@ async def _test_image_connection(settings) -> TestConnectionResponse:
                 return TestConnectionResponse(
                     success=False, message="连接失败", details=str(e)[:200]
                 )
-    except Exception as e:
+    except (RuntimeError, ValueError, httpx.HTTPError) as e:
         return TestConnectionResponse(success=False, message="连接失败", details=str(e)[:200])
 
 
@@ -305,7 +309,7 @@ async def _test_video_connection(settings) -> TestConnectionResponse:
                 message="视频服务连接成功",
                 details=f"提供商: {settings.video_provider}, 模型: {settings.doubao_video_model if settings.video_provider == 'doubao' else settings.video_model}",
             )
-        except Exception as e:
+        except (RuntimeError, ValueError, httpx.HTTPError) as e:
             # 检查是否是认证错误
             error_str = str(e).lower()
             if "401" in error_str or "unauthorized" in error_str or "authentication" in error_str:
@@ -329,5 +333,5 @@ async def _test_video_connection(settings) -> TestConnectionResponse:
                 return TestConnectionResponse(
                     success=False, message="连接失败", details=str(e)[:200]
                 )
-    except Exception as e:
+    except (RuntimeError, ValueError, httpx.HTTPError) as e:
         return TestConnectionResponse(success=False, message="连接失败", details=str(e)[:200])

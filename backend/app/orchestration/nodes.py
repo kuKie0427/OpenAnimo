@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from langgraph.runtime import Runtime
-from langgraph.types import interrupt
+from langgraph.types import Send, interrupt
 
 from app.agents.critic import CriticAgent
 from app.agents.review_rules import ALLOWED_START_AGENTS
@@ -55,6 +55,13 @@ _STAGE_TO_AGENT: dict[str, str] = {
     "compose_merge": "compose",
     "add_audio": "compose",
 }
+
+_parallel_mode: bool = False
+
+
+def set_parallel_mode(enabled: bool) -> None:
+    global _parallel_mode
+    _parallel_mode = enabled
 
 
 def _agent_name_for_stage(stage: str) -> str:
@@ -132,7 +139,7 @@ async def _run_sub_stage(
     agent_name = _agent_name_for_stage(stage)
     if stage == "plan_outline" and state.get("approval_feedback"):
         agent_ctx.user_feedback = state.get("approval_feedback")
-    await orchestrator._set_run(  # noqa: SLF001
+    await orchestrator.set_run_state(
         agent_ctx.run,
         current_agent=agent_name,
         progress=progress,
@@ -152,7 +159,7 @@ async def _run_sub_stage(
         },
     )
 
-    agent = orchestrator.agents[orchestrator._agent_index(agent_name)]  # noqa: SLF001
+    agent = orchestrator.get_agent(agent_name)
     method = getattr(agent, method_name)
     await method(agent_ctx)
 
@@ -211,7 +218,7 @@ async def _manual_approval_node(
 
     approval_progress = workflow_progress_for_stage(approval_stage)
 
-    await orchestrator._set_run(  # noqa: SLF001
+    await orchestrator.set_run_state(
         agent_ctx.run,
         current_agent=gate,
         progress=approval_progress,
@@ -483,7 +490,7 @@ async def critique_character_images_node(
 
     orchestrator = runtime.context.orchestrator
     progress = workflow_progress_for_stage("critique_character_images", within_stage=0.0)
-    await orchestrator._set_run(  # noqa: SLF001
+    await orchestrator.set_run_state(
         agent_ctx.run,
         current_agent="critic",
         progress=progress,
@@ -558,7 +565,7 @@ async def critique_shot_images_node(
 
     orchestrator = runtime.context.orchestrator
     progress = workflow_progress_for_stage("critique_shot_images", within_stage=0.0)
-    await orchestrator._set_run(  # noqa: SLF001
+    await orchestrator.set_run_state(
         agent_ctx.run,
         current_agent="critic",
         progress=progress,
@@ -606,11 +613,14 @@ def route_after_critique_character_images(state: Phase2State) -> str:
 
     Uses route_stage set by the critique node:
     - 'render_characters' if score < threshold and within max rounds
-    - 'render_shots' if quality OK or max rounds exceeded
+    - 'render_shots' if quality OK or max rounds exceeded (serial)
+    - 'compose_videos' if quality OK or max rounds exceeded (parallel)
     """
     route = state.get("route_stage")
     if route:
         return route
+    if _parallel_mode:
+        return "compose_videos"
     return "render_shots"
 
 
@@ -636,7 +646,7 @@ async def review_node(state: Phase2State, runtime: Runtime[Phase2RuntimeContext]
     orchestrator = runtime.context.orchestrator
     agent_ctx = runtime.context.agent_context
 
-    review_agent = orchestrator.agents[orchestrator._agent_index("review")]  # noqa: SLF001
+    review_agent = orchestrator.get_agent("review")
 
     approval_feedback = state.get("approval_feedback", "")
     if approval_feedback:
@@ -662,7 +672,7 @@ async def review_node(state: Phase2State, runtime: Runtime[Phase2RuntimeContext]
     if target_ids is not None:
         agent_ctx.target_ids = target_ids
 
-    await orchestrator._cleanup_for_rerun(  # noqa: SLF001
+    await orchestrator.cleanup_for_rerun(
         agent_ctx.project.id,
         start_agent,
         mode=mode,
@@ -706,6 +716,18 @@ def route_after_characters_approval(state: Phase2State) -> str:
 
 def route_after_shots_approval(state: Phase2State) -> str:
     return _route_after_approval(state, default_next="render_characters")
+
+
+def route_shots_approval_parallel(state: Phase2State) -> str | list[Send]:
+    route = state.get("route_stage")
+    if route:
+        return route
+    if state.get("review_requested"):
+        return "review"
+    return [
+        Send("render_characters", state),
+        Send("render_shots_parallel", state),
+    ]
 
 
 def route_after_character_images_approval(state: Phase2State) -> str:

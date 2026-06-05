@@ -14,6 +14,8 @@ from app.agents.orchestrator import (
     _next_phase2_stage,
     _resume_agent_for_stage,
     _video_generation_skipped_in_result,
+)
+from app.orchestration.redis import (
     clear_awaiting_payload,
     clear_confirm_event_redis,
     get_awaiting_payload,
@@ -130,16 +132,16 @@ async def fake_redis(monkeypatch):
     async def _factory():
         return fake
 
-    monkeypatch.setattr("app.agents.orchestrator.get_redis", _factory)
+    monkeypatch.setattr("app.orchestration.redis.get_redis", _factory)
     return fake
 
 
 @pytest.mark.asyncio
 async def test_get_redis_returns_singleton(monkeypatch):
     """get_redis() module-level should reuse one client instance."""
-    import app.agents.orchestrator as orch
+    import app.orchestration.redis as redis_mod
 
-    monkeypatch.setattr(orch, "_redis_client", None)
+    monkeypatch.setattr(redis_mod, "_redis_client", None)
 
     created: list[Any] = []
 
@@ -153,7 +155,7 @@ async def test_get_redis_returns_singleton(monkeypatch):
         return c
 
     fake_redis_module = SimpleNamespace(from_url=_from_url, Redis=object)
-    monkeypatch.setattr(orch, "redis", fake_redis_module)
+    monkeypatch.setattr(redis_mod, "redis", fake_redis_module)
 
     a = await get_redis()
     b = await get_redis()
@@ -174,7 +176,7 @@ async def test_store_awaiting_payload_swallow_redis_error(monkeypatch):
     async def _raising():
         raise RuntimeError("redis down")
 
-    monkeypatch.setattr("app.agents.orchestrator.get_redis", _raising)
+    monkeypatch.setattr("app.orchestration.redis.get_redis", _raising)
 
     # Should not raise even when redis is unreachable.
     await store_awaiting_payload(1, {"a": 1})
@@ -185,7 +187,7 @@ async def test_clear_awaiting_payload_swallow_redis_error(monkeypatch):
     async def _raising():
         raise RuntimeError("redis down")
 
-    monkeypatch.setattr("app.agents.orchestrator.get_redis", _raising)
+    monkeypatch.setattr("app.orchestration.redis.get_redis", _raising)
     await clear_awaiting_payload(1)
 
 
@@ -201,7 +203,7 @@ async def test_get_awaiting_payload_redis_error_returns_none(monkeypatch):
     async def _raising():
         raise RuntimeError("redis down")
 
-    monkeypatch.setattr("app.agents.orchestrator.get_redis", _raising)
+    monkeypatch.setattr("app.orchestration.redis.get_redis", _raising)
     assert await get_awaiting_payload(1) is None
 
 

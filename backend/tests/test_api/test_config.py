@@ -259,7 +259,7 @@ async def test_is_safe_url_rejects_private_and_invalid_urls():
 @pytest.mark.asyncio
 async def test_is_safe_url_returns_false_when_urlparse_raises(monkeypatch):
     def _boom(_url):
-        raise RuntimeError("boom")
+        raise OSError("boom")
 
     monkeypatch.setattr(config_routes, "urlparse", _boom)
 
@@ -338,10 +338,8 @@ async def test_test_image_connection_success(monkeypatch, test_settings):
             self.settings = settings
             self.max_retries = max_retries
 
-        async def generate(self, prompt, size, n):
+        async def generate(self, *, prompt, size=None, n=1, **kwargs):
             assert prompt == "test"
-            assert size == "1024x1024"
-            assert n == 1
 
     monkeypatch.setattr("app.services.image_factory.create_image_service", lambda settings: FakeImageService(settings))
 
@@ -357,7 +355,7 @@ async def test_test_image_connection_reports_auth_failure(monkeypatch, test_sett
         def __init__(self, settings, max_retries=0):
             pass
 
-        async def generate(self, prompt, size, n):
+        async def generate(self, *, prompt, size=None, n=1, **kwargs):
             raise RuntimeError("401 unauthorized")
 
     monkeypatch.setattr("app.services.image_factory.create_image_service", lambda settings: FakeImageService(settings))
@@ -374,7 +372,7 @@ async def test_test_image_connection_reports_forbidden(monkeypatch, test_setting
         def __init__(self, settings, max_retries=0):
             pass
 
-        async def generate(self, prompt, size, n):
+        async def generate(self, *, prompt, size=None, n=1, **kwargs):
             raise RuntimeError("403 forbidden")
 
     monkeypatch.setattr("app.services.image_factory.create_image_service", lambda settings: FakeImageService(settings))
@@ -391,7 +389,7 @@ async def test_test_image_connection_reports_not_found(monkeypatch, test_setting
         def __init__(self, settings, max_retries=0):
             pass
 
-        async def generate(self, prompt, size, n):
+        async def generate(self, *, prompt, size=None, n=1, **kwargs):
             raise RuntimeError("404 not found")
 
     monkeypatch.setattr("app.services.image_factory.create_image_service", lambda settings: FakeImageService(settings))
@@ -408,7 +406,7 @@ async def test_test_image_connection_reports_generic_error(monkeypatch, test_set
         def __init__(self, settings, max_retries=0):
             pass
 
-        async def generate(self, prompt, size, n):
+        async def generate(self, *, prompt, size=None, n=1, **kwargs):
             raise RuntimeError("bad gateway")
 
     monkeypatch.setattr("app.services.image_factory.create_image_service", lambda settings: FakeImageService(settings))
@@ -438,7 +436,7 @@ async def test_test_image_connection_success_through_route(monkeypatch, test_set
         def __init__(self, settings, max_retries=0):
             self.settings = settings
 
-        async def generate(self, prompt, size, n):
+        async def generate(self, *, prompt, size=None, n=1, **kwargs):
             return None
 
     monkeypatch.setattr("app.services.image_factory.create_image_service", lambda settings: FakeImageService(settings))

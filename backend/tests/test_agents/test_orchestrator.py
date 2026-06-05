@@ -209,7 +209,7 @@ async def test_redis_helpers_round_trip(monkeypatch):
     async def _get_fake_redis():
         return fake
 
-    monkeypatch.setattr("app.agents.orchestrator.get_redis", _get_fake_redis)
+    monkeypatch.setattr("app.orchestration.redis.get_redis", _get_fake_redis)
 
     payload = {"run_id": 1, "project_id": 2}
     await store_awaiting_payload(1, payload)
@@ -258,7 +258,7 @@ async def test_wait_for_confirm_redis_returns_true_from_key_and_timeout(monkeypa
     async def _get_fake_redis():
         return fake
 
-    monkeypatch.setattr("app.agents.orchestrator.get_redis", _get_fake_redis)
+    monkeypatch.setattr("app.orchestration.redis.get_redis", _get_fake_redis)
     assert await wait_for_confirm_redis(1, timeout=1) is True
 
 
@@ -299,7 +299,7 @@ async def test_wait_for_confirm_redis_returns_true_from_pubsub_message(monkeypat
     async def _get_fake_redis():
         return fake
 
-    monkeypatch.setattr("app.agents.orchestrator.get_redis", _get_fake_redis)
+    monkeypatch.setattr("app.orchestration.redis.get_redis", _get_fake_redis)
     assert await wait_for_confirm_redis(1, timeout=1) is True
 
 
@@ -333,7 +333,7 @@ async def test_wait_for_confirm_redis_times_out(monkeypatch):
     async def _get_fake_redis():
         return fake
 
-    monkeypatch.setattr("app.agents.orchestrator.get_redis", _get_fake_redis)
+    monkeypatch.setattr("app.orchestration.redis.get_redis", _get_fake_redis)
     assert await wait_for_confirm_redis(1, timeout=0) is False
 
 

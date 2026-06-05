@@ -111,7 +111,7 @@ class TextService:
                     last_status = exc.response.status_code
                     try:
                         last_body = exc.response.text[:500]
-                    except Exception:
+                    except (RuntimeError, httpx.StreamError):
                         last_body = None
 
                     if attempt >= self.max_retries or not self._is_retryable_status(last_status):
@@ -191,7 +191,7 @@ class TextService:
                     last_status = exc.response.status_code
                     try:
                         last_body = exc.response.text[:500]
-                    except Exception:
+                    except (RuntimeError, httpx.StreamError):
                         last_body = None
 
                     if emitted_any:
@@ -392,7 +392,7 @@ class TextService:
 
         try:
             await self._probe_generate_capability(messages=probe_messages)
-        except Exception as exc:
+        except (RuntimeError, ValueError, TextServiceError) as exc:
             return TextProviderCapability(
                 status="invalid",
                 generate=False,
@@ -411,7 +411,7 @@ class TextService:
                 )
             ):
                 pass
-        except Exception as exc:
+        except (RuntimeError, ValueError, TextServiceError) as exc:
             return TextProviderCapability(
                 status="degraded",
                 generate=True,

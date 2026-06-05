@@ -78,7 +78,7 @@ class RunMessageEventData(BaseModel):
     content: str = ""
     summary: str | None = None
     progress: float | None = Field(default=None, ge=0.0, le=1.0)
-    isLoading: bool | None = None
+    is_loading: bool | None = Field(default=None, alias="isLoading")
 
 
 class RunCompletedEventData(BaseModel):
@@ -234,6 +234,12 @@ class AudioGeneratedEventData(BaseModel):
     duration: float | None = None
 
 
+class ExportCompletedEventData(BaseModel):
+    project_id: int
+    export_type: str = ""
+    file_url: str | None = None
+
+
 class AgentThinkingEventData(BaseModel):
     agent: str
     phase: Literal["reasoning", "decision", "planning", "reviewing"]
@@ -259,6 +265,41 @@ class ConsistencyEvalCompletedEventData(BaseModel):
     project_id: int
     overall_score: float = Field(ge=0.0, le=100.0)
     character_count: int = 0
+
+
+# Map of event types to their corresponding data models.
+# Events with empty data (connected, pong, echo) map to None.
+EVENT_DATA_MODELS: dict[str, type[BaseModel] | None] = {
+    "connected": None,
+    "pong": None,
+    "echo": None,
+    "error": ErrorEventData,
+    "run_started": RunStartedEventData,
+    "run_progress": RunProgressEventData,
+    "run_message": RunMessageEventData,
+    "agent_thinking": AgentThinkingEventData,
+    "run_completed": RunCompletedEventData,
+    "run_failed": RunFailedEventData,
+    "run_awaiting_confirm": RunAwaitingConfirmEventData,
+    "run_confirmed": RunConfirmedEventData,
+    "run_cancelled": RunCancelledEventData,
+    "character_created": CharacterCreatedEventData,
+    "character_updated": CharacterUpdatedEventData,
+    "character_deleted": CharacterDeletedEventData,
+    "shot_created": ShotCreatedEventData,
+    "shot_updated": ShotUpdatedEventData,
+    "shot_deleted": ShotDeletedEventData,
+    "outline_updated": OutlineUpdatedEventData,
+    "project_updated": ProjectUpdatedEventData,
+    "data_cleared": DataClearedEventData,
+    "critique_result": CritiqueResultEventData,
+    "bible_updated": BibleUpdatedEventData,
+    "version_created": VersionCreatedEventData,
+    "version_rollback": VersionRollbackEventData,
+    "audio_generated": AudioGeneratedEventData,
+    "export_completed": ExportCompletedEventData,
+    "consistency_eval_completed": ConsistencyEvalCompletedEventData,
+}
 
 
 class WsEvent(BaseModel):

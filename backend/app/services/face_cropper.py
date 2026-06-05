@@ -39,7 +39,7 @@ def _get_face_analysis():
         _FACE_ANALYSIS_APP = app
         logger.info("InsightFace FaceAnalysis initialized successfully (CPU mode)")
         return app
-    except Exception as e:
+    except (ImportError, OSError, RuntimeError) as e:
         logger.warning("Failed to initialize InsightFace, face cropping disabled: %s", e)
         return None
 

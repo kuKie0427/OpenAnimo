@@ -4,7 +4,8 @@ import json
 import logging
 from typing import Any
 
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.agents.base import AgentContext, BaseAgent, CompletionInfo
 from app.agents.prompts.plan import SYSTEM_PROMPT
@@ -219,7 +220,7 @@ class PlanAgent(BaseAgent):
                     for sc in shared_chars
                 ]
             return result
-        except Exception:
+        except SQLAlchemyError:
             return None
 
     async def _get_existing_state(self, ctx: AgentContext) -> dict[str, Any]:
@@ -534,7 +535,7 @@ class PlanAgent(BaseAgent):
                         phase="planning",
                         content=f"已从宇宙导入 {len(imported)} 个共享角色：{', '.join(c.name for c in imported)}",
                     )
-            except Exception as e:
+            except (SQLAlchemyError, RuntimeError, ValueError) as e:
                 logger.warning("Failed to auto-import shared characters: %s", e)
 
         # Thinking: planning phase — before LLM call

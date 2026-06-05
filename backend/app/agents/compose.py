@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import logging
+import subprocess
 from typing import cast
+
+import httpx
 
 from sqlalchemy import select
 from sqlalchemy.orm import InstrumentedAttribute
@@ -122,7 +125,7 @@ class ComposeAgent(BaseAgent):
                                         character_image_urls=char_image_urls,
                                     )
                                 )
-                            except Exception:
+                            except (RuntimeError, ValueError, OSError):
                                 image_url = shot.image_url
                         else:
                             image_url = shot.image_url
@@ -153,7 +156,7 @@ class ComposeAgent(BaseAgent):
                                         character_image_urls=[],
                                     )
                                 )
-                        except Exception:
+                        except (RuntimeError, ValueError, OSError):
                             reference_image_bytes = None
 
                     video_url = await ctx.video.generate_url(
@@ -167,7 +170,7 @@ class ComposeAgent(BaseAgent):
                 await ctx.session.flush()
                 await self.send_shot_event(ctx, shot, "shot_updated")
                 updated_count += 1
-            except Exception as e:
+            except (RuntimeError, ValueError, httpx.HTTPError) as e:
                 await self.send_message(ctx, f"镜头 {shot.order} 视频生成失败: {e}")
 
         await ctx.session.commit()
@@ -276,7 +279,7 @@ class ComposeAgent(BaseAgent):
                 summary=summary,
                 progress=1.0,
             )
-        except Exception as e:
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, RuntimeError, OSError) as e:
             await self.send_message(ctx, f"视频拼接失败: {e}。您可以稍后手动拼接。", progress=1.0)
 
     async def _add_audio_to_videos(self, ctx: AgentContext) -> None:
@@ -390,7 +393,7 @@ class ComposeAgent(BaseAgent):
                     },
                 )
 
-            except Exception as e:
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as e:
                 logger.warning("Audio processing failed for shot %s: %s", shot.id, e)
                 await self.send_message(
                     ctx, f"分镜 {shot.order} 音频处理失败: {e}，跳过。"
@@ -416,7 +419,7 @@ class ComposeAgent(BaseAgent):
                     if new_project_url != ctx.project.video_url:
                         ctx.project.video_url = new_project_url
                         ctx.session.add(ctx.project)
-            except Exception as e:
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as e:
                 logger.warning("Final video BGM mixing failed: %s", e)
 
         await ctx.session.commit()

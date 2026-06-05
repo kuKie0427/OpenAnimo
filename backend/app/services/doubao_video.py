@@ -259,7 +259,8 @@ class DoubaoVideoService:
             if on_progress:
                 try:
                     on_progress(status, progress)
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
+                    # user-provided progress callback may raise arbitrary errors
                     logger.warning(f"Progress callback error: {e}")
 
             if status == self.STATUS_SUCCEEDED:

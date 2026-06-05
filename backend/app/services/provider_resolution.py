@@ -48,7 +48,7 @@ def _provider_snapshot_payload(snapshot: object) -> dict[str, object] | None:
     if hasattr(snapshot, "model_dump"):
         try:
             dumped = snapshot.model_dump(mode="json")  # type: ignore[attr-defined]
-        except Exception:
+        except (ValueError, TypeError):
             return None
         if isinstance(dumped, dict):
             return dumped

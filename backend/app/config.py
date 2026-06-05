@@ -100,6 +100,14 @@ class Settings(BaseSettings):
         default="/images/generations",
         description="图像生成 API 端点路径",
     )
+    image_size: str = Field(
+        default="1024x1024",
+        description="图像生成默认尺寸（DALL-E 用像素，Seedream 支持 2K/3K/4K 或 2560x1440+）",
+    )
+    image_output_format: str | None = Field(
+        default=None,
+        description="图像输出格式（png/jpeg），None 表示不传此参数",
+    )
     enable_image_to_image: bool = Field(
         default=False,
         description="是否启用图生图（分镜首帧 I2I 参考图）",
@@ -297,6 +305,17 @@ class Settings(BaseSettings):
             return path
         normalized = path if path.startswith("/") else f"/{path}"
         return f"{self.public_base_url.rstrip('/')}{normalized}"
+
+    # ============================================
+    # Validation
+    # ============================================
+    validation_enabled: bool = True
+    validation_max_retries: int = 2
+
+    # ============================================
+    # Orchestration
+    # ============================================
+    parallel_enabled: bool = True
 
 
 def apply_settings_overrides(overrides: dict[str, Any]) -> None:

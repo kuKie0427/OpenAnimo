@@ -313,7 +313,7 @@ class ConsistencyEvalService:
                 file_path = base_dir / image_url.lstrip("/")
                 if file_path.exists():
                     return file_path.read_bytes()
-            except Exception as exc:
+            except (OSError, PermissionError) as exc:
                 logger.warning("Failed to read local image %s: %s", image_url, exc)
                 return None
 
@@ -324,7 +324,7 @@ class ConsistencyEvalService:
                     resp = await client.get(image_url)
                     resp.raise_for_status()
                     return resp.content
-            except Exception as exc:
+            except httpx.HTTPError as exc:
                 logger.warning("Failed to download image %s: %s", image_url, exc)
                 return None
 

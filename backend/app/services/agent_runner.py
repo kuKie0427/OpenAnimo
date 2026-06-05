@@ -139,7 +139,7 @@ async def run_agent_plan(
                 await cancel_session.commit()
         await ws.send_event(project_id, {"type": "run_cancelled", "data": {"run_id": run_id}})
         raise
-    except Exception as e:
+    except (RuntimeError, ValueError, OSError) as e:
         async with async_session_maker() as fail_session:
             run = await fail_session.get(AgentRun, run_id)
             if run and run.status not in ("cancelled", "failed", "succeeded"):

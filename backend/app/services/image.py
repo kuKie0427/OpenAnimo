@@ -107,7 +107,7 @@ class ImageService:
             save_path.write_bytes(content)
 
             return f"/static/images/{filename}"
-        except Exception as exc:
+        except (httpx.HTTPError, OSError, RuntimeError) as exc:
             logger.warning("Failed to cache external image, using original URL: %s", exc)
             return url
 
@@ -331,7 +331,7 @@ class ImageService:
         self,
         *,
         prompt: str,
-        size: str = "1024x1024",
+        size: str | None = None,
         n: int = 1,
         style: str | None = None,
         response_format: str = "url",
@@ -351,13 +351,16 @@ class ImageService:
             payload: dict[str, Any] = {
                 "model": self.settings.image_model,
                 "prompt": prompt,
-                "size": size,
+                "size": size or self.settings.image_size,
                 "n": n,
                 "response_format": response_format,
                 **kwargs,
             }
             if style:
                 payload["style"] = style
+        fmt = self.settings.image_output_format
+        if fmt and "output_format" not in payload:
+            payload["output_format"] = fmt
 
         return await self._post_json_with_retry(url, payload)
 
@@ -365,10 +368,12 @@ class ImageService:
         self,
         *,
         prompt: str,
-        size: str = "1024x1024",
+        size: str | None = None,
         image_bytes: bytes | None = None,
         **kwargs: Any,
     ) -> str:
+        effective_size = size or self.settings.image_size
+
         # ModelScope API（异步轮询模式）
         if self._is_modelscope_api():
             if image_bytes is not None:
@@ -411,15 +416,17 @@ class ImageService:
                     raise RuntimeError(f"Image API stream response missing URL: {content}")
                 else:
                     # 标准图片生成接口（图生图）
-                    payload = {
+                    payload: dict[str, Any] = {
                         "model": self.settings.image_model,
                         "prompt": prompt,
-                        "size": size,
-                        "n": 1,
+                        "size": effective_size,
                         "response_format": "url",
                         "image": image_base64,
                         **kwargs,
                     }
+                    fmt = self.settings.image_output_format
+                    if fmt:
+                        payload.setdefault("output_format", fmt)
                     data = await self._post_json_with_retry(url, payload)
                     items = data.get("data") or []
                     if isinstance(items, list) and items:
@@ -429,7 +436,7 @@ class ImageService:
                             return self._sanitize_url(result_url)
 
                     raise RuntimeError(f"Image API response missing URL: {data}")
-            except Exception as exc:
+            except (httpx.HTTPError, RuntimeError) as exc:
                 # 降级：I2I 失败自动回退到文生图
                 logger.warning(
                     "Image-to-image failed, falling back to text-to-image: %s",

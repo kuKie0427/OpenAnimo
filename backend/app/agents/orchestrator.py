@@ -4,13 +4,12 @@ import asyncio
 import logging
 from typing import Any, cast
 
-import redis.asyncio as redis
 from langgraph.types import Command
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.utils import utcnow
-from app.agents.base import AgentContext
+from app.agents.base import AgentContext, BaseAgent
 from app.agents.outline import OutlineAgent
 from app.agents.plan import PlanAgent
 from app.agents.render import RenderAgent
@@ -36,6 +35,18 @@ from app.services.run_recovery import PHASE2_STAGE_ORDER, build_recovery_summary
 from app.services.text_factory import create_text_service
 from app.services.video_factory import create_video_service
 from app.ws.manager import ConnectionManager
+from app.orchestration.redis import (
+    clear_awaiting_payload,
+    clear_confirm_event_redis,
+    get_awaiting_payload,  # noqa: F401 - re-export for external consumers
+    get_awaiting_payload_key,  # noqa: F401 - re-export for external consumers
+    get_confirm_channel,  # noqa: F401 - re-export for external consumers
+    get_confirm_event_key,  # noqa: F401 - re-export for external consumers
+    get_redis,  # noqa: F401 - re-export for external consumers
+    store_awaiting_payload,
+    trigger_confirm_redis,  # noqa: F401 - re-export for external consumers
+    wait_for_confirm_redis,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -127,121 +138,6 @@ AGENT_COMPLETION_INFO = {
 }
 
 
-_redis_client: redis.Redis | None = None
-
-
-async def get_redis() -> redis.Redis:
-    global _redis_client
-    if _redis_client is None:
-        from app.config import get_settings
-
-        settings = get_settings()
-        _redis_client = redis.from_url(settings.redis_url)
-    return _redis_client
-
-
-def get_confirm_event_key(run_id: int) -> str:
-    return f"openoii:confirm:{run_id}"
-
-
-def get_confirm_channel(run_id: int) -> str:
-    return f"openoii:confirm_channel:{run_id}"
-
-
-def get_awaiting_payload_key(run_id: int) -> str:
-    """Redis 缓存 run 当前 gate 的 awaiting payload，用于 WS 重连补发"""
-    return f"openoii:awaiting:{run_id}"
-
-
-async def store_awaiting_payload(run_id: int, payload: dict) -> None:
-    """记录当前 run 在 gate 等待，附带 run_awaiting_confirm 事件 payload"""
-    import json as _json
-
-    try:
-        r = await get_redis()
-        await r.set(get_awaiting_payload_key(run_id), _json.dumps(payload), ex=7200)
-    except Exception:  # noqa: BLE001 - redis unreachable is non-fatal for orchestration flow
-        logger.exception("store_awaiting_payload failed run_id=%s", run_id)
-
-
-async def clear_awaiting_payload(run_id: int) -> None:
-    try:
-        r = await get_redis()
-        await r.delete(get_awaiting_payload_key(run_id))
-    except Exception:  # noqa: BLE001
-        logger.exception("clear_awaiting_payload failed run_id=%s", run_id)
-
-
-async def get_awaiting_payload(run_id: int) -> dict | None:
-    import json as _json
-
-    try:
-        r = await get_redis()
-        raw = await r.get(get_awaiting_payload_key(run_id))
-    except Exception:  # noqa: BLE001
-        logger.exception("get_awaiting_payload failed run_id=%s", run_id)
-        return None
-    if not raw:
-        return None
-    try:
-        return _json.loads(raw)
-    except Exception:
-        return None
-
-
-async def clear_confirm_event_redis(run_id: int) -> None:
-    r = await get_redis()
-    await r.delete(get_confirm_event_key(run_id))
-
-
-async def trigger_confirm_redis(run_id: int) -> bool:
-    """通过 Redis 发布 confirm 信号（用于多 worker 共享）"""
-    r = await get_redis()
-    await r.set(get_confirm_event_key(run_id), "1", ex=3600)  # 1 小时过期
-    await r.publish(get_confirm_channel(run_id), "confirm")
-    return True
-
-
-async def wait_for_confirm_redis(run_id: int, timeout: int = 1800) -> bool:
-    """通过 Redis 订阅等待 confirm 信号"""
-    r = await get_redis()
-    key = get_confirm_event_key(run_id)
-    channel = get_confirm_channel(run_id)
-
-    pubsub = r.pubsub()
-    await pubsub.subscribe(channel)
-    try:
-        # 订阅前 confirm 先到的情况：用 key 兜底
-        if await r.get(key):
-            await r.delete(key)
-            return True
-
-        loop = asyncio.get_running_loop()
-        deadline = loop.time() + timeout
-        while True:
-            remaining = deadline - loop.time()
-            if remaining <= 0:
-                return False
-
-            msg = await pubsub.get_message(
-                ignore_subscribe_messages=True,
-                timeout=min(1.0, remaining),
-            )
-            if msg is not None:
-                await r.delete(key)
-                return True
-
-            # publish 丢失时，用 key 再兜底一次
-            if await r.get(key):
-                await r.delete(key)
-                return True
-    finally:
-        try:
-            await pubsub.unsubscribe(channel)
-        finally:
-            await pubsub.close()
-
-
 class GenerationOrchestrator:
     def __init__(self, *, settings: Settings, ws: ConnectionManager, session: AsyncSession):
         self.settings = settings
@@ -261,6 +157,18 @@ class GenerationOrchestrator:
             if agent.name == agent_name:
                 return idx
         raise ValueError(f"Unknown agent: {agent_name}")
+
+    async def set_run_state(self, run: AgentRun, **fields) -> AgentRun:
+        """Public wrapper for _set_run."""
+        return await self._set_run(run, **fields)
+
+    def get_agent(self, name: str) -> BaseAgent:
+        """Return agent instance by name. Raises ValueError if not found."""
+        return self.agents[self._agent_index(name)]
+
+    async def cleanup_for_rerun(self, project_id: int, start_agent: str, mode: str = "full") -> None:
+        """Public wrapper for _cleanup_for_rerun."""
+        return await self._cleanup_for_rerun(project_id, start_agent, mode)
 
     async def _delete_project_shots(self, project_id: int) -> None:
         await self.session.execute(delete(Shot).where(Shot.project_id == project_id))
@@ -415,13 +323,13 @@ class GenerationOrchestrator:
                             "project": {
                                 "id": project_id,
                                 "status": project.status,
-                                "video_url": project.video_url,
+                                "video_url": getattr(project, "video_url", None),
                                 "blocking_clips": blocking_clips,
                             }
                         },
                     },
                 )
-        except Exception:
+        except (RuntimeError, OSError):
             pass
         await self.ws.send_event(
             project_id,
@@ -958,7 +866,7 @@ class GenerationOrchestrator:
                 )
 
             await self._complete_run(project_id, run, run_id, final_stage, video_generation_skipped)
-        except Exception as e:
+        except RuntimeError as e:
             await self._handle_run_failure(project_id, run, run_id, e, context="Resume")
         finally:
             await self._cleanup_run(run_id)
@@ -1110,7 +1018,7 @@ class GenerationOrchestrator:
             )
 
             await self._complete_run(project_id, run, run_id, final_stage, video_generation_skipped)
-        except Exception as e:
+        except (RuntimeError, KeyError) as e:
             await self._handle_run_failure(project_id, run, run_id, e, context="Run")
         finally:
             await self._cleanup_run(run_id)

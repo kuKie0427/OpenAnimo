@@ -1,91 +1,153 @@
-# AGENTS.md
+## Harness 约定
 
-## 先看这个
-- openOii 是“故事想法 → 漫剧成片”的长链路生成应用；改动生成、恢复、进度推送时，优先保 resumability 和现有执行流。
-- 这是双包仓库，没有根级统一脚本：后端在 `backend/` 用 `uv`，前端在 `frontend/` 用 `pnpm`。
-- 当前 GitHub Actions 只有镜像构建/推送：`.github/workflows/docker-publish.yml`。本地要自己跑测试/构建，CI 不会替你兜底。
-
-## 关键入口
-- 后端 FastAPI 入口：`backend/app/main.py`。
-- API 聚合：`backend/app/api/v1/router.py`，默认前缀 `/api/v1`。
-- 生成链路 HTTP 入口：`backend/app/api/v1/routes/generation.py`（`/{project_id}/generate|resume|cancel|feedback`）。
-- 真正的编排/持久化逻辑在 `backend/app/orchestration/`；API 层主要负责建 run、起后台任务、回传控制面。
-- WebSocket 入口：`/ws/projects/{project_id}`。
-- 前端入口：`frontend/app/main.tsx`；路由在 `frontend/app/App.tsx`。
-
-## 开发命令
-
-### 后端
+### 开始工作前
 ```bash
-cd backend
-uv sync
-uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 18765
-uv run pytest
-uv run pytest tests/test_api/test_generation.py -q
-uv run ruff check app tests
+./init.sh                    # 环境检查 + 全量验证
+cat feature_list.json | python -m json.tool  # 当前功能状态
+cat progress.md              # 上次会话做了什么
 ```
 
-### 前端
-```bash
-cd frontend
-pnpm install
-pnpm dev
-pnpm build
-pnpm test
-pnpm exec vitest run app/pages/ProjectPage.test.tsx
-pnpm exec tsc --noEmit
-pnpm e2e
-pnpm e2e:install
+### 工作中
+- **WIP=1**: 同时只做一个 feature（`feature_list.json` 中 `active` 不超过 1 个）
+- **pass-gate**: 只有 verification 命令全部通过，才能标记 `passing`
+- **feature_list.json**: 开始做 → `active`，做完且验证通过 → `passing`
+
+### 结束工作前
+1. 更新 `progress.md`（做了什么 / 决策 / 阻断 / 下次）
+2. 更新 `feature_list.json` 最终状态
+3. 运行 `./init.sh` — 必须全绿
+4. Git commit
+
+# openOii — 项目知识库（根）
+
+**生成时间:** 2026-06-05
+**语言:** 中文
+
+---
+
+## 概览
+
+openOii 是"故事想法 → 漫剧成片"的 **AI 多 Agent 长链路生成平台**。双包 Monorepo（后端 Python/FastAPI + 前端 React/Vite），无根级统一脚本。
+
+- **后端**: FastAPI + LangGraph + SQLModel + Anthropic SDK — Agent 编排、LLM 调用、图像/视频/音频生成
+- **前端**: React 18 + TypeScript + Vite 6 + tldraw 4 + TailwindCSS 3 + daisyUI 4 — 画布交互、实时 WebSocket、项目面板
+- **基础设施**: Docker Compose（PostgreSQL 16 + Redis 7）、GitHub Container Registry
+
+详细指南 → `backend/AGENTS.md`（后端） / `frontend/AGENTS.md`（前端）
+
+---
+
+## 目录结构
+
+```
+openOii/
+├── backend/                    # Python FastAPI 后端（uv 管理）
+│   ├── app/
+│   │   ├── main.py             # ⭐ FastAPI 入口（应用工厂）
+│   │   ├── config.py           # 配置加载（.env）
+│   │   ├── api/v1/router.py    # API 路由聚合（/api/v1）
+│   │   ├── agents/             # LangGraph Agent（编排器 + 子 Agent）
+│   │   ├── orchestration/      # 编排图/节点/状态/持久化
+│   │   ├── services/           # 36 个业务服务
+│   │   ├── models/             # SQLModel 数据模型
+│   │   ├── schemas/            # Pydantic 请求/响应
+│   │   ├── db/                 # 数据库会话初始化
+│   │   └── ws/                 # WebSocket 管理
+│   ├── tests/                  # pytest（test_api/services/agents/orchestration）
+│   ├── alembic/                # 数据库迁移版本
+│   └── pyproject.toml
+├── frontend/                   # React TypeScript 前端（pnpm 管理）
+│   ├── app/
+│   │   ├── main.tsx            # ⭐ React 入口（MSW + createRoot）
+│   │   ├── App.tsx             # ⭐ 路由定义（react-router-dom 7）
+│   │   ├── pages/              # 页面组件
+│   │   ├── components/         # UI 组件（canvas/chat/layout/panels/settings/ui）
+│   │   ├── stores/             # Zustand 状态
+│   │   ├── hooks/              # 自定义 Hook
+│   │   ├── services/api.ts     # API 请求封装
+│   │   ├── types/              # TypeScript 类型
+│   │   ├── mocks/              # MSW Mock
+│   │   └── styles/             # 全局 CSS（tokens + globals + fonts）
+│   ├── tests/e2e/              # Playwright E2E
+│   └── package.json
+├── docker-compose.yml          # 生产编排（预构建镜像）
+├── docker-compose.dev.yml      # 开发编排（本地构建）
+└── AGENTS.md                   # ← 本文件
 ```
 
-### Docker
-```bash
-cp backend/.env.example backend/.env
-docker-compose up -d
-docker-compose -f docker-compose.dev.yml up -d
-docker-compose logs -f backend
-docker-compose down
+---
+
+## 快速查找
+
+| 任务 | 位置 | 备注 |
+|------|------|------|
+| 启动全部服务 | `docker-compose up -d` | 需先 `cp backend/.env.example backend/.env` |
+| 单独起后端 | `cd backend && uv run uvicorn app.main:app --reload --port 18765` | 端口 18765 |
+| 单独起前端 | `cd frontend && pnpm dev` | 端口 15173 |
+| 后端 API 文档 | `http://localhost:18765/docs` | Swagger UI |
+| 了解生成链路 | `backend/app/orchestration/` | LangGraph 编排图 |
+| 了解 API 路由 | `backend/app/api/v1/router.py` | 13 个子路由 |
+| 了解前端路由 | `frontend/app/App.tsx` | 7 条 react-router 路由 |
+| 了解 WebSocket | `backend/app/ws/manager.py` + `frontend/app/hooks/useWebSocket.ts` | `/ws/projects/{id}` |
+| 了解配置机制 | `backend/app/config.py` + `frontend/app/utils/runtimeBase.ts` | 后端 .env，前端自动推导 |
+| 了解设计规范 | `DESIGN.md` | CMYK 漫画风主题，15 条 Don't |
+| 查看产品定义 | `PRODUCT.md` | 产品功能与用户流程 |
+
+---
+
+## 代码符号速查
+
+| 符号 | 类型 | 位置 | 职责 |
+|------|------|------|------|
+| `create_app()` | 函数 | `backend/app/main.py` | FastAPI 应用工厂 |
+| `Orchestrator` | 类 | `backend/app/agents/orchestrator.py` | 生成链路总调度器（最大源文件，1127 行） |
+| `get_settings()` | 函数 | `backend/app/config.py` | 配置单例（@lru_cache） |
+| `api_router` | APIRouter | `backend/app/api/v1/router.py` | API 路由聚合 |
+| `App` | 组件 | `frontend/app/App.tsx` | 前端路由根 |
+| `useEditorStore` | Zustand | `frontend/app/stores/editorStore.ts` | 编辑器状态 |
+| `useWebSocket` | Hook | `frontend/app/hooks/useWebSocket.ts` | WebSocket 事件路由（698 行） |
+| `InfiniteCanvas` | 组件 | `frontend/app/components/canvas/InfiniteCanvas.tsx` | tldraw 画布 |
+
+---
+
+## 跨项目约定
+
+### 提交格式
+```
+type(scope): description
+
+类型: feat / fix / docs / refactor / test / chore
+范围: 模块名（api, ui, canvas, agent, orchestrator）
 ```
 
-## 验证习惯
-- 前端改动：先跑相关 `vitest`，再跑 `pnpm build`（这里已经包含 `tsc`）。
-- 后端改动：先跑相关 `pytest`，再按需要跑全量 `uv run pytest`。
-- 改依赖时同步更新锁文件：`backend/uv.lock`、`frontend/pnpm-lock.yaml`。
-- E2E 配置在 `frontend/playwright.config.ts`；它只会自动起前端 `pnpm dev`。测试要打真实 API 时，后端要自己另起。
+### 验证习惯
+- **前端改动**: 先跑相关 `vitest`，再跑 `pnpm build`（含 tsc 类型检查）
+- **后端改动**: 先跑相关 `pytest`，再按需跑 `uv run ruff check app tests`
+- **依赖变更**: 同步更新 `backend/uv.lock` 和 `frontend/pnpm-lock.yaml`
+- **Docker 镜像**: CI 仅构建推送，不跑测试 — 本地自己跑
 
-## 易错点
-- `frontend/app/utils/runtimeBase.ts` 会在开发环境按当前页面 hostname 自动推导后端 `18765` 端口，并自动对齐 `localhost`/`127.0.0.1`。默认通常不需要写 `frontend/.env.local`；只有后端不在默认地址时再配 `VITE_API_URL` / `VITE_WS_URL`。
-- `frontend/app/main.tsx` 里的 MSW 默认关闭；只有 `VITE_ENABLE_MSW=true` 才会启用 mock worker。
-- `backend/app/config.py` 里测试与运行时的配置读取路径不同：测试里直接 `Settings()` 不会自动读仓库 `.env`，运行时走 `get_settings()` 才会加载 `.env`。
-- `backend/app/db/session.py:init_db()` 启动时会 `create_all()`、初始化配置、把遗留 `queued/running` run 标成 `cancelled`，并调用 `ensure_postgres_checkpointer_setup()`。改模型/持久化时要同时考虑启动初始化和 Alembic。
-- Alembic 版本文件在 `backend/alembic/versions/`，但 `backend/alembic.ini` 默认指向本地 SQLite；跑迁移前先确认 `DATABASE_URL`/环境变量覆盖正确。
-- 生成/恢复/取消流程同时依赖数据库状态、Redis confirm 信号和进程内 `task_manager`；不要把当前实现当成天然多实例安全。
-- Docker 场景下，若图像/视频服务跑在宿主机，`backend/.env` 里不能继续用 `localhost`；按 README 改成 `host.docker.internal` 或宿主机 IP。
-- 静态媒体输出在 `backend/app/static`，Compose 也把这个目录挂出来；改导出/拼接逻辑时不要忽略它。
-- `backend/Dockerfile` 会执行 `uv sync --frozen --no-dev --extra agents`；改后端依赖后记得更新 `uv.lock`，并注意运行时会带上 `agents` 可选依赖。
+### 端口约定
+| 服务 | 端口 |
+|------|------|
+| 前端 | 15173 |
+| 后端 | 18765 |
+| PostgreSQL | 5432（本地覆盖 5433） |
+| Redis | 6379 |
 
-## 测试分布
-- 后端测试在 `backend/tests/`，重点是 `test_api/`、`test_orchestration/`、`test_services/`、`test_agents/`，另有 `test_migrations.py` 和 `integration/`。
-- 前端单测与组件同目录；E2E 在 `frontend/tests/e2e/`。
-<!-- TRELLIS:START -->
-# Trellis Instructions
+---
 
-These instructions are for AI assistants working in this project.
+## 关键易错点（跨端）
 
-Use the `/trellis:start` command when starting a new session to:
-- Initialize your developer identity
-- Understand current project context
-- Read relevant guidelines
+1. **无根级统一脚本** — 必须分别进入 `backend/` 和 `frontend/` 操作
+2. **后端强制单 Worker** — `task_manager` 是进程内字典，`WEB_CONCURRENCY=1`
+3. **前端 `frontend/.env.local` 通常不需要写** — `runtimeBase.ts` 会自动推导后端地址
+4. **Docker 场景** — 图像/视频服务跑在宿主机时，`.env` 不能用 `localhost`，改 `host.docker.internal`
+5. **配置路径不一致** — 后端 `get_settings()` 读 `.env`，测试 `Settings()` 不读 `.env`
+6. **静态媒体输出** — `backend/app/static` 被 Compose 挂载，改导出逻辑不要忽略
+7. **Alembic 默认 SQLite** — 跑迁移前先确认 `DATABASE_URL` 指向正确的数据库
 
-Use `@/.trellis/` to learn:
-- Development workflow (`workflow.md`)
-- Project structure guidelines (`spec/`)
-- Developer workspace (`workspace/`)
+---
 
-If you're using Codex, project-scoped helpers may also live in:
-- `.agents/skills/` for reusable Trellis skills
-- `.codex/agents/` for optional custom subagents
-
-Keep this managed block so 'trellis update' can refresh the instructions.
-
-<!-- TRELLIS:END -->
+## 参考
+- `backend/AGENTS.md` — 后端 Python/FastAPI 开发指南
+- `frontend/AGENTS.md` — 前端 React/Vite 开发指南

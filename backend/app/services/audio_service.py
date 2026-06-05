@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import subprocess
 import uuid
 from pathlib import Path
 
@@ -80,8 +81,6 @@ def _generate_silence_placeholder(dest: Path, duration: int = 15) -> None:
         duration: 时长（秒）
     """
     try:
-        import subprocess
-
         cmd = [
             "ffmpeg",
             "-y",
@@ -94,7 +93,7 @@ def _generate_silence_placeholder(dest: Path, duration: int = 15) -> None:
         ]
         subprocess.run(cmd, capture_output=True, timeout=30, check=True)
         logger.info("Generated silence placeholder BGM: %s", dest)
-    except Exception:
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
         logger.warning("Failed to generate silence placeholder for %s (FFmpeg unavailable?)", dest)
 
 
@@ -147,7 +146,8 @@ class AudioService:
             await communicate.save(str(output_path))
             logger.info("TTS generated: %s (voice=%s, text=%s...)", output_path, voice, text[:30])
             return f"/static/audio/{filename}"
-        except Exception:
+        except Exception:  # noqa: BLE001
+            # edge_tts may raise various OSError/httpx errors on network failure
             logger.warning("TTS generation failed (text=%s..., voice=%s)", text[:30], voice, exc_info=True)
             return None
 
@@ -299,7 +299,7 @@ class AudioService:
                 output_path, actual_tts_vol, actual_bgm_vol,
             )
             return f"/static/videos/{output_filename}"
-        except Exception:
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
             logger.warning("FFmpeg audio mixing failed, keeping original video", exc_info=True)
             return video_path
 

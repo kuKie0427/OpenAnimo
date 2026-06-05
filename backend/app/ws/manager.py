@@ -100,7 +100,7 @@ class ConnectionManager:
                 continue
             try:
                 await ws.send_json(payload)
-            except Exception:
+            except (RuntimeError, OSError):
                 await self.disconnect(project_id, ws)
 
 

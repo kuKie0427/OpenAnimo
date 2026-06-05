@@ -78,7 +78,7 @@ class ImageComposer:
             try:
                 img = await self._download_image(url)
                 char_imgs.append(img)
-            except Exception:
+            except (httpx.HTTPError, OSError, RuntimeError):
                 # 下载失败则跳过该角色
                 continue
 
@@ -196,7 +196,7 @@ class ImageComposer:
                 buf = io.BytesIO()
                 img.save(buf, format="PNG")
                 char_img_bytes.append(buf.getvalue())
-            except Exception:
+            except (IOError, OSError, RuntimeError):
                 continue
 
         if not char_imgs:
@@ -218,7 +218,7 @@ class ImageComposer:
                     )
                     return face_strip
                 logger.info("No faces detected, falling back to full-body composition")
-            except Exception as e:
+            except (ValueError, RuntimeError) as e:
                 logger.warning("Face cropping failed, falling back to full-body: %s", e)
 
         # Fallback：原有全身图拼接逻辑

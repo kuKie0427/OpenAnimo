@@ -6,7 +6,14 @@ from . import nodes
 from .state import Phase2State
 
 
-def build_phase2_graph() -> StateGraph:
+def build_phase2_graph(parallel_enabled: bool | None = None) -> StateGraph:
+    if parallel_enabled is None:
+        from app.config import get_settings
+
+        parallel_enabled = get_settings().parallel_enabled
+
+    nodes.set_parallel_mode(parallel_enabled)
+
     graph = StateGraph(Phase2State)
 
     # ---- Production nodes ----
@@ -15,6 +22,8 @@ def build_phase2_graph() -> StateGraph:
     graph.add_node("plan_shots", nodes.plan_shots_node)
     graph.add_node("render_characters", nodes.render_characters_node)
     graph.add_node("render_shots", nodes.render_shots_node)
+    if parallel_enabled:
+        graph.add_node("render_shots_parallel", nodes.render_shots_node)
     graph.add_node("compose_videos", nodes.compose_videos_node)
     graph.add_node("compose_merge", nodes.compose_merge_node)
     graph.add_node("add_audio", nodes.add_audio_node)
@@ -42,7 +51,6 @@ def build_phase2_graph() -> StateGraph:
     graph.add_edge("plan_characters", "characters_approval")
     graph.add_edge("plan_shots", "shots_approval")
     graph.add_edge("render_characters", "character_images_approval")
-    graph.add_edge("render_shots", "shot_images_approval")
     graph.add_conditional_edges(
         "compose_videos",
         nodes.route_after_compose_videos,
@@ -66,11 +74,28 @@ def build_phase2_graph() -> StateGraph:
         nodes.route_after_characters_approval,
         {"plan_shots": "plan_shots", "review": "review"},
     )
-    graph.add_conditional_edges(
-        "shots_approval",
-        nodes.route_after_shots_approval,
-        {"render_characters": "render_characters", "review": "review"},
-    )
+
+    # ---- Mode-dependent: shots_approval → render phase ----
+    if parallel_enabled:
+        graph.add_conditional_edges(
+            "shots_approval",
+            nodes.route_shots_approval_parallel,
+            {
+                "render_characters": "render_characters",
+                "render_shots_parallel": "render_shots_parallel",
+                "review": "review",
+            },
+        )
+        graph.add_edge("render_shots_parallel", "shot_images_approval")
+    else:
+        graph.add_conditional_edges(
+            "shots_approval",
+            nodes.route_after_shots_approval,
+            {"render_characters": "render_characters", "review": "review"},
+        )
+        graph.add_edge("render_shots", "shot_images_approval")
+
+    # ---- Approval → critique (same in both modes) ----
     graph.add_conditional_edges(
         "character_images_approval",
         nodes.route_after_character_images_approval,
@@ -81,28 +106,48 @@ def build_phase2_graph() -> StateGraph:
         nodes.route_after_shot_images_approval,
         {"critique_shot_images": "critique_shot_images", "review": "review"},
     )
+
+    # ---- Mode-dependent: critique routing ----
+    if parallel_enabled:
+        graph.add_conditional_edges(
+            "critique_character_images",
+            nodes.route_after_critique_character_images,
+            {
+                "render_characters": "render_characters",
+                "compose_videos": "compose_videos",
+            },
+        )
+        graph.add_conditional_edges(
+            "critique_shot_images",
+            nodes.route_after_critique_shot_images,
+            {
+                "render_shots": "render_shots_parallel",
+                "compose_videos": "compose_videos",
+            },
+        )
+    else:
+        graph.add_conditional_edges(
+            "critique_character_images",
+            nodes.route_after_critique_character_images,
+            {
+                "render_characters": "render_characters",
+                "render_shots": "render_shots",
+            },
+        )
+        graph.add_conditional_edges(
+            "critique_shot_images",
+            nodes.route_after_critique_shot_images,
+            {
+                "render_shots": "render_shots",
+                "compose_videos": "compose_videos",
+            },
+        )
+
+    # ---- Compose approval → end ----
     graph.add_conditional_edges(
         "compose_approval",
         nodes.route_after_compose_approval,
         {END: END, "review": "review"},
-    )
-
-    # ---- Critique conditional edges (feedback loop) ----
-    graph.add_conditional_edges(
-        "critique_character_images",
-        nodes.route_after_critique_character_images,
-        {
-            "render_characters": "render_characters",  # score < threshold → regenerate
-            "render_shots": "render_shots",  # score >= threshold → continue
-        },
-    )
-    graph.add_conditional_edges(
-        "critique_shot_images",
-        nodes.route_after_critique_shot_images,
-        {
-            "render_shots": "render_shots",  # score < threshold → regenerate
-            "compose_videos": "compose_videos",  # score >= threshold → continue
-        },
     )
 
     # ---- Review routes back to production stages ----

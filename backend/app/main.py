@@ -8,6 +8,7 @@ from fastapi import FastAPI, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.exc import SQLAlchemyError
 from starlette.websockets import WebSocketDisconnect, WebSocketState
 
 from app.api.v1.router import api_router
@@ -51,6 +52,9 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_router, prefix=settings.api_v1_prefix)
+
+    # 确保静态文件目录存在（lifespan 中也会创建子目录，但 StaticFiles 初始化时就检查目录）
+    STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
     # 挂载静态文件服务（用于提供拼接后的视频）
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -109,7 +113,7 @@ def create_app() -> FastAPI:
 
     @app.websocket("/ws/projects/{project_id}")
     async def ws_projects(websocket: WebSocket, project_id: int):
-        from app.agents.orchestrator import (
+        from app.orchestration.redis import (
             get_awaiting_payload,
             trigger_confirm_redis,
         )
@@ -160,7 +164,7 @@ def create_app() -> FastAPI:
                                     },
                                 },
                             )
-            except Exception as e:
+            except (SQLAlchemyError, RuntimeError, OSError, AttributeError) as e:
                 logger.warning(f"Failed to replay state for project {project_id}: {e}")
 
             while True:
@@ -213,7 +217,7 @@ def create_app() -> FastAPI:
                                                 )
                                             )
                                             await session.commit()
-                                except Exception as e:
+                                except SQLAlchemyError as e:
                                     logger.error(f"Failed to save feedback for run {run_id}: {e}")
                             await trigger_confirm_redis(run_id)
                 except WebSocketDisconnect:
@@ -246,7 +250,7 @@ def create_app() -> FastAPI:
                                 },
                             },
                         )
-                    except Exception:
+                    except (RuntimeError, OSError):
                         logger.info(
                             f"Failed to send error event, breaking WS loop for project {project_id}"
                         )
@@ -264,7 +268,7 @@ def create_app() -> FastAPI:
                         },
                     },
                 )
-            except Exception:
+            except (RuntimeError, OSError):
                 pass  # 连接已断开，忽略发送错误
         finally:
             await ws_manager.disconnect(project_id, websocket)

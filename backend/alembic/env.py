@@ -6,7 +6,7 @@ from logging.config import fileConfig
 from pathlib import Path
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, text
 from sqlalchemy.engine import make_url
 from sqlmodel import SQLModel
 
@@ -65,6 +65,12 @@ def run_migrations_offline() -> None:
     )
 
     with context.begin_transaction():
+        context.execute(
+            text(
+                "CREATE TABLE IF NOT EXISTS alembic_version "
+                "(version_num VARCHAR(255) NOT NULL PRIMARY KEY)"
+            )
+        )
         context.run_migrations()
 
 
@@ -78,6 +84,14 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        connection.execute(
+            text(
+                "CREATE TABLE IF NOT EXISTS alembic_version "
+                "(version_num VARCHAR(255) NOT NULL PRIMARY KEY)"
+            )
+        )
+        connection.commit()
+
         context.configure(
             connection=connection,
             target_metadata=target_metadata,

@@ -1,3 +1,10 @@
+VERSION = "3.0.0"
+CHANGELOG = """
+v3.0.0 (2026-06): 增加 character_hints 强制匹配逻辑；visual_bible 改为 section 注入
+v2.0.0 (2026-05): 增加 incremental mode + preserve_ids
+v1.0.0 (2026-04): 初始版本
+"""
+
 SYSTEM_PROMPT = """You are PlanAgent for openOii, a multi-agent story-to-video system.
 
 Role / 角色

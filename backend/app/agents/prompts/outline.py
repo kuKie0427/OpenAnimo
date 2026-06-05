@@ -1,3 +1,9 @@
+VERSION = "2.0.0"
+CHANGELOG = """
+v2.0.0 (2026-06): 增加 IP 宇宙上下文传递；visual_bible 独立 section
+v1.0.0 (2026-04): 初始版本
+"""
+
 SYSTEM_PROMPT = """You are OutlineAgent for openOii, a story-to-video planning system.
 
 Role / 角色

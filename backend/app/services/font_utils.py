@@ -118,7 +118,7 @@ def _download_noto_sans_sc() -> str | None:
             target_path.write_bytes(res.content)
             logger.info(f"Font downloaded to {target_path}")
             return str(target_path)
-        except Exception as e:
+        except (httpx.HTTPError, OSError) as e:
             logger.warning(f"Failed to download font from {url}: {e}")
             continue
 
@@ -187,7 +187,8 @@ def get_reportlab_font_name() -> str:
             font_name = "STSong-Light"
             pdfmetrics.registerFont(UnicodeCIDFont(font_name))
             return font_name
-        except Exception:
+        except Exception:  # noqa: BLE001
+            # reportlab CID font registration may fail for various system-level reasons
             return "Helvetica"
 
     lower_path = font_path.lower()
@@ -198,13 +199,15 @@ def get_reportlab_font_name() -> str:
             font_name = "NotoSansCJKsc"
             pdfmetrics.registerFont(TTFont(font_name, font_path, subfontIndex=0))
             return font_name
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
+            # reportlab TTC font registration may fail for various system-level reasons
             logger.warning(f"Failed to register TTC font: {e}")
             try:
                 font_name = "STSong-Light"
                 pdfmetrics.registerFont(UnicodeCIDFont(font_name))
                 return font_name
-            except Exception:
+            except Exception:  # noqa: BLE001
+                # reportlab CID font registration may fail for various system-level reasons
                 return "Helvetica"
 
     # TTF / OTF 文件
@@ -212,13 +215,15 @@ def get_reportlab_font_name() -> str:
         font_name = f"CustomChinese_{Path(font_path).stem}"
         pdfmetrics.registerFont(TTFont(font_name, font_path))
         return font_name
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
+        # reportlab TTF font registration may fail for various system-level reasons
         logger.warning(f"Failed to register font {font_path}: {e}")
         try:
             font_name = "STSong-Light"
             pdfmetrics.registerFont(UnicodeCIDFont(font_name))
             return font_name
-        except Exception:
+        except Exception:  # noqa: BLE001
+            # reportlab CID font registration may fail for various system-level reasons
             return "Helvetica"
 
 

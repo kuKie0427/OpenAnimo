@@ -37,6 +37,7 @@ def test_alembic_upgrade_head_rebuilds_blank_database(tmp_path: Path) -> None:
         engine.dispose()
 
     expected_tables = {
+        "agent_trace",
         "agentrun",
         "agentmessage",
         "artifact",

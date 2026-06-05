@@ -132,6 +132,11 @@ class CriticAgent(BaseAgent):
         entity_name: str,
     ) -> dict[str, Any]:
         """Execute a single review via the TextService VLM call."""
+        # Fault injection for degradation testing
+        if ctx.fault_injector and ctx.fault_injector.get("fail_vlm"):
+            raise RuntimeError("Fault injected: VLM unavailable")
+        if ctx.fault_injector and ctx.fault_injector.get("fail_text"):
+            raise RuntimeError("Fault injected: text-only fallback unavailable")
         settings = ctx.settings
 
         # Check if critique is enabled
@@ -163,7 +168,7 @@ class CriticAgent(BaseAgent):
                 temperature=0.3,
             )
             raw_text = llm_response.text
-        except Exception as exc:
+        except (RuntimeError, ValueError) as exc:
             logger.warning("CriticAgent: VLM call failed, degrading to text-only: %s", exc)
             # Graceful degradation: try text-only (no image)
             text_only_messages = [
@@ -177,7 +182,7 @@ class CriticAgent(BaseAgent):
                     temperature=0.3,
                 )
                 raw_text = llm_response.text
-            except Exception as exc2:
+            except (RuntimeError, ValueError) as exc2:
                 logger.error("CriticAgent: text-only fallback also failed: %s", exc2)
                 return {
                     "score": 5.0,
@@ -445,7 +450,7 @@ class CriticAgent(BaseAgent):
                 "should_regenerate": any_regenerate,
                 "consistency_report": consistency_report,
             }
-        except Exception as exc:
+        except (RuntimeError, ValueError) as exc:
             logger.warning("Consistency eval after shot review failed: %s", exc)
             result = {
                 "scores": scores,

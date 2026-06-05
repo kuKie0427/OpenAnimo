@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 
 from sqlalchemy import func, inspect, text, update
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -139,7 +140,7 @@ async def init_db() -> None:
         _run_alembic_upgrade()
         alembic_ok = True
         log.info("init_db: alembic upgrade done")
-    except Exception as e:
+    except (SQLAlchemyError, RuntimeError) as e:
         log.warning("init_db: alembic upgrade failed (%s), falling back to create_all", e)
 
     if not alembic_ok:
@@ -147,12 +148,12 @@ async def init_db() -> None:
             async with engine.begin() as conn:
                 await conn.run_sync(SQLModel.metadata.create_all)
             log.info("init_db: create_all fallback done")
-        except Exception as e2:
+        except SQLAlchemyError as e2:
             log.warning("init_db: create_all also failed (%s), continuing", e2)
 
     try:
         await _sync_missing_metadata_columns()
-    except Exception as e3:
+    except SQLAlchemyError as e3:
         log.warning("init_db: metadata column sync failed (%s), continuing", e3)
 
     log.info("init_db: starting DB session cleanup")

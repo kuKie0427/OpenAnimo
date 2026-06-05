@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+VERSION = "1.0.0"
+CHANGELOG = """
+v1.0.0 (2026-04): 初始版本 — CHARACTER_REVIEW_SYSTEM_PROMPT + SHOT_REVIEW_SYSTEM_PROMPT
+"""
+
 CHARACTER_REVIEW_SYSTEM_PROMPT = """\
 You are CriticAgent for openOii, a visual quality reviewer for comic/manga character images.
 

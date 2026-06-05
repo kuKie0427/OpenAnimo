@@ -78,7 +78,7 @@ class ExportService:
             res = await client.get(url)
             res.raise_for_status()
             return res.content
-        except Exception as e:
+        except httpx.HTTPError as e:
             logger.warning(f"Failed to download image {url}: {e}")
             return None
 
@@ -86,7 +86,7 @@ class ExportService:
         """加载 PIL Image，失败时返回 None"""
         try:
             return Image.open(BytesIO(data)).convert("RGB")
-        except Exception as e:
+        except (IOError, OSError) as e:
             logger.warning(f"Failed to load image: {e}")
             return None
 
@@ -230,7 +230,7 @@ class ExportService:
                         c.setStrokeColor(black)
                         c.setLineWidth(0.5)
                         c.rect(draw_x, draw_y, draw_w, draw_h)
-                    except Exception as e:
+                    except Exception as e:  # noqa: BLE001 — reportlab image drawing may fail for various reasons during PDF export
                         logger.warning(f"Failed to draw image for shot {shot.id}: {e}")
                         # 降级：绘制占位框
                         c.setStrokeColor(black)
@@ -405,7 +405,7 @@ class ExportService:
         try:
             title_font = ImageFont.truetype(font_path or "", 36)
             label_font = ImageFont.truetype(font_path or "", 18)
-        except Exception:
+        except (IOError, OSError):
             title_font = ImageFont.load_default()
             label_font = ImageFont.load_default()
 
@@ -500,7 +500,7 @@ class ExportService:
         try:
             font = ImageFont.truetype(font_path or "", 22)
             small_font = ImageFont.truetype(font_path or "", 16)
-        except Exception:
+        except (IOError, OSError):
             font = ImageFont.load_default()
             small_font = font
 

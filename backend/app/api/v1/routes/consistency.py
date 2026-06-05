@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi import APIRouter, HTTPException, status
+from pydantic import ValidationError
 
 from app.api.deps import SessionDep, get_or_404
 from app.models.consistency_report import ConsistencyReport
@@ -58,7 +59,7 @@ async def trigger_consistency_eval(
                         },
                     },
                 )
-            except Exception as exc:
+            except (RuntimeError, ValueError) as exc:
                 import logging
 
                 logging.getLogger(__name__).error(
@@ -101,7 +102,7 @@ async def get_latest_consistency_report(
     if report.report_data:
         try:
             report_data = ProjectConsistencyRead.model_validate(report.report_data)
-        except Exception:
+        except ValidationError:
             report_data = None
 
     return ConsistencyReportRead(
@@ -140,7 +141,7 @@ async def get_consistency_report_history(
         if r.report_data:
             try:
                 report_data = ProjectConsistencyRead.model_validate(r.report_data)
-            except Exception:
+            except ValidationError:
                 report_data = None
         result.append(
             ConsistencyReportRead(

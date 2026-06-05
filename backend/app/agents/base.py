@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
 from app.models.agent_run import AgentRun
+from app.models.agent_trace import AgentTrace
 from app.models.message import Message
 from app.models.project import Project
 from app.schemas.project import CharacterRead, ShotRead
@@ -64,6 +67,7 @@ class AgentContext:
     target_ids: TargetIds | None = None  # 精细化控制的目标 ID
     completion_info: CompletionInfo | None = None
     plan_data: dict | None = None  # Cached LLM response from plan_characters for plan_shots
+    fault_injector: dict | None = None  # 仅测试环境使用
 
 
 class BaseAgent:
@@ -182,7 +186,7 @@ class BaseAgent:
                 ctx.project.id,
                 {"type": "run_message", "data": data},
             )
-        except Exception:
+        except (RuntimeError, OSError):
             logger.debug("send_thinking failed (non-critical)", exc_info=True)
 
     async def send_character_event(
@@ -330,6 +334,37 @@ class BaseAgent:
         if final is None:  # pragma: no cover
             raise RuntimeError("LLM stream finished without final response")
         return final
+
+    @asynccontextmanager
+    async def trace_step(self, ctx: AgentContext, stage: str, method: str):
+        """Trace a sub-step execution. Non-blocking on failure."""
+        from datetime import datetime, timezone
+
+        def utcnow() -> datetime:
+            return datetime.now(timezone.utc)
+
+        trace = AgentTrace(
+            run_id=ctx.run.id,
+            agent_name=self.name,
+            stage=stage,
+            method=method,
+            start_time=utcnow(),
+        )
+        ctx.session.add(trace)
+        await ctx.session.commit()
+        try:
+            yield trace
+            trace.status = "completed"
+        except Exception as e:
+            trace.status = "failed"
+            trace.error = str(e)[:500]
+            raise
+        finally:
+            trace.end_time = utcnow()
+            try:
+                await ctx.session.commit()
+            except SQLAlchemyError:
+                pass  # trace persistence failure must not break agent flow
 
     async def run(self, ctx: AgentContext) -> None:  # pragma: no cover
         raise NotImplementedError

@@ -11,6 +11,7 @@ from app.api.v1.routes.shots import router as shots_router
 from app.api.v1.routes.style_templates import router as style_templates_router
 from app.api.v1.routes.text import router as text_router
 from app.api.v1.routes.universes import router as universes_router
+from app.api.v1.routes.metrics import router as metrics_router
 from app.api.v1.routes.versions import router as versions_router
 
 api_router = APIRouter()
@@ -26,3 +27,4 @@ api_router.include_router(export_router, prefix="/projects", tags=["export"])
 api_router.include_router(versions_router, tags=["versions"])
 api_router.include_router(consistency_router, prefix="/projects", tags=["consistency"])
 api_router.include_router(universes_router, prefix="/universes", tags=["universes"])
+api_router.include_router(metrics_router, tags=["metrics"])

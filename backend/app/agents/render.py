@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
+import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -183,7 +184,7 @@ class RenderAgent(BaseAgent):
                             char.visual_notes = visual_notes
                             ctx.session.add(char)
                             await ctx.session.flush()
-                    except Exception as e:
+                    except (RuntimeError, ValueError) as e:
                         logger.warning("Failed to auto-populate visual_notes for %s: %s", char.name, e)
 
                 # Auto-compute face embedding after image is generated
@@ -196,7 +197,7 @@ class RenderAgent(BaseAgent):
                             ctx.session.add(char)
                             await ctx.session.flush()
                             logger.info("Computed face embedding for character %s", char.name)
-                    except Exception as e:
+                    except (httpx.HTTPError, RuntimeError, ValueError) as e:
                         logger.warning("Failed to compute face embedding for %s: %s", char.name, e)
 
                 current_version = await self.version_service.create_version(
@@ -221,7 +222,7 @@ class RenderAgent(BaseAgent):
                 )
                 await self.send_character_event(ctx, char, "character_updated")
                 updated_count += 1
-            except Exception as e:
+            except (RuntimeError, ValueError, OSError) as e:
                 await self.send_message(ctx, f"角色 {char.name} 图片生成失败: {str(e)[:50]}")
 
         await ctx.session.commit()
@@ -300,7 +301,7 @@ class RenderAgent(BaseAgent):
                             len(char_image_urls),
                             shot.id,
                         )
-                    except Exception as exc:
+                    except (RuntimeError, ValueError, OSError) as exc:
                         reference_image_bytes = None
                         logger.warning("Failed to compose character reference image: %s", exc)
                 else:
@@ -366,7 +367,7 @@ class RenderAgent(BaseAgent):
                 if i < total - 1:
                     await asyncio.sleep(1.0)
 
-            except Exception as e:
+            except (RuntimeError, ValueError, OSError) as e:
                 failed_count += 1
                 await self.send_message(ctx, f"镜头 {shot.order} 首帧图片生成失败: {str(e)[:100]}")
                 await asyncio.sleep(2.0)

@@ -242,7 +242,7 @@ class TestRunMessageEventData:
             }
         )
         assert d.summary == "brief"
-        assert d.isLoading is True
+        assert d.is_loading is True
 
     def test_minimal(self):
         d = RunMessageEventData.model_validate({})

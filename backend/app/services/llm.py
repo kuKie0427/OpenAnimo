@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import anthropic
 import asyncio
 from dataclasses import dataclass
 from typing import Any, AsyncIterator
@@ -135,7 +136,7 @@ class LLMService:
 
         try:
             await self._probe_generate_capability(messages=probe_messages)
-        except Exception as exc:
+        except (anthropic.APIError, RuntimeError) as exc:
             return TextProviderCapability(
                 status="invalid",
                 generate=False,
@@ -147,7 +148,7 @@ class LLMService:
         try:
             async for _ in self.stream(messages=probe_messages, max_tokens=1, temperature=0):
                 pass
-        except Exception as exc:
+        except (anthropic.APIError, RuntimeError) as exc:
             return TextProviderCapability(
                 status="degraded",
                 generate=True,

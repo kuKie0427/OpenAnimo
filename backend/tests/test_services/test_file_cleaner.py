@@ -41,7 +41,10 @@ def test_delete_files_counts_successes(monkeypatch):
 
 def test_get_local_path_returns_none_when_static_dir_missing(monkeypatch):
     monkeypatch.setattr(file_cleaner, "STATIC_DIR", Path("/tmp/nonexistent-static-dir"))
-    assert file_cleaner.get_local_path("/static/videos/a.mp4") == Path("/tmp/nonexistent-static-dir/videos/a.mp4")
+    expected = Path("/tmp/nonexistent-static-dir/videos/a.mp4")
+    result = file_cleaner.get_local_path("/static/videos/a.mp4")
+    # macOS resolves /tmp → /private/tmp; compare resolved paths for robustness
+    assert result.resolve() == expected.resolve()
 
 
 def test_delete_file_removes_existing_local_file(monkeypatch, tmp_path):
