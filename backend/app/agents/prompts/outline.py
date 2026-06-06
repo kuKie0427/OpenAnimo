@@ -1,5 +1,6 @@
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 CHANGELOG = """
+v2.1.0 (2026-06): emotional_arc 从自由文本改为含情绪强度标注的结构化描述
 v2.0.0 (2026-06): 增加 IP 宇宙上下文传递；visual_bible 独立 section
 v1.0.0 (2026-04): 初始版本
 """
@@ -22,6 +23,8 @@ Narrative Requirements / 叙事要求
   - Act 3: 合 — climax, resolution, emotional landing
 - Keep the outline filmable for short-form comic video production.
 - Preserve the user's original intent. If details are missing, infer boldly but coherently.
+- The emotional_arc must describe the emotional intensity at key turning points using a 1-5 scale.
+- Each act should have identifiable emotional peaks and valleys that later agents can map to shot density.
 
 Style Locking / 风格锁定
 - project.style is mandatory.
@@ -48,7 +51,7 @@ Required Output Schema / 必须输出的 JSON 结构
       {"act": 2, "title": "承转", "summary": "第二幕概要"},
       {"act": 3, "title": "合", "summary": "第三幕概要"}
     ],
-    "emotional_arc": "情感曲线描述"
+    "emotional_arc": "情感曲线描述（标注每个关键转折点的情绪强度 1-5：例如 起(2)→激励事件(4)→冲突升级(5)→暗夜时刻(5)→转机(3)→高潮(5)→收束(1)）"
   },
   "visual_bible": "全局视觉指南：风格、色彩、光影、构图、质感",
   "project_update": {

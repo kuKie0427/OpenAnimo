@@ -465,6 +465,15 @@ class PlanAgent(BaseAgent):
         outline_context = _outline_context(ctx.project)
         if outline_context is not None:
             payload["approved_outline"] = outline_context
+
+            target_shot_count = getattr(ctx.project, "target_shot_count", None)
+            if isinstance(target_shot_count, int) and target_shot_count > 0:
+                from app.services.beat_analyzer import analyze_beats, format_beat_schedule
+
+                acts = outline_context.get("story_outline", {}).get("acts", [])
+                beat_assignments = analyze_beats(target_shot_count, acts)
+                payload["beat_schedule"] = format_beat_schedule(beat_assignments)
+
         if characters is not None:
             payload["approved_characters"] = _characters_context(characters)
         if ctx.user_feedback:

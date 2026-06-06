@@ -303,21 +303,21 @@
       "name": "Critic 反馈注入再生 prompt (P1)",
       "description": "将 CriticAgent 的批评文本注入 RenderAgent 的重生 prompt，形成「审查→改进」闭环。对应 analysis_pipeline_report.md §2.2(d)",
       "dependencies": ["f-critic-threshold"],
-      "status": "not_started",
+      "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/ -k 'critic or render' -q && uv run ruff check app tests",
-      "evidence": null,
-      "notes": "改动范围: CriticAgent→RenderAgent prompt 流 + _critique_to_feedback 转换器 + 测试。来源: analysis §4 P1-1"
+      "evidence": "2026-06-06: agent_ctx.critique_feedback field, _compile_critique_feedback helper, injection in critique_character_nodes, consumption in _build_*_prompt, 12 test_critic_feedback.py tests passing, ruff 0, pytest 1135/1135",
+      "notes": "改动范围: base.py (AgentContext new field) + nodes.py (_compile_critique_feedback + injection in 2 nodes) + render.py (_build_character_prompt + _build_shot_prompt consume feedback) + tests. 来源: analysis §4 P1-1"
     },
     {
       "id": "f-beat-analysis",
       "name": "节拍分析：叙事节奏注入分镜 (P1)",
       "description": "在 outline → plan_shots 间添加节拍分析步骤（情绪曲线、节奏控制注入分镜 duration/camera/lighting）。对应 analysis_pipeline_report.md §3.2(a)",
       "dependencies": ["f-stage-completeness"],
-      "status": "not_started",
+      "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/ -k 'beat or outline or plan' -q && uv run ruff check app tests",
-      "evidence": null,
+      "evidence": "2026-06-06: BeatAnalyzer service module, _call_plan_llm injection, plan.py v3.1.0 + outline.py v2.1.0 prompts, CHANGELOG, 17 beat_analyzer tests, ruff 0, pytest 1152/1152",
       "notes": "改动范围: OutlineAgent+PlanAgent prompt + 新 BeatAnalyzer 组件 + Prompt VERSION/CHANGELOG + 测试。来源: analysis §4 P1-2"
     },
     {

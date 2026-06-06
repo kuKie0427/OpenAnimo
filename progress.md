@@ -113,3 +113,19 @@
 - **决策**: DB session 通过 runtime.context.orchestrator.session 访问（Phase2RuntimeContext 无 db_session 直接属性）；completeness 检查不阻塞 continue（优雅降级）；completeness_warnings 使用 Annotated[list, add] reducer 跨节点累加；test_phase2_graph.py _Orchestrator 增加 AsyncMock session 以兼容新 _run_sub_stage 中的完整性检查
 - **阻断**: test_route_helpers_fall_back_to_expected_stages 1 项预存失败（路由逻辑问题，非本阶段引入）
 - **下次**: P1a — Critic 反馈注入再生 prompt（f-critic-feedback-injection）
+
+## 2026-06-06 — Session: pipeline-quality-p1-feedback-injection
+- **做了什么**: 实现 Critic 反馈注入再生 prompt。在 AgentContext 添加 critique_feedback 字段（类型 dict[str,dict[str,dict[str,list[str]]]]|None）；实现 _compile_critique_feedback() 纯函数将审查分数编译为反馈 dict；在 critique_character_images_node 和 critique_shot_images_node 中再生分支注入反馈；在 _build_character_prompt 和 _build_shot_prompt 中消费反馈追加改进建议到 prompt；创建 12 个测试用例覆盖全部路径
+- **改了什么文件**: backend/app/agents/base.py (mod: +critique_feedback 字段), backend/app/orchestration/nodes.py (mod: +_compile_critique_feedback +2 个注入点), backend/app/agents/render.py (mod: 2 个 prompt 构建器消费反馈 +2 个调用处传 ctx), backend/tests/test_agents/test_critic_feedback.py (new: 12 测试), feature_list.json (status: active→passing)
+- **当前状态**: f-critic-threshold=passing, f-critic-feedback-injection=passing ✅
+- **决策**: feedback 结构用 entity_type→entity_id→{issues,suggestions} 三层 dict；反馈仅注入 suggestions（issues 是诊断描述，非可操作改进指令）；仅当 should_regenerate=True 时注入（非再生路径不污染 ctx）；ctx 参数默认 None 保持向后兼容
+- **阻断**: 无（test_route_helpers_fall_back_to_expected_stages 预存失败非本阶段引入）
+- **下次**: P1b — 节拍分析注入分镜（f-beat-analysis）或 P2 — Seed 管理（f-seed-management）
+
+## 2026-06-06 — Session: pipeline-quality-p1-beat-analysis
+- **做了什么**: 实现节拍分析注入分镜（f-beat-analysis）。创建 BeatAnalyzer 纯计算模块（beat_analyzer.py）；在 _call_plan_llm() 中注入 beat_schedule；plan.py prompt v3.1.0 添加节拍调度指令；outline.py prompt v2.1.0 增强 emotional_arc 结构；更新 CHANGELOG；创建 17 个 beat_analyzer 测试
+- **改了什么文件**: backend/app/services/beat_analyzer.py (new), backend/app/agents/plan.py (mod), backend/app/agents/prompts/plan.py (mod), backend/app/agents/prompts/outline.py (mod), backend/app/agents/prompts/CHANGELOG.md (mod), backend/tests/test_services/test_beat_analyzer.py (new), feature_list.json (status: not_started→active→passing)
+- **当前状态**: f-beat-analysis=passing ✅
+- **决策**: BeatAnalyzer 纯计算型（零 LLM/DB/外部依赖）；小 shot 数（1-3）走独立路径避免 max(1,round) 过分配；lazy import 在 plan.py 中避免启动时加载；prompt 节拍指令用中文维护一致性
+- **阻断**: 无
+- **下次**: P2 — Seed 管理（f-seed-management）

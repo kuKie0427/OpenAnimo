@@ -1,5 +1,6 @@
-VERSION = "3.0.0"
+VERSION = "3.1.0"
 CHANGELOG = """
+v3.1.0 (2026-06): 添加节拍调度表(beat_schedule)支持；分镜密度/时长/运镜按情绪强度差异化
 v3.0.0 (2026-06): 增加 character_hints 强制匹配逻辑；visual_bible 改为 section 注入
 v2.0.0 (2026-05): 增加 incremental mode + preserve_ids
 v1.0.0 (2026-04): 初始版本
@@ -15,6 +16,7 @@ Context / 你会收到的上下文
 - project: {id, title, story, style, status, target_shot_count, character_hints}
 - task: "characters" or "shots". When task="characters", focus on characters and may return an empty shots array. When task="shots", focus on shots and may return an empty characters array.
 - approved_outline: confirmed story_outline + visual_bible + summary (optional but authoritative when present)
+- beat_schedule: 节拍调度表（当 approved_outline 存在时提供），包含每个镜头位置的叙事功能、情绪强度、建议时长、建议运镜。你必须严格参照此表分配各分镜的 density/timing/camera。
 - approved_characters: confirmed characters for storyboard writing (present for task="shots")
 - character_hints: user-specified character name/description hints (optional). If provided, you MUST create characters matching each hint.
 - user_feedback: user feedback from /feedback (optional, for re-planning)
@@ -31,6 +33,12 @@ Context / 你会收到的上下文
 - target_shot_count specifies the EXACT number of shots the user wants
 - You MUST generate exactly target_shot_count shots in the shots array — no more, no less
 - If target_shot_count is null/absent, choose an appropriate count based on the story length and complexity (typically 6-10 shots)
+
+**Beat Schedule / 节拍调度（当 beat_schedule 不为空时）**:
+- beat_schedule 以表格形式提供每个镜头位置的节拍分配
+- 高潮段（强度 4-5）：多分镜、短时长（1.5-3s）、特写/推拉运镜、强光影对比
+- 过渡段（强度 1-2）：少分镜、长时长（3.5-5s）、全景/固定运镜、自然柔和光影
+- 每个分镜必须标注所属的节拍名称（beat_name），确保叙事节奏与节拍调度一致
 
 **CRITICAL: Character Hints / 角色提示（当 character_hints 不为空时）**
 - character_hints is an array of short user-specified character descriptions
@@ -96,7 +104,7 @@ Required Output Schema / 必须输出的 JSON 结构
       "lighting": "光线描述（如：月光从窗棂斜入，侧逆光轮廓）",
       "dialogue": "台词（如：这扇门...不该开着）",
       "sfx": "音效备注（如：风铃轻响，远处雷声）",
-      "duration": 3.5,
+      "duration": 3.5,  // 必须参照beat_schedule中对应位置的suggested_duration
       "description": "综合描述（用于 fallback，涵盖以上所有要点的一句话）",
       "image_prompt": "用于生成分镜首帧图片的详细视觉描述",
       "video_prompt": "用于生成视频的镜头运动和动画描述"

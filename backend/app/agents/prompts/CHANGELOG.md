@@ -1,5 +1,12 @@
 # Prompt 变更历史
 
+## plan.py — v3.1.0 (2026-06)
+- 添加 beat_schedule 节拍调度表支持
+- 分镜 density/duration/camera 按情绪强度差异化指令
+
+## outline.py — v2.1.0 (2026-06)
+- emotional_arc 增加 1-5 情绪强度标注指导
+
 ## plan.py — v3.0.0 (2026-06)
 - 增加 character_hints 强制匹配逻辑
 - visual_bible 从 inline 改为独立 section 注入
