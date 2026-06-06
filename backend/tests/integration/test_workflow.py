@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import json
 
+from PIL import Image
+
+from app.services.image_composer import ImageComposer
+
 import pytest
 from sqlmodel import select
 
@@ -74,6 +78,12 @@ async def test_full_workflow(monkeypatch, test_session, test_settings):
     ]
 
     monkeypatch.setattr("app.services.face_cropper._get_face_analysis", lambda: None)
+
+    # StubImage returns fake URLs — monkeypatch the download to return a tiny real PIL Image
+    async def _fake_download_image(self, url: str) -> Image.Image:
+        return Image.new("RGB", (64, 64), color="red")
+
+    monkeypatch.setattr(ImageComposer, "_download_image", _fake_download_image)
 
     ctx = AgentContext(
         settings=test_settings,

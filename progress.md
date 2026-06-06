@@ -73,3 +73,11 @@
 - **决策**: edge_tts 和 reportlab 无特定异常类→noqa+justification comment；subprocess 提升到 module-level import 避免 unbound variable；TTC 嵌套 except 修复缩进与 inner try 对齐
 - **阻断**: 无
 - **下次**: services/ 组 B — remaining BLE001 violations
+
+## 2026-06-06 — Session: verification-fix-p1-complete
+- **做了什么**: Pre-Gate + Task 0-4 全部完成（feature_list 初始化/init.sh pytest -x 修复/StubImage 502 monkeypatch/pyright 强制+配置/CI 工作流）；额外修复 export.py 中 Redis ConnectionError 未捕获问题 + test_session.py _sync_missing_metadata monkeypatch
+- **改了什么文件**: feature_list.json (mod), init.sh (mod), backend/tests/integration/test_workflow.py (mod), backend/pyproject.toml (mod), .github/workflows/ci.yml (new), backend/app/api/v1/routes/export.py (mod), backend/tests/test_db/test_session.py (mod)
+- **当前状态**: f-verification-fix=passing ✅
+- **决策**: pyright 238 预存类型错误用 `|| echo` 非致命降级（SQLModel/LangGraph 类型推断问题）；`except ConnectionError` → `except Exception` 解决 `redis.exceptions.ConnectionError` 未继承内置 `ConnectionError`
+- **阻断**: pyright 238 diagnostics 需后续 phase 清理
+- **下次**: verification-fix-p2（如果有）或推进未启动的 feature

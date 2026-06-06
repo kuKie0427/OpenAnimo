@@ -7,7 +7,6 @@ import uuid
 from datetime import datetime
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, status
-from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -40,7 +39,7 @@ async def _store_export_status(export_resp: ExportResponse) -> None:
         from app.orchestration.redis import get_redis
         r = await get_redis()
         await r.set(_get_redis_export_key(export_resp.export_id), data, ex=3600)
-    except (ConnectionError, TimeoutError, OSError):
+    except Exception:
         _export_status_cache[export_resp.export_id] = export_resp
 
 
@@ -52,7 +51,7 @@ async def _get_export_status(export_id: str) -> ExportResponse | None:
         data = await r.get(_get_redis_export_key(export_id))
         if data:
             return ExportResponse.model_validate_json(data)
-    except (ConnectionError, TimeoutError, OSError, ValidationError):
+    except Exception:
         pass
     return _export_status_cache.get(export_id)
 

@@ -56,6 +56,9 @@ async def test_init_db_runs_schema_check_and_config(monkeypatch):
     def fake_alembic_upgrade():
         calls["alembic_upgrade"] = True
     monkeypatch.setattr(session_module, "_run_alembic_upgrade", fake_alembic_upgrade)
+    async def _noop_sync():
+        pass
+    monkeypatch.setattr(session_module, "_sync_missing_metadata_columns", _noop_sync)
     async def fake_checkpointer(url):
         calls["checkpointer"] = True
     monkeypatch.setattr(session_module, "ensure_postgres_checkpointer_setup", fake_checkpointer)
