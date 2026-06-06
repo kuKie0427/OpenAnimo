@@ -1,12 +1,7 @@
 {
-  "active_plan": "/Users/lanf/pra/die/donghua/openOii/.sisyphus/plans/technical-debt-p1.md",
-  "started_at": "2026-06-05T19:04:21.560Z",
-  "session_ids": [
-    "ses_166d3f32dffeYOJUaffMRMbWZ2"
-  ],
-  "session_origins": {
-    "ses_166d3f32dffeYOJUaffMRMbWZ2": "direct"
-  },
-  "plan_name": "technical-debt-p1",
-  "agent": "atlas"
+  "active_plan": "/Users/lanf/pra/die/donghua/openOii/.sisyphus/plans/verification-fix-p1.md",
+  "started_at": "2026-06-06T05:30:50.266Z",
+  "session_ids": ["ses_164966408ffe5wmkxiJmXchxpW"],
+  "plan_name": "verification-fix-p1",
+  "worktree_path": null
 }
