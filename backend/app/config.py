@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -221,6 +221,11 @@ class Settings(BaseSettings):
         description="视频服务提供商：openai（OpenAI 兼容接口）、doubao（豆包）或 fake（本地开发/测试）",
     )
 
+    stub_services: bool = Field(
+        default=False,
+        description="一键启用所有 Fake 服务（本地开发/测试，不调用外部 API）",
+    )
+
     # ============================================
     # TTS / BGM 配置（Edge TTS + 内置 BGM，完全免费）
     # ============================================
@@ -331,6 +336,14 @@ class Settings(BaseSettings):
     # Orchestration
     # ============================================
     parallel_enabled: bool = True
+
+    @model_validator(mode='after')
+    def _apply_stub_services(self):
+        if self.stub_services:
+            self.text_provider = "fake"
+            self.image_provider = "fake"
+            self.video_provider = "fake"
+        return self
 
 
 def apply_settings_overrides(overrides: dict[str, Any]) -> None:

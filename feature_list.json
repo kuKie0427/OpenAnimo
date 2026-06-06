@@ -389,6 +389,18 @@
       "verification": "cd backend && uv run pytest tests/e2e/ -v --tb=short && uv run pytest -q --tb=short && uv run ruff check app tests",
       "evidence": "2026-06-06: 9 E2E tests pass via httpx.AsyncClient with stub services. Pipeline runs end-to-end (outline\u2192characters\u2192shots\u2192render\u2192compose\u2192audio). AgentTrace read/write verified. RunMetrics API verified. Parallel branch overlap verified. Full chain output verified. 1170 non-e2e tests pass, ruff clean.",
       "notes": "6 test files, 12 test cases, full pipeline via httpx.AsyncClient"
+    },
+    {
+      "id": "f-e2e-real-integration",
+      "name": "E2E 真实集成测试（前端 Playwright + 真实后端 + Stub 服务）",
+      "status": "passing",
+      "description": "Phase 3 — Frontend Playwright E2E tests connecting to a real backend process with stub LLM/Image/Video services",
+      "dependencies": [
+        "f-e2e-live-backend"
+      ],
+      "domain": "fullstack",
+      "verification": "cd frontend && npx playwright test tests/e2e/workflow-real-*.spec.ts --reporter=list --timeout=120000",
+      "evidence": "2026-06-07: 14 E2E tests (4 mock + 10 real) all passing. global-setup/teardown lifecycle, workflow-real-api (6 tests), workflow-real-ws (3 tests), workflow-real-recovery (2 tests). TypeScript clean, ruff 0, pytest 1177/1177, build OK."
     }
   ]
 }
