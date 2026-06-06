@@ -275,6 +275,61 @@
       "evidence": "2026-06-06: 71 tests (Button7+Card7+Modal7+Input8+ConfirmModal8+EditModal9+ErrorBoundary4+HoverActionBar6+LoadingOverlay4+TypewriterText5+Toast4+ToastContainer2)",
       "status": "passing",
       "description": "12个可复用UI组件"
+    },
+    {
+      "id": "f-critic-threshold",
+      "name": "CriticAgent 维度级质量阈值 (P0)",
+      "description": "CriticAgent 评分改为多条件判断（一致性≥4.0 AND 质量≥4.0 AND 加权总分≥6.0），防止单一维度崩坏被掩蔽。对应 analysis_pipeline_report.md §2.2(a)",
+      "dependencies": [],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -k 'critic' -q && uv run ruff check app tests",
+      "evidence": "2026-06-06: _critique_decision static method, dimension-level thresholds (consistency≥4/quality≥4/composition≥4 + weighted≥6.0), WS Schema failed_checks field, 8 _critique_decision unit tests, ruff 0, pytest 1114/1114",
+      "notes": "改动范围: CriticAgent 评分逻辑 + _critique_decision 路由 + 测试。来源: analysis §4 P0-1"
+    },
+    {
+      "id": "f-stage-completeness",
+      "name": "阶段级完整性断言 (P0)",
+      "description": "每个 Production 节点结束时验证产出物完整性（所有角色/分镜都有对应产物），防止部分产出物悄悄缺失。对应 analysis_pipeline_report.md §2.2(b)",
+      "dependencies": [],
+      "status": "not_started",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/test_orchestration/ -q && uv run ruff check app tests",
+      "evidence": null,
+      "notes": "改动范围: nodes.py render_characters/render_shots 节点 + completeness check helpers + 测试。来源: analysis §4 P0-2"
+    },
+    {
+      "id": "f-critic-feedback-injection",
+      "name": "Critic 反馈注入再生 prompt (P1)",
+      "description": "将 CriticAgent 的批评文本注入 RenderAgent 的重生 prompt，形成「审查→改进」闭环。对应 analysis_pipeline_report.md §2.2(d)",
+      "dependencies": ["f-critic-threshold"],
+      "status": "not_started",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -k 'critic or render' -q && uv run ruff check app tests",
+      "evidence": null,
+      "notes": "改动范围: CriticAgent→RenderAgent prompt 流 + _critique_to_feedback 转换器 + 测试。来源: analysis §4 P1-1"
+    },
+    {
+      "id": "f-beat-analysis",
+      "name": "节拍分析：叙事节奏注入分镜 (P1)",
+      "description": "在 outline → plan_shots 间添加节拍分析步骤（情绪曲线、节奏控制注入分镜 duration/camera/lighting）。对应 analysis_pipeline_report.md §3.2(a)",
+      "dependencies": ["f-stage-completeness"],
+      "status": "not_started",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -k 'beat or outline or plan' -q && uv run ruff check app tests",
+      "evidence": null,
+      "notes": "改动范围: OutlineAgent+PlanAgent prompt + 新 BeatAnalyzer 组件 + Prompt VERSION/CHANGELOG + 测试。来源: analysis §4 P1-2"
+    },
+    {
+      "id": "f-seed-management",
+      "name": "Seed 管理：生成可复现 (P2)",
+      "description": "ImageService 传递 seed 参数到图像生成 API，支持锁定+微调工作流。Shot.seed 字段已存在（migration 0011），需在服务层传递。对应 analysis_pipeline_report.md §3.2(f)",
+      "dependencies": ["f-critic-feedback-injection"],
+      "status": "not_started",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/test_services/ -k 'image or render' -q && uv run ruff check app tests",
+      "evidence": null,
+      "notes": "改动范围: ImageService + RenderAgent + API 层 seed 传递 + 测试。来源: analysis §4 P2"
     }
   ]
 }

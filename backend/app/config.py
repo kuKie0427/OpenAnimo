@@ -124,7 +124,22 @@ class Settings(BaseSettings):
     )
     critique_score_threshold: float = Field(
         default=6.0,
-        description="质量分阈值，低于此分数触发重新生成",
+        description="加权总分阈值，低于此分数触发重新生成",
+    )
+    critique_consistency_threshold: int = Field(
+        default=4,
+        ge=0, le=10,
+        description="一致性维度最低分（角色面部/服饰连贯性），低于此分触发重新生成（一票否决）",
+    )
+    critique_quality_threshold: int = Field(
+        default=4,
+        ge=0, le=10,
+        description="质量维度最低分（图像清晰度/伪影），低于此分触发重新生成",
+    )
+    critique_composition_threshold: int = Field(
+        default=4,
+        ge=0, le=10,
+        description="构图维度最低分（布局/透视/灯光），低于此分触发重新生成",
     )
     critique_max_rounds: int = Field(
         default=2,

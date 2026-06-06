@@ -427,6 +427,7 @@ export interface CritiqueResultEventData {
 	entity_type: string;
 	entity_id: number;
 	will_regenerate: boolean;
+	failed_checks: string[];
 }
 
 export interface BibleUpdatedEventData {

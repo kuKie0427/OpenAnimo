@@ -120,6 +120,41 @@ class CriticAgent(BaseAgent):
             "suggestions": [str(s) for s in suggestions],
         }
 
+    @staticmethod
+    def _critique_decision(result: dict, settings) -> tuple[bool, list[str]]:
+        """Determine whether to regenerate based on multi-dimensional thresholds.
+
+        Replaces the single-score check. A regeneration is triggered if:
+        - Weighted aggregate score < critique_score_threshold, OR
+        - ANY dimension score < its per-dimension threshold (fail-fast).
+
+        Returns:
+            (should_regenerate: bool, failed_checks: list[str])
+            failed_checks contains human-readable descriptions of which
+            dimensions failed (e.g. ["consistency: 3 < 4", "score: 5.5 < 6.0"])
+        """
+        dims = result["dimensions"]
+        consistency = int(dims.get("consistency", 5))
+        quality = int(dims.get("quality", 5))
+        composition = int(dims.get("composition", 5))
+        score = float(result.get("score", 5.0))
+
+        failed = []
+
+        # Dimension-level fail-fast checks
+        if consistency < settings.critique_consistency_threshold:
+            failed.append(f"consistency: {consistency} < {settings.critique_consistency_threshold}")
+        if quality < settings.critique_quality_threshold:
+            failed.append(f"quality: {quality} < {settings.critique_quality_threshold}")
+        if composition < settings.critique_composition_threshold:
+            failed.append(f"composition: {composition} < {settings.critique_composition_threshold}")
+
+        # Aggregate score check (existing behavior preserved)
+        if score < settings.critique_score_threshold:
+            failed.append(f"score: {score:.1f} < {settings.critique_score_threshold:.1f}")
+
+        return (len(failed) > 0, failed)
+
     async def _run_review(
         self,
         ctx: AgentContext,
@@ -147,6 +182,7 @@ class CriticAgent(BaseAgent):
                 "dimensions": {"consistency": 10, "quality": 10, "composition": 10},
                 "issues": [],
                 "suggestions": [],
+                "failed_checks": [],
                 "entity_type": entity_type,
                 "entity_id": entity_id,
                 "will_regenerate": False,
@@ -189,6 +225,7 @@ class CriticAgent(BaseAgent):
                     "dimensions": {"consistency": 5, "quality": 5, "composition": 5},
                     "issues": ["VLM 审查调用失败"],
                     "suggestions": ["请检查文本服务配置"],
+                    "failed_checks": [],
                     "entity_type": entity_type,
                     "entity_id": entity_id,
                     "will_regenerate": False,
@@ -198,9 +235,9 @@ class CriticAgent(BaseAgent):
         result["entity_type"] = entity_type
         result["entity_id"] = entity_id
 
-        threshold = settings.critique_score_threshold
-        will_regenerate = result["score"] < threshold
+        will_regenerate, failed_checks = self._critique_decision(result, settings)
         result["will_regenerate"] = will_regenerate
+        result["failed_checks"] = failed_checks
 
         # Send critique result via WebSocket
         await ctx.ws.send_event(
@@ -222,8 +259,10 @@ class CriticAgent(BaseAgent):
             f"  问题: {issues_str}\n"
             f"  建议: {sug_str}"
         )
+        if failed_checks:
+            content += f"\n⚠️ 维度未达标：{'；'.join(failed_checks)}"
         if will_regenerate:
-            content += f"\n分数低于阈值 ({threshold})，将重新生成"
+            content += "\n将重新生成"
         else:
             content += "\n质量达标，继续下一步"
 

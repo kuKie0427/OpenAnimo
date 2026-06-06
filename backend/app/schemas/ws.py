@@ -218,6 +218,7 @@ class CritiqueResultEventData(BaseModel):
     entity_type: str = ""  # "character" or "shot"
     entity_id: int = 0
     will_regenerate: bool = False
+    failed_checks: list[str] = Field(default_factory=list)
 
 
 class BibleUpdatedEventData(BaseModel):

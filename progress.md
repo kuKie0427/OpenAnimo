@@ -97,3 +97,11 @@
 - **决策**: 内联约定替换为摘要+链接表，保留"已知问题""快速查找""开发命令"内联（这些随代码频繁变更）；链接指向子目录 index.md；三篇均 <200 行
 - **阻断**: 无
 - **下次**: Scope subsystem phase (domain enforcement + overreach guardrails) or Multi-agent MessageBus
+
+## 2026-06-06 — Session: pipeline-quality-p0-critic-threshold
+- **做了什么**: 实现 CriticAgent 维度级质量阈值：config.py 添加 3 个维度阈值字段（consistency/quality/composition 各≥4）；critic.py 添加 _critique_decision() 静态方法（fail-fast 维度检查+聚合分数）；修改 _run_review() 调用新决策函数并注入 failed_checks 到 WS/AgentMessage；WS Schema（前后端）添加 failed_checks 字段；创建 test_critic.py（8 个单元测试覆盖掩蔽场景/边界值/自定义阈值）
+- **改了什么文件**: feature_list.json (mod), backend/app/config.py (mod), backend/app/agents/critic.py (mod), backend/app/schemas/ws.py (mod), frontend/app/types/index.ts (mod), backend/tests/test_agents/test_critic.py (new)
+- **当前状态**: f-critic-threshold=passing ✅
+- **决策**: _critique_decision 设计为 @staticmethod 便于纯函数测试；维度级检查在聚合分数前（fail-fast 语义）；failed_checks 用 Field(default_factory=list) 保持向后兼容；AgentMessage 内容用 `⚠️ 维度未达标：{list}` 格式
+- **阻断**: 无
+- **下次**: pipeline-quality-p0-stage-completeness（阶段级完整性断言）
