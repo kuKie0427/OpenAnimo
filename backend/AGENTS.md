@@ -104,50 +104,25 @@ uv run alembic upgrade head
 
 ## 后端约定
 
-### 代码规范
-- **文件命名**: snake_case（`agent_run.py`、`style_template.py`）
-- **类命名**: PascalCase（`Settings`、`AgentRun`、`AppException`）
-- **变量/函数**: snake_case
-- **行宽**: Ruff `line-length=100`
-- **异步**: 几乎全异步（`async def`），异常处理统一用 `AppException`
-- **包管理**: `uv`（非 pip/poetry），锁文件 `uv.lock`
+详细开发规范见 `.trellis/spec/backend/` 专题文档:
 
-### API 模式
-- 路由文件在 `app/api/v1/routes/`，按资源命名
-- 请求/响应用 Pydantic `schemas/` 严格校验
-- 路由中不写业务逻辑，委托给 `services/`
-- 全局异常处理器在 `app/main.py` 的 lifespan 中注册
+| 主题 | 文档 |
+|------|------|
+| 代码质量规范（命名/行宽/异步/模块结构） | [quality-guidelines](.trellis/spec/backend/quality-guidelines.md) |
+| 错误处理与异常 | [error-handling](.trellis/spec/backend/error-handling.md) |
+| 日志规范 | [logging-guidelines](.trellis/spec/backend/logging-guidelines.md) |
+| 数据库操作（ORM/迁移/SQLite shim） | [database-guidelines](.trellis/spec/backend/database-guidelines.md) |
+| 编排阶段与状态机 | [orchestration-stages](.trellis/spec/backend/orchestration-stages.md) |
+| WebSocket 事件契约 | [ws-event-contracts](.trellis/spec/backend/ws-event-contracts.md) |
+| 目录结构与模块职责 | [directory-structure](.trellis/spec/backend/directory-structure.md) |
 
-### 服务层模式
-- 业务逻辑在 `services/`，每个模块处理一类资源/能力
-- 服务模块通过参数注入依赖（DB session、LLM client、Redis），避免隐式全局状态
-- Provider 切换通过 `services/provider_resolution.py` 决议
-
-### 测试模式
-- **asyncio_mode = auto**，但测试仍显式标注 `@pytest.mark.asyncio`（双重保险）
-- **每个 test function 独立 SQLite 文件** — 使用 `tmp_path / "test.db"` 而非 `:memory:`
-- **Fake 类优先** — 不用 unittest.mock.patch，使用 `FakeSession`、`FakeRedis`、`FakeLLM` 等
-- **双层验证** — API 测试既验证 HTTP 响应，又通过注入 session 查数据库
-- **依赖覆盖** — FastAPI `app.dependency_overrides` 替换 DB session、配置、WS manager
-
-### 数据库
-- **ORM**: SQLModel（SQLAlchemy + Pydantic 融合）
-- **生产/开发**: PostgreSQL + asyncpg
-- **测试**: 内存 SQLite（aiosqlite shim，在 `backend/aiosqlite/` 目录）
-- **迁移**: Alembic，手动执行（不自动在启动时运行）
-- **启动初始化**: `init_db()` 会 `create_all()` + 初始化配置 + 重置遗留 run 状态
-
----
+核心原则速记：snake_case 命名 · line-length=100 · 全异步 · Pydantic 校验 · SQLModel ORM · 路由委托 services/
 
 ## 后端反模式（禁止）
 
-1. **不要**用裸 `except Exception:` 吞异常 — 区分具体异常类型（现有 32 处需逐步修复）
-2. **不要**忽略 `init_db()` 的副作用 — 启动时 `create_all()`、重置 run 状态、checkpointer setup 同步发生
-3. **不要**假设多实例安全 — `task_manager` 是进程内字典，当前设计只支持单 Worker
-4. **不要**直接访问私有成员 — `nodes.py` 中 7 处 `# noqa: SLF001` 绕过 `orchestrator._set_run` 等私有方法，应添加公开方法
-5. **不要**在路由中写编排/持久化逻辑 — 应委托给 `orchestration/` 和 `services/`
-6. **不要**在 Docker 容器内用 `localhost` 访问宿主机服务 — 改为 `host.docker.internal`
-7. **不要**忘记更新 `uv.lock` — 改依赖后必须同步更新锁文件
+详见 [quality-guidelines](.trellis/spec/backend/quality-guidelines.md) 的反模式章节。
+
+速记：禁止裸 except · 禁止忽略副作用 · 禁止假设多实例 · 禁止 bypass 私有方法 · 禁止路由写业务逻辑
 
 ---
 

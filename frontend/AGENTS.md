@@ -108,60 +108,24 @@ pnpm exec tsc --noEmit
 
 ## 前端约定
 
-### 代码规范
-- **组件命名**: PascalCase（`HomePage`、`ProjectPage`、`SettingsModal`）
-- **文件命名**: 组件用 PascalCase 文件（`Button.tsx`），工具/hook/store 用 camelCase（`toast.ts`、`useWebSocket.ts`）
-- **路径别名**: `~/` → `./app/`（非标准 `@/`）
-- **类型**: TypeScript 严格模式，`app/types/index.ts` 集中定义
-- **样式**: Tailwind CSS `class="..."`，无 CSS Modules / styled-components
-- **无 ESLint/Prettier** — 仅靠 `tsc` 保证类型正确
-- **缩进**: Tab（从 main.tsx 确认）
+详细开发规范见 `.trellis/spec/frontend/` 专题文档:
 
-### 组件模式
-- **页面组件**: 位于 `app/pages/`，命名 `*Page.tsx`，默认导出
-- **UI 组件**: 位于 `app/components/`，按功能分子目录（canvas/chat/layout/panels/settings/ui）
-- **组件测试**: 与源文件同目录，后缀 `.test.tsx`
-- **懒加载**: 路由页面使用 `React.lazy()` + `Suspense`
+| 主题 | 文档 |
+|------|------|
+| 代码质量规范（命名/路径别名/Tailwind/类型） | [quality-guidelines](.trellis/spec/frontend/quality-guidelines.md) |
+| 组件模式（页面/UI/Shape 组件、懒加载、测试同目录） | [component-guidelines](.trellis/spec/frontend/component-guidelines.md) |
+| 状态管理（Zustand/React Query/Mock 策略） | [state-management](.trellis/spec/frontend/state-management.md) |
+| Hook 设计模式（WebSocket/DOM/Canvas） | [hook-guidelines](.trellis/spec/frontend/hook-guidelines.md) |
+| TypeScript 类型安全（严格模式/any 清理路径） | [type-safety](.trellis/spec/frontend/type-safety.md) |
+| 目录结构与模块职责 | [directory-structure](.trellis/spec/frontend/directory-structure.md) |
 
-### 状态管理模式
-- **全局状态**: Zustand 5（`app/stores/`），每个 store 一个文件
-- **服务器状态**: `@tanstack/react-query`（缓存/重取/乐观更新）
-- **测试**: 直接调用 `useEditorStore.getState().reset()` 无需渲染组件
-- **Store 命名**: camelCase 文件名（例外：`toast.store.ts` 用点分隔）
-
-### 样式规范（来自 DESIGN.md）
-- 禁止纯 `#000` / `#fff` — 所有中性色需偏暖色调
-- 禁止渐变文字（`background-clip: text`）
-- 禁止毛玻璃作为默认表面
-- 禁止 >1px 的彩色装饰线
-- 禁止在 UI 标签/按钮中使用 Bangers 显示字体
-- 主题: daisyUI `doodle`（日间）/ `doodle-dark`（夜间）
-
-### 测试模式
-- **单测框架**: Vitest（globals: true，jsdom 环境）
-- **Mock 策略**: `vi.fn()` / `vi.mock()` / `vi.stubGlobal()` 为主，MSW 备选
-- **WebSocket 测试**: 自定义 `MockWebSocket` 类模拟连接
-- **API 测试**: `vi.stubGlobal("fetch", mockFetch)` + 动态 `import()` 确保 mock 生效
-- **E2E**: Playwright，Chromium 单浏览器，CI 重试 2 次
-- **测试文件**: 与源文件同目录，E2E 在 `tests/e2e/`
-
-### 配置/环境变量
-- `VITE_API_URL` — 后端 HTTP 地址（默认自动推导，**通常不需要手动设置**）
-- `VITE_WS_URL` — 后端 WS 地址（同上）
-- `VITE_ENABLE_MSW` — 是否启用 Mock Service Worker（默认关闭）
-- 自动推导逻辑在 `app/utils/runtimeBase.ts`，开发环境下自动用 hostname + `:18765`
-
----
+核心原则速记：Tab 缩进 · `~/` 别名 · Tailwind only · tsc 保类型 · vitest globals:true · 无 ESLint/Prettier（有意为之）
 
 ## 前端反模式（禁止）
 
-1. **不要**在组件中直接调用 API — 使用 `services/api.ts` 封装的函数
-2. **不要**使用 `any` 类型 — `frontend/app/types/errors.ts` 和 tldraw shapes 中多处 `T.any` 需逐步替换为具体类型
-3. **不要**在 `app.config.ts` 中修改配置 — 此文件是 TanStack Start 残留，实际构建走 `vite.config.ts`
-4. **不要**在生产代码留 `console.log/debug/error` — WebSocket hook 中 5 处 console 需清理
-5. **不要**忽视 Zustand store 的 `reset()` — 测试和组件卸载时确保调用
-6. **不要**绕过类型检查 — 测试中的 `as any` 应在重构时消除
-7. **不要**忘记 `pnpm build` 已包含 `tsc` — 无需单独运行类型检查
+详见 [quality-guidelines](.trellis/spec/frontend/quality-guidelines.md) 的反模式章节。
+
+速记：禁止直接调 API（用 services/api.ts）· 禁止 any（逐步清理）· 禁止 app.config.ts · 禁止生产 console · 禁止忘 reset()
 
 ---
 

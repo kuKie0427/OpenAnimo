@@ -148,6 +148,33 @@ type(scope): description
 
 ---
 
+## 详细指南
+
+根级跨端专题文档存放在 `.trellis/spec/guides/`:
+
+| 主题 | 文档 |
+|------|------|
+| 跨层开发思维 | [cross-layer-thinking-guide](.trellis/spec/guides/cross-layer-thinking-guide.md) |
+| 代码复用模式 | [code-reuse-thinking-guide](.trellis/spec/guides/code-reuse-thinking-guide.md) |
+| 编排架构设计 | [orchestration-architecture](.trellis/spec/guides/orchestration-architecture.md) |
+
+后端专题文档（数据库/日志/错误处理/WS 契约等 8 篇）→ 详见 `backend/AGENTS.md`
+前端专题文档（组件/状态管理/类型安全/样式规范等 7 篇）→ 详见 `frontend/AGENTS.md`
+
+
+
+## 专题文档索引
+
+跨端专题文档存放在 `.trellis/spec/` 目录下，按需加载（Tier 3 context）：
+
+| 层级 | 目录 | 覆盖 |
+|------|------|------|
+| 跨层开发指南 | [guides/](.trellis/spec/guides/index.md) | 代码复用思维、跨层协作模式、编排架构设计 |
+| 后端专题规范 | [backend/](.trellis/spec/backend/index.md) | 数据库、错误处理、日志、编排阶段、WS 事件（8 篇） |
+| 前端专题规范 | [frontend/](.trellis/spec/frontend/index.md) | 组件模式、状态管理、Hook 设计、类型安全（7 篇） |
+
+---
+
 ## 参考
 - `backend/AGENTS.md` — 后端 Python/FastAPI 开发指南
 - `frontend/AGENTS.md` — 前端 React/Vite 开发指南

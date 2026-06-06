@@ -81,3 +81,19 @@
 - **决策**: pyright 238 预存类型错误用 `|| echo` 非致命降级（SQLModel/LangGraph 类型推断问题）；`except ConnectionError` → `except Exception` 解决 `redis.exceptions.ConnectionError` 未继承内置 `ConnectionError`
 - **阻断**: pyright 238 diagnostics 需后续 phase 清理
 - **下次**: verification-fix-p2（如果有）或推进未启动的 feature
+
+## 2026-06-06 — Session: state-scope-p2-complete
+- **做了什么**: Task 0-3 全部完成（初始化 f-state-scope-p2，feature_list.json 重构：14 个现有 feature 补 domain+evidence + 新增 10 个前端 feature + 创建 WIP≤1 pre-commit hook）
+- **改了什么文件**: feature_list.json (rewrite: 15→25 features), .git/hooks/pre-commit (new)
+- **当前状态**: f-state-scope-p2=passing ✅
+- **决策**: 10 个前端 feature 按功能域分组（canvas/chat/project-ui/ws-client/settings-ui/universe-ui/state-stores/theme/pipeline-visual/ui-system）；pre-commit hook 仅检查 staged feature_list.json，Python3 不可用时降级 warning；blocked 状态暂不启用（全部 feature verification 基于 stub/mock 可本地验证）
+- **阻断**: f-universe-ui 和部分 stores 无独立测试文件（通过页面测试间接覆盖）；pyright 238 diagnostics 需后续 phase 清理
+- **下次**: 推进未启动的 feature
+
+## 2026-06-06 — Session: instructions-p3-complete
+- **做了什么**: Task 0-3 全部完成（AGENTS.md 渐进披露重构：backend + frontend + root 三篇内联约定→摘要+.trellis/spec/ 链接，共 25 个跨文档引用）
+- **改了什么文件**: AGENTS.md (153→180行), backend/AGENTS.md (159→134行), frontend/AGENTS.md (176→140行), feature_list.json (+1 entry)
+- **当前状态**: f-instructions-p3=passing ✅
+- **决策**: 内联约定替换为摘要+链接表，保留"已知问题""快速查找""开发命令"内联（这些随代码频繁变更）；链接指向子目录 index.md；三篇均 <200 行
+- **阻断**: 无
+- **下次**: Scope subsystem phase (domain enforcement + overreach guardrails) or Multi-agent MessageBus
