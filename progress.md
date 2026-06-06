@@ -137,3 +137,19 @@
 - **决策**: BeatAnalyzer 纯计算型（零 LLM/DB/外部依赖）；小 shot 数（1-3）走独立路径避免 max(1,round) 过分配；lazy import 在 plan.py 中避免启动时加载；prompt 节拍指令用中文维护一致性
 - **阻断**: 无
 - **下次**: P2 — Seed 管理（f-seed-management）
+
+## 2026-06-06 — Session: e2e-testing-p1-integration
+- **做了什么**: 创建 5 个 E2E 集成测试文件（18 测试）：test_critic_e2e.py（5 维级阈值审查 E2E）、test_completeness_e2e.py（3 阶段完整性断言 E2E）、test_feedback_e2e.py（3 反馈注入 Prompt E2E）、test_beat_e2e.py（3 节拍分析集成 E2E）、test_seed_e2e.py（4 Seed 持久化与复用 E2E）。所有测试使用 Stub/Fake 基础设施，不修改 app/ 源码
+- **改了什么文件**: feature_list.json (mod: +f-e2e-integration, status active→passing), backend/tests/integration/test_critic_e2e.py (new), backend/tests/integration/test_completeness_e2e.py (new), backend/tests/integration/test_feedback_e2e.py (new), backend/tests/integration/test_beat_e2e.py (new), backend/tests/integration/test_seed_e2e.py (new)
+- **当前状态**: f-e2e-integration=passing ✅
+- **决策**: test_critic_e2e.py 使用 StubTextService 替代 FakeTextService（因 _critic_response() 硬编码完美分数）；test_completeness_e2e.py 用 MagicMock 包装真实 test_session；test_seed_e2e.py 用 kwargs-capture monkeypatch 验证 seed 传递路径
+- **阻断**: 无
+- **下次**: Phase 2 — e2e-testing-p2-playwright（前端 Playwright E2E 测试）
+
+## 2026-06-06 — Session: e2e-testing-p2-live-backend
+- **做了什么**: Phase 2 E2E 测试完成 — 创建 6 个 E2E 测试文件（9 测试通过）：test_agent_trace_e2e.py（3 AgentTrace E2E）、test_metrics_e2e.py（1 RunMetrics E2E）、test_parallel_e2e.py（2 并行执行 E2E）、test_recovery_e2e.py（2 恢复 E2E）、test_full_workflow_e2e.py（1 全链路 E2E）、test_ws_e2e.py（1 已跳过 WS 测试）。新增 e2e_stub_services fixture（6 类 monkeypatch：text/image/video factory + Redis + PIL + face_cropper）及 _e2e_autostub fixture（provider resolution + 本地 binding + async_session_maker + BackgroundTasks 立即执行 + audio stub）。修复 nodes.py critique_character_images_node 并行路由 bug。补全 outline/plan/render/compose 4 个 Agent 的 trace_step 调用。
+- **改了什么文件**: feature_list.json (mod: +f-e2e-live-backend active→passing), backend/pyproject.toml (mod: +e2e marker), backend/tests/conftest.py (mod: +e2e_stub_services), backend/tests/e2e/__init__.py (new), backend/tests/e2e/conftest.py (new), backend/tests/e2e/test_agent_trace_e2e.py (new), backend/tests/e2e/test_metrics_e2e.py (new), backend/tests/e2e/test_parallel_e2e.py (new), backend/tests/e2e/test_recovery_e2e.py (new), backend/tests/e2e/test_full_workflow_e2e.py (new), backend/tests/e2e/test_ws_e2e.py (new), backend/app/orchestration/nodes.py (mod: 并行路由 bug fix), backend/app/agents/outline.py (mod: +trace_step), backend/app/agents/plan.py (mod: +trace_step), backend/app/agents/render.py (mod: +trace_step), backend/app/agents/compose.py (mod: +trace_step)
+- **当前状态**: f-e2e-live-backend=passing ✅
+- **决策**: async_session_maker 需要模块级 + 本地绑定双重 patch；BackgroundTasks 在 ASGITransport 模式需 immediate_exec 替代；trace_step 调用需 wrap 整个 run_* 方法体；critique_character_images_node 并行路由 unconditional render_shots 需改为 compose_videos if _parallel_mode
+- **阻断**: WS E2E 测试需同步 TestClient 重构（WS 连接必须在 generate 前建立且兼容 async fixture 生命周期）
+- **下次**: Phase 3 — e2e-testing-p3-frontend-integration（前端 Playwright E2E）

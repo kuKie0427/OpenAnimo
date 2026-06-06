@@ -157,3 +157,62 @@ async def _no_lifespan(_: object):
 def ws_client(app):
     app.router.lifespan_context = _no_lifespan
     return TestClient(app)
+
+
+@pytest_asyncio.fixture(scope="function")
+async def e2e_stub_services(monkeypatch, test_db_engine_sessionmaker):
+    """E2E stub services: replace factories + Redis + PIL + face_cropper.
+
+    Must be applied BEFORE app fixture creation so that monkeypatches
+    take effect before the orchestrator code is imported.
+    """
+    from unittest.mock import AsyncMock
+    from PIL import Image as PILImage
+
+    # 0. Patch async_session_maker to use the test DB so background tasks share the same database
+    _, session_maker = test_db_engine_sessionmaker
+    monkeypatch.setattr("app.db.session.async_session_maker", session_maker)
+
+    # 0a. Also patch modules with module-level 'from app.db.session import async_session_maker' bindings
+    import app.api.v1.routes.generation as gen_mod
+    import app.services.agent_runner as agent_runner_mod
+
+    monkeypatch.setattr(gen_mod, "async_session_maker", session_maker)
+    monkeypatch.setattr(agent_runner_mod, "async_session_maker", session_maker)
+
+    # 1. Text factory → FakeTextService (stage-aware fake responses)
+    from app.services.fake_text import FakeTextService
+
+    monkeypatch.setattr(
+        "app.services.text_factory.create_text_service",
+        lambda s: FakeTextService(s),
+    )
+
+    # 2. Image factory → agent_fixtures FakeImageService (simple URL returner)
+    from tests.agent_fixtures import FakeImageService as FixtureImageService
+
+    monkeypatch.setattr(
+        "app.services.image_factory.create_image_service",
+        lambda s: FixtureImageService(),
+    )
+
+    # 3. Video factory → agent_fixtures FakeVideoService (simple URL returner)
+    from tests.agent_fixtures import FakeVideoService as FixtureVideoService
+
+    monkeypatch.setattr(
+        "app.services.video_factory.create_video_service",
+        lambda s: FixtureVideoService(),
+    )
+
+    # 4. Redis → AsyncMock (no actual Redis needed)
+    monkeypatch.setattr("app.orchestration.redis.get_redis", AsyncMock)
+
+    # 5. PIL Image.open download stub → return tiny red image
+    monkeypatch.setattr(
+        PILImage, "open", lambda *a, **kw: PILImage.new("RGB", (64, 64), color="red"),
+    )
+
+    # 6. face_cropper stub
+    monkeypatch.setattr("app.services.face_cropper._get_face_analysis", lambda: None)
+
+    yield

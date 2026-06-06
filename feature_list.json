@@ -2,18 +2,18 @@
   "features": [
     {
       "id": "f-harness-p0",
-      "name": "Harness Phase 0 — 最小可行基础设施",
+      "name": "Harness Phase 0 \u2014 \u6700\u5c0f\u53ef\u884c\u57fa\u7840\u8bbe\u65bd",
       "status": "passing",
       "description": "init.sh / feature_list.json / progress.md / AGENTS.md harness section",
       "dependencies": [],
       "domain": "fullstack",
       "verification": "./init.sh && python -c \"import json; d=json.load(open('feature_list.json')); assert d['features'][0]['status']=='passing'\"",
       "evidence": "2026-06-06: ./init.sh green, schema valid, AGENTS.md harness section present",
-      "notes": "这是 harness 改造的起点"
+      "notes": "\u8fd9\u662f harness \u6539\u9020\u7684\u8d77\u70b9"
     },
     {
       "id": "f-harness-p1",
-      "name": "Harness Phase 1 — Prompt 版本管理 + AgentTrace",
+      "name": "Harness Phase 1 \u2014 Prompt \u7248\u672c\u7ba1\u7406 + AgentTrace",
       "dependencies": [
         "f-harness-p0"
       ],
@@ -21,11 +21,11 @@
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/ -q && uv run ruff check app tests",
       "evidence": "2026-06-06: pytest passed, ruff 0. Prompt VERSION+CHANGELOG, AgentTrace migration+API",
-      "notes": "所有 Prompt 模块含 VERSION+CHANGELOG；AgentTrace 表可用；API 可查询 Trace"
+      "notes": "\u6240\u6709 Prompt \u6a21\u5757\u542b VERSION+CHANGELOG\uff1bAgentTrace \u8868\u53ef\u7528\uff1bAPI \u53ef\u67e5\u8be2 Trace"
     },
     {
       "id": "f-harness-p2",
-      "name": "Harness Phase 2 — 产出物验证 + 降级测试 + WS Schema",
+      "name": "Harness Phase 2 \u2014 \u4ea7\u51fa\u7269\u9a8c\u8bc1 + \u964d\u7ea7\u6d4b\u8bd5 + WS Schema",
       "dependencies": [
         "f-harness-p1"
       ],
@@ -33,12 +33,12 @@
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/ -q && uv run ruff check app tests",
       "evidence": "2026-06-06: pytest passed, ruff 0. PlanOutputValidator, fault_injector, WS Schema",
-      "notes": "PlanOutputValidator / fault_injector 降级测试 / WS Schema 全覆盖"
+      "notes": "PlanOutputValidator / fault_injector \u964d\u7ea7\u6d4b\u8bd5 / WS Schema \u5168\u8986\u76d6"
     },
     {
       "id": "f-harness-p3",
-      "name": "Harness Phase 3 — 观测性仪表板 + 多 Agent 并行",
-      "description": "RunMetrics API / 并行分支 / 新路由注册",
+      "name": "Harness Phase 3 \u2014 \u89c2\u6d4b\u6027\u4eea\u8868\u677f + \u591a Agent \u5e76\u884c",
+      "description": "RunMetrics API / \u5e76\u884c\u5206\u652f / \u65b0\u8def\u7531\u6ce8\u518c",
       "dependencies": [
         "f-harness-p2"
       ],
@@ -46,11 +46,11 @@
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/ -q && uv run ruff check app tests",
       "evidence": "2026-06-06: pytest passed, ruff 0. RunMetrics API 3 endpoints, parallel Send() 27 tests",
-      "notes": "RunMetrics 仪表板 API（metrics_service / route / test）+ 多 Agent 并行分支（Send / 汇聚）"
+      "notes": "RunMetrics \u4eea\u8868\u677f API\uff08metrics_service / route / test\uff09+ \u591a Agent \u5e76\u884c\u5206\u652f\uff08Send / \u6c47\u805a\uff09"
     },
     {
       "id": "f-pipeline-core",
-      "name": "核心生成管线 (17-stage LangGraph)",
+      "name": "\u6838\u5fc3\u751f\u6210\u7ba1\u7ebf (17-stage LangGraph)",
       "status": "passing",
       "dependencies": [],
       "domain": "backend",
@@ -59,7 +59,7 @@
     },
     {
       "id": "f-character-consistency",
-      "name": "角色一致性 (Bible + InsightFace + Eval)",
+      "name": "\u89d2\u8272\u4e00\u81f4\u6027 (Bible + InsightFace + Eval)",
       "status": "passing",
       "dependencies": [
         "f-pipeline-core"
@@ -70,7 +70,7 @@
     },
     {
       "id": "f-critic-loop",
-      "name": "CriticAgent VLM 质量审查回环",
+      "name": "CriticAgent VLM \u8d28\u91cf\u5ba1\u67e5\u56de\u73af",
       "status": "passing",
       "dependencies": [
         "f-pipeline-core"
@@ -81,7 +81,7 @@
     },
     {
       "id": "f-tts-audio",
-      "name": "TTS 配音 + BGM 混音",
+      "name": "TTS \u914d\u97f3 + BGM \u6df7\u97f3",
       "status": "passing",
       "dependencies": [
         "f-pipeline-core"
@@ -92,7 +92,7 @@
     },
     {
       "id": "f-export",
-      "name": "PDF/Webtoon 导出",
+      "name": "PDF/Webtoon \u5bfc\u51fa",
       "status": "passing",
       "dependencies": [
         "f-pipeline-core"
@@ -103,7 +103,7 @@
     },
     {
       "id": "f-style-template",
-      "name": "风格模板系统 (14 内置 + 自定义)",
+      "name": "\u98ce\u683c\u6a21\u677f\u7cfb\u7edf (14 \u5185\u7f6e + \u81ea\u5b9a\u4e49)",
       "status": "passing",
       "dependencies": [
         "f-pipeline-core"
@@ -114,7 +114,7 @@
     },
     {
       "id": "f-universe-multi-project",
-      "name": "跨项目 IP 宇宙",
+      "name": "\u8de8\u9879\u76ee IP \u5b87\u5b99",
       "status": "passing",
       "dependencies": [
         "f-character-consistency"
@@ -125,7 +125,7 @@
     },
     {
       "id": "f-version-compare",
-      "name": "版本对比与回滚 (ArtifactVersion)",
+      "name": "\u7248\u672c\u5bf9\u6bd4\u4e0e\u56de\u6eda (ArtifactVersion)",
       "status": "passing",
       "dependencies": [
         "f-pipeline-core"
@@ -136,7 +136,7 @@
     },
     {
       "id": "f-technical-debt",
-      "name": "技术债务清理 (32 裸except + 7 SLF001 + split orchestrator)",
+      "name": "\u6280\u672f\u503a\u52a1\u6e05\u7406 (32 \u88f8except + 7 SLF001 + split orchestrator)",
       "status": "passing",
       "dependencies": [],
       "domain": "backend",
@@ -145,191 +145,250 @@
     },
     {
       "id": "f-verification-fix",
-      "name": "验证管线修复 (init.sh + pyright + CI)",
+      "name": "\u9a8c\u8bc1\u7ba1\u7ebf\u4fee\u590d (init.sh + pyright + CI)",
       "status": "passing",
-      "description": "修复 init.sh pytest -x 提前退出、StubImage 502 测试失败、pyright 可选→强制、添加 CI test/lint 工作流",
-      "dependencies": ["f-technical-debt"],
+      "description": "\u4fee\u590d init.sh pytest -x \u63d0\u524d\u9000\u51fa\u3001StubImage 502 \u6d4b\u8bd5\u5931\u8d25\u3001pyright \u53ef\u9009\u2192\u5f3a\u5236\u3001\u6dfb\u52a0 CI test/lint \u5de5\u4f5c\u6d41",
+      "dependencies": [
+        "f-technical-debt"
+      ],
       "domain": "fullstack",
       "verification": "./init.sh && cd backend && uv run ruff check app tests && uv run pytest -q",
       "evidence": "init.sh full 6 steps green, ruff 0, pytest 1106/1106, CI workflow created",
-      "notes": "Harness 诊断 Phase 1 — 修复验证子系统关键 bug 和缺失项"
+      "notes": "Harness \u8bca\u65ad Phase 1 \u2014 \u4fee\u590d\u9a8c\u8bc1\u5b50\u7cfb\u7edf\u5173\u952e bug \u548c\u7f3a\u5931\u9879"
     },
     {
       "id": "f-state-scope-p2",
-      "name": "State + Scope 子系统修复 (feature_list 重构 + 前端覆盖 + WIP≤1 hook)",
+      "name": "State + Scope \u5b50\u7cfb\u7edf\u4fee\u590d (feature_list \u91cd\u6784 + \u524d\u7aef\u8986\u76d6 + WIP\u22641 hook)",
       "status": "passing",
-      "description": "为所有 feature 添加 domain/evidence 字段，补全 10 个前端 feature 条目，创建 WIP≤1 pre-commit hook",
-      "dependencies": ["f-verification-fix"],
+      "description": "\u4e3a\u6240\u6709 feature \u6dfb\u52a0 domain/evidence \u5b57\u6bb5\uff0c\u8865\u5168 10 \u4e2a\u524d\u7aef feature \u6761\u76ee\uff0c\u521b\u5efa WIP\u22641 pre-commit hook",
+      "dependencies": [
+        "f-verification-fix"
+      ],
       "domain": "fullstack",
       "verification": "python3 -c \"import json; d=json.load(open('feature_list.json')); assert all('domain' in f for f in d['features']); assert 'f-canvas' in [f['id'] for f in d['features']]; print('OK')\" && ./.git/hooks/pre-commit 2>&1 | grep -q 'WIP=1'",
-      "evidence": "2026-06-06: 25 features 全含 domain+evidence, 10 前端 features added, WIP≤1 pre-commit hook 生效, init.sh 全绿",
-      "notes": "Harness 诊断 Phase 2 — feature 覆盖率 ~40% → ~85%，domain/evidence/blocked 字段标准化"
+      "evidence": "2026-06-06: 25 features \u5168\u542b domain+evidence, 10 \u524d\u7aef features added, WIP\u22641 pre-commit hook \u751f\u6548, init.sh \u5168\u7eff",
+      "notes": "Harness \u8bca\u65ad Phase 2 \u2014 feature \u8986\u76d6\u7387 ~40% \u2192 ~85%\uff0cdomain/evidence/blocked \u5b57\u6bb5\u6807\u51c6\u5316"
     },
     {
       "id": "f-instructions-p3",
-      "name": "Instructions 子系统修复 (AGENTS.md 渐进披露 + .trellis/spec 链接)",
+      "name": "Instructions \u5b50\u7cfb\u7edf\u4fee\u590d (AGENTS.md \u6e10\u8fdb\u62ab\u9732 + .trellis/spec \u94fe\u63a5)",
       "status": "passing",
-      "description": "将 backend/frontend AGENTS.md 的内联约定/反模式替换为摘要+链接到 .trellis/spec/ 下的 19 篇专题文档",
-      "dependencies": ["f-state-scope-p2"],
+      "description": "\u5c06 backend/frontend AGENTS.md \u7684\u5185\u8054\u7ea6\u5b9a/\u53cd\u6a21\u5f0f\u66ff\u6362\u4e3a\u6458\u8981+\u94fe\u63a5\u5230 .trellis/spec/ \u4e0b\u7684 19 \u7bc7\u4e13\u9898\u6587\u6863",
+      "dependencies": [
+        "f-state-scope-p2"
+      ],
       "domain": "fullstack",
       "verification": "grep -c '.trellis/spec/' AGENTS.md backend/AGENTS.md frontend/AGENTS.md | awk -F: '{s+=$2} END {print s}' | xargs -I{} test {} -ge 12",
-      "evidence": "2026-06-06: 25 .trellis/spec/ links (8+9+8), AGENTS.md:180/134/140 行全<200, .trellis/spec/ 文件无改动",
-      "notes": "Harness 诊断 Phase 3 — 修复 Instructions 子系统；不移动任何 .trellis/spec/ 文件"
+      "evidence": "2026-06-06: 25 .trellis/spec/ links (8+9+8), AGENTS.md:180/134/140 \u884c\u5168<200, .trellis/spec/ \u6587\u4ef6\u65e0\u6539\u52a8",
+      "notes": "Harness \u8bca\u65ad Phase 3 \u2014 \u4fee\u590d Instructions \u5b50\u7cfb\u7edf\uff1b\u4e0d\u79fb\u52a8\u4efb\u4f55 .trellis/spec/ \u6587\u4ef6"
     },
     {
       "id": "f-canvas",
-      "name": "无限画布 (InfiniteCanvas+tldraw+shapes)",
+      "name": "\u65e0\u9650\u753b\u5e03 (InfiniteCanvas+tldraw+shapes)",
       "domain": "frontend",
-      "dependencies": ["f-ws-client"],
+      "dependencies": [
+        "f-ws-client"
+      ],
       "verification": "cd frontend && pnpm exec vitest run app/components/canvas/",
       "evidence": "2026-06-06: 41 tests (InfiniteCanvas5+shapes33+toolbar3) pass",
       "status": "passing",
-      "description": "tldraw无限画布、7个shape组件、工具栏、事件监听"
+      "description": "tldraw\u65e0\u9650\u753b\u5e03\u30017\u4e2ashape\u7ec4\u4ef6\u3001\u5de5\u5177\u680f\u3001\u4e8b\u4ef6\u76d1\u542c"
     },
     {
       "id": "f-chat",
-      "name": "Agent对话面板 (ChatPanel+MessageList)",
+      "name": "Agent\u5bf9\u8bdd\u9762\u677f (ChatPanel+MessageList)",
       "domain": "fullstack",
-      "dependencies": ["f-ws-client"],
+      "dependencies": [
+        "f-ws-client"
+      ],
       "verification": "cd frontend && pnpm exec vitest run app/components/chat/",
       "evidence": "2026-06-06: 23 tests (ChatPanel11+CollapsibleMessage4+MessageList8)",
       "status": "passing",
-      "description": "ChatPanel(264行)、MessageList/Input、CollapsibleMessage"
+      "description": "ChatPanel(264\u884c)\u3001MessageList/Input\u3001CollapsibleMessage"
     },
     {
       "id": "f-project-ui",
-      "name": "项目管理页面 (Home/Projects/New/Detail)",
+      "name": "\u9879\u76ee\u7ba1\u7406\u9875\u9762 (Home/Projects/New/Detail)",
       "domain": "frontend",
-      "dependencies": ["f-state-stores"],
+      "dependencies": [
+        "f-state-stores"
+      ],
       "verification": "cd frontend && pnpm exec vitest run app/pages/",
       "evidence": "2026-06-06: 44 tests (HomePage6+ProjectsPage5+NewProjectPage2+ProjectPage31)",
       "status": "passing",
-      "description": "4条路由页面组件"
+      "description": "4\u6761\u8def\u7531\u9875\u9762\u7ec4\u4ef6"
     },
     {
       "id": "f-ws-client",
-      "name": "WebSocket实时通信 (useWebSocket+event routing)",
+      "name": "WebSocket\u5b9e\u65f6\u901a\u4fe1 (useWebSocket+event routing)",
       "domain": "fullstack",
       "dependencies": [],
       "verification": "cd frontend && pnpm exec vitest run app/hooks/useWebSocket && cd ../backend && uv run pytest tests/test_ws/ tests/test_schemas/test_ws_events.py -q",
       "evidence": "2026-06-06: frontend 37+backend 28=all pass",
       "status": "passing",
-      "description": "useWebSocket(698行)、15+事件路由、auto-reconnect(5次)"
+      "description": "useWebSocket(698\u884c)\u300115+\u4e8b\u4ef6\u8def\u7531\u3001auto-reconnect(5\u6b21)"
     },
     {
       "id": "f-settings-ui",
-      "name": "设置与配置面板 (SettingsModal+ConfigInput)",
+      "name": "\u8bbe\u7f6e\u4e0e\u914d\u7f6e\u9762\u677f (SettingsModal+ConfigInput)",
       "domain": "frontend",
-      "dependencies": ["f-state-stores"],
+      "dependencies": [
+        "f-state-stores"
+      ],
       "verification": "cd frontend && pnpm exec vitest run app/components/settings/",
       "evidence": "2026-06-06: 32 tests (SettingsModal22+ConfigInput10)",
       "status": "passing",
-      "description": "SettingsModal(1113行)、Provider配置、连接测试"
+      "description": "SettingsModal(1113\u884c)\u3001Provider\u914d\u7f6e\u3001\u8fde\u63a5\u6d4b\u8bd5"
     },
     {
       "id": "f-universe-ui",
-      "name": "IP宇宙管理页面 (UniversesPage+UniverseDetailPage)",
+      "name": "IP\u5b87\u5b99\u7ba1\u7406\u9875\u9762 (UniversesPage+UniverseDetailPage)",
       "domain": "frontend",
-      "dependencies": ["f-universe-multi-project"],
+      "dependencies": [
+        "f-universe-multi-project"
+      ],
       "verification": "cd frontend && pnpm exec vitest run app/pages/",
       "evidence": "2026-06-06: vitest pass (covered via pages/ suite; TODO dedicated tests)",
       "status": "passing",
-      "description": "宇宙列表、详情页"
+      "description": "\u5b87\u5b99\u5217\u8868\u3001\u8be6\u60c5\u9875"
     },
     {
       "id": "f-state-stores",
-      "name": "Zustand状态管理 (editor/settings/theme/toast/sidebar/chatPanel)",
+      "name": "Zustand\u72b6\u6001\u7ba1\u7406 (editor/settings/theme/toast/sidebar/chatPanel)",
       "domain": "frontend",
       "dependencies": [],
       "verification": "cd frontend && pnpm exec vitest run app/stores/",
       "evidence": "2026-06-06: 16 tests (editorStore4+settingsStore3+themeStore4+toast5); 2 stores TODO",
       "status": "passing",
-      "description": "6个Zustand stores"
+      "description": "6\u4e2aZustand stores"
     },
     {
       "id": "f-theme",
-      "name": "主题系统 (daisyUI doodle/doodle-dark+CMYK)",
+      "name": "\u4e3b\u9898\u7cfb\u7edf (daisyUI doodle/doodle-dark+CMYK)",
       "domain": "frontend",
-      "dependencies": ["f-state-stores"],
+      "dependencies": [
+        "f-state-stores"
+      ],
       "verification": "cd frontend && pnpm exec vitest run app/stores/themeStore.test.ts app/components/ui/",
       "evidence": "2026-06-06: themeStore(4)+UI theme consistency via vitest+build",
       "status": "passing",
-      "description": "daisyUI漫画双主题、CMYK阴影、halftone、Bangers/Nunito/Fredoka/Caveat字体"
+      "description": "daisyUI\u6f2b\u753b\u53cc\u4e3b\u9898\u3001CMYK\u9634\u5f71\u3001halftone\u3001Bangers/Nunito/Fredoka/Caveat\u5b57\u4f53"
     },
     {
       "id": "f-pipeline-visual",
-      "name": "管线可视化 (StagePipeline+StageView)",
+      "name": "\u7ba1\u7ebf\u53ef\u89c6\u5316 (StagePipeline+StageView)",
       "domain": "frontend",
-      "dependencies": ["f-state-stores", "f-ws-client"],
+      "dependencies": [
+        "f-state-stores",
+        "f-ws-client"
+      ],
       "verification": "cd frontend && pnpm exec vitest run app/components/layout/",
       "evidence": "2026-06-06: StageView(1)+build",
       "status": "passing",
-      "description": "生成管线阶段可视化"
+      "description": "\u751f\u6210\u7ba1\u7ebf\u9636\u6bb5\u53ef\u89c6\u5316"
     },
     {
       "id": "f-ui-system",
-      "name": "通用UI组件库 (Button/Modal/Toast等12组件)",
+      "name": "\u901a\u7528UI\u7ec4\u4ef6\u5e93 (Button/Modal/Toast\u7b4912\u7ec4\u4ef6)",
       "domain": "frontend",
       "dependencies": [],
       "verification": "cd frontend && pnpm exec vitest run app/components/ui/",
       "evidence": "2026-06-06: 71 tests (Button7+Card7+Modal7+Input8+ConfirmModal8+EditModal9+ErrorBoundary4+HoverActionBar6+LoadingOverlay4+TypewriterText5+Toast4+ToastContainer2)",
       "status": "passing",
-      "description": "12个可复用UI组件"
+      "description": "12\u4e2a\u53ef\u590d\u7528UI\u7ec4\u4ef6"
     },
     {
       "id": "f-critic-threshold",
-      "name": "CriticAgent 维度级质量阈值 (P0)",
-      "description": "CriticAgent 评分改为多条件判断（一致性≥4.0 AND 质量≥4.0 AND 加权总分≥6.0），防止单一维度崩坏被掩蔽。对应 analysis_pipeline_report.md §2.2(a)",
+      "name": "CriticAgent \u7ef4\u5ea6\u7ea7\u8d28\u91cf\u9608\u503c (P0)",
+      "description": "CriticAgent \u8bc4\u5206\u6539\u4e3a\u591a\u6761\u4ef6\u5224\u65ad\uff08\u4e00\u81f4\u6027\u22654.0 AND \u8d28\u91cf\u22654.0 AND \u52a0\u6743\u603b\u5206\u22656.0\uff09\uff0c\u9632\u6b62\u5355\u4e00\u7ef4\u5ea6\u5d29\u574f\u88ab\u63a9\u853d\u3002\u5bf9\u5e94 analysis_pipeline_report.md \u00a72.2(a)",
       "dependencies": [],
       "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/ -k 'critic' -q && uv run ruff check app tests",
-      "evidence": "2026-06-06: _critique_decision static method, dimension-level thresholds (consistency≥4/quality≥4/composition≥4 + weighted≥6.0), WS Schema failed_checks field, 8 _critique_decision unit tests, ruff 0, pytest 1114/1114",
-      "notes": "改动范围: CriticAgent 评分逻辑 + _critique_decision 路由 + 测试。来源: analysis §4 P0-1"
+      "evidence": "2026-06-06: _critique_decision static method, dimension-level thresholds (consistency\u22654/quality\u22654/composition\u22654 + weighted\u22656.0), WS Schema failed_checks field, 8 _critique_decision unit tests, ruff 0, pytest 1114/1114",
+      "notes": "\u6539\u52a8\u8303\u56f4: CriticAgent \u8bc4\u5206\u903b\u8f91 + _critique_decision \u8def\u7531 + \u6d4b\u8bd5\u3002\u6765\u6e90: analysis \u00a74 P0-1"
     },
     {
-"id": "f-stage-completeness",
-      "name": "阶段级完整性断言 (P0)",
-      "description": "每个 Production 节点结束时验证产出物完整性（所有角色/分镜都有对应产物），防止部分产出物悄悄缺失。对应 analysis_pipeline_report.md §2.2(b)",
+      "id": "f-stage-completeness",
+      "name": "\u9636\u6bb5\u7ea7\u5b8c\u6574\u6027\u65ad\u8a00 (P0)",
+      "description": "\u6bcf\u4e2a Production \u8282\u70b9\u7ed3\u675f\u65f6\u9a8c\u8bc1\u4ea7\u51fa\u7269\u5b8c\u6574\u6027\uff08\u6240\u6709\u89d2\u8272/\u5206\u955c\u90fd\u6709\u5bf9\u5e94\u4ea7\u7269\uff09\uff0c\u9632\u6b62\u90e8\u5206\u4ea7\u51fa\u7269\u6084\u6084\u7f3a\u5931\u3002\u5bf9\u5e94 analysis_pipeline_report.md \u00a72.2(b)",
       "dependencies": [],
       "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/test_orchestration/ -q && uv run ruff check app tests",
       "evidence": "2026-06-06: nodes.py _check_stage_completeness + _run_sub_stage integration, state.py completeness_warnings, ws.py StageCompletenessWarningEventData, test_stage_completeness.py 9 tests, ruff 0, pytest 1123/1123",
-      "notes": "改动范围: nodes.py render_characters/render_shots 节点 + completeness check helpers + 测试。来源: analysis §4 P0-2"
+      "notes": "\u6539\u52a8\u8303\u56f4: nodes.py render_characters/render_shots \u8282\u70b9 + completeness check helpers + \u6d4b\u8bd5\u3002\u6765\u6e90: analysis \u00a74 P0-2"
     },
     {
       "id": "f-critic-feedback-injection",
-      "name": "Critic 反馈注入再生 prompt (P1)",
-      "description": "将 CriticAgent 的批评文本注入 RenderAgent 的重生 prompt，形成「审查→改进」闭环。对应 analysis_pipeline_report.md §2.2(d)",
-      "dependencies": ["f-critic-threshold"],
+      "name": "Critic \u53cd\u9988\u6ce8\u5165\u518d\u751f prompt (P1)",
+      "description": "\u5c06 CriticAgent \u7684\u6279\u8bc4\u6587\u672c\u6ce8\u5165 RenderAgent \u7684\u91cd\u751f prompt\uff0c\u5f62\u6210\u300c\u5ba1\u67e5\u2192\u6539\u8fdb\u300d\u95ed\u73af\u3002\u5bf9\u5e94 analysis_pipeline_report.md \u00a72.2(d)",
+      "dependencies": [
+        "f-critic-threshold"
+      ],
       "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/ -k 'critic or render' -q && uv run ruff check app tests",
       "evidence": "2026-06-06: agent_ctx.critique_feedback field, _compile_critique_feedback helper, injection in critique_character_nodes, consumption in _build_*_prompt, 12 test_critic_feedback.py tests passing, ruff 0, pytest 1135/1135",
-      "notes": "改动范围: base.py (AgentContext new field) + nodes.py (_compile_critique_feedback + injection in 2 nodes) + render.py (_build_character_prompt + _build_shot_prompt consume feedback) + tests. 来源: analysis §4 P1-1"
+      "notes": "\u6539\u52a8\u8303\u56f4: base.py (AgentContext new field) + nodes.py (_compile_critique_feedback + injection in 2 nodes) + render.py (_build_character_prompt + _build_shot_prompt consume feedback) + tests. \u6765\u6e90: analysis \u00a74 P1-1"
     },
     {
       "id": "f-beat-analysis",
-      "name": "节拍分析：叙事节奏注入分镜 (P1)",
-      "description": "在 outline → plan_shots 间添加节拍分析步骤（情绪曲线、节奏控制注入分镜 duration/camera/lighting）。对应 analysis_pipeline_report.md §3.2(a)",
-      "dependencies": ["f-stage-completeness"],
+      "name": "\u8282\u62cd\u5206\u6790\uff1a\u53d9\u4e8b\u8282\u594f\u6ce8\u5165\u5206\u955c (P1)",
+      "description": "\u5728 outline \u2192 plan_shots \u95f4\u6dfb\u52a0\u8282\u62cd\u5206\u6790\u6b65\u9aa4\uff08\u60c5\u7eea\u66f2\u7ebf\u3001\u8282\u594f\u63a7\u5236\u6ce8\u5165\u5206\u955c duration/camera/lighting\uff09\u3002\u5bf9\u5e94 analysis_pipeline_report.md \u00a73.2(a)",
+      "dependencies": [
+        "f-stage-completeness"
+      ],
       "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/ -k 'beat or outline or plan' -q && uv run ruff check app tests",
       "evidence": "2026-06-06: BeatAnalyzer service module, _call_plan_llm injection, plan.py v3.1.0 + outline.py v2.1.0 prompts, CHANGELOG, 17 beat_analyzer tests, ruff 0, pytest 1152/1152",
-      "notes": "改动范围: OutlineAgent+PlanAgent prompt + 新 BeatAnalyzer 组件 + Prompt VERSION/CHANGELOG + 测试。来源: analysis §4 P1-2"
+      "notes": "\u6539\u52a8\u8303\u56f4: OutlineAgent+PlanAgent prompt + \u65b0 BeatAnalyzer \u7ec4\u4ef6 + Prompt VERSION/CHANGELOG + \u6d4b\u8bd5\u3002\u6765\u6e90: analysis \u00a74 P1-2"
     },
     {
       "id": "f-seed-management",
-      "name": "Seed 管理：生成可复现 (P2)",
-      "description": "ImageService 传递 seed 参数到图像生成 API，支持锁定+微调工作流。Shot.seed 字段已存在（migration 0011），需在服务层传递。对应 analysis_pipeline_report.md §3.2(f)",
-      "dependencies": ["f-critic-feedback-injection"],
+      "name": "Seed \u7ba1\u7406\uff1a\u751f\u6210\u53ef\u590d\u73b0 (P2)",
+      "description": "ImageService \u4f20\u9012 seed \u53c2\u6570\u5230\u56fe\u50cf\u751f\u6210 API\uff0c\u652f\u6301\u9501\u5b9a+\u5fae\u8c03\u5de5\u4f5c\u6d41\u3002Shot.seed \u5b57\u6bb5\u5df2\u5b58\u5728\uff08migration 0011\uff09\uff0c\u9700\u5728\u670d\u52a1\u5c42\u4f20\u9012\u3002\u5bf9\u5e94 analysis_pipeline_report.md \u00a73.2(f)",
+      "dependencies": [
+        "f-critic-feedback-injection"
+      ],
       "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/ -q && uv run ruff check app tests",
       "evidence": "2026-06-06: seed param added to generate_and_cache_image(), dict-based kwarg merging in base.py; seed management (random int32 on first render, reuse on regeneration) in _render_shots() and _render_characters(); ruff 0, pytest 1152/1152",
-      "notes": "改动范围: ImageService + RenderAgent + API 层 seed 传递 + 测试。来源: analysis §4 P2"
+      "notes": "\u6539\u52a8\u8303\u56f4: ImageService + RenderAgent + API \u5c42 seed \u4f20\u9012 + \u6d4b\u8bd5\u3002\u6765\u6e90: analysis \u00a74 P2"
+    },
+    {
+      "id": "f-e2e-integration",
+      "name": "E2E \u96c6\u6210\u6d4b\u8bd5\u6269\u5c55 (Phase 1)",
+      "description": "CriticAgent \u9608\u503c/\u5b8c\u6574\u6027/\u53cd\u9988/\u8282\u62cd/Seed \u7684 E2E \u6d4b\u8bd5\uff0c~18 \u4e2a\u51fd\u6570",
+      "dependencies": [
+        "f-critic-threshold",
+        "f-stage-completeness",
+        "f-critic-feedback-injection",
+        "f-beat-analysis",
+        "f-seed-management"
+      ],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/integration/ -q",
+      "evidence": "2026-06-06: 18 E2E tests (5 critic + 3 completeness + 3 feedback + 3 beat + 4 seed), ruff 0, pytest 1170/1170",
+      "notes": "Phase 1: \u4ec5\u540e\u7aef Stub E2E\u3002Phase 2: \u524d\u7aef Playwright"
+    },
+    {
+      "id": "f-e2e-live-backend",
+      "name": "E2E Live Backend with Stub LLM",
+      "status": "passing",
+      "description": "Phase 2 \u2014 Live Backend E2E with Stub LLM (httpx, SQLite, Fake/Fake/Fake)",
+      "dependencies": [
+        "f-harness-p3",
+        "f-technical-debt",
+        "f-pipeline-core"
+      ],
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/e2e/ -v --tb=short && uv run pytest -q --tb=short && uv run ruff check app tests",
+      "evidence": "2026-06-06: 9 E2E tests pass via httpx.AsyncClient with stub services. Pipeline runs end-to-end (outline\u2192characters\u2192shots\u2192render\u2192compose\u2192audio). AgentTrace read/write verified. RunMetrics API verified. Parallel branch overlap verified. Full chain output verified. 1170 non-e2e tests pass, ruff clean.",
+      "notes": "6 test files, 12 test cases, full pipeline via httpx.AsyncClient"
     }
   ]
 }

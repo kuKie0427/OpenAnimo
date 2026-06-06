@@ -524,239 +524,241 @@ class PlanAgent(BaseAgent):
         return data
 
     async def run_characters(self, ctx: AgentContext) -> None:
-        is_incremental = ctx.rerun_mode == "incremental"
-        if is_incremental:
-            await self.send_message(ctx, "正在增量更新角色...", progress=0.0, is_loading=True)
-        else:
-            await self.send_message(ctx, "正在规划角色设定...", progress=0.0, is_loading=True)
+        async with self.trace_step(ctx, stage="plan_characters", method="run_characters"):
+            is_incremental = ctx.rerun_mode == "incremental"
+            if is_incremental:
+                await self.send_message(ctx, "正在增量更新角色...", progress=0.0, is_loading=True)
+            else:
+                await self.send_message(ctx, "正在规划角色设定...", progress=0.0, is_loading=True)
 
-        # Auto-import shared characters from universe if project belongs to one
-        if getattr(ctx.project, "universe_id", None) and not is_incremental:
-            try:
-                from app.services.universe_service import UniverseService
-                svc = UniverseService(ctx.session)
-                imported = await svc.auto_import_shared_characters(ctx.project.id)
-                if imported:
-                    for char in imported:
-                        await self.send_character_event(ctx, char, "character_created")
-                    await self.send_thinking(
-                        ctx,
-                        phase="planning",
-                        content=f"已从宇宙导入 {len(imported)} 个共享角色：{', '.join(c.name for c in imported)}",
-                    )
-            except (SQLAlchemyError, RuntimeError, ValueError) as e:
-                logger.warning("Failed to auto-import shared characters: %s", e)
+            # Auto-import shared characters from universe if project belongs to one
+            if getattr(ctx.project, "universe_id", None) and not is_incremental:
+                try:
+                    from app.services.universe_service import UniverseService
+                    svc = UniverseService(ctx.session)
+                    imported = await svc.auto_import_shared_characters(ctx.project.id)
+                    if imported:
+                        for char in imported:
+                            await self.send_character_event(ctx, char, "character_created")
+                        await self.send_thinking(
+                            ctx,
+                            phase="planning",
+                            content=f"已从宇宙导入 {len(imported)} 个共享角色：{', '.join(c.name for c in imported)}",
+                        )
+                except (SQLAlchemyError, RuntimeError, ValueError) as e:
+                    logger.warning("Failed to auto-import shared characters: %s", e)
 
-        # Thinking: planning phase — before LLM call
-        await self.send_thinking(
-            ctx,
-            phase="planning",
-            content="正在根据已确认大纲规划角色设定...",
-        )
-
-        data = await self._call_plan_llm(ctx, task="characters")
-        user_message = data.get("user_message") or ""
-
-        # Thinking: decision phase — after LLM returns
-        raw_characters = data.get("characters") or []
-        char_count = len(raw_characters) if isinstance(raw_characters, list) else 0
-        core_idea = user_message or ctx.project.summary or ""
-        await self.send_thinking(
-            ctx,
-            phase="decision",
-            content=f"已规划 {char_count} 个角色。核心创意：{core_idea[:80]}",
-            details=f"故事风格：{ctx.project.style or '未指定'}",
-        )
-
-        if is_incremental:
-            visual_bible = data.get("visual_bible") or ""
-            new_char_count, _ = await self._apply_incremental_changes(ctx, data, visual_bible)
-
-            char_res = await ctx.session.execute(
-                select(Character).where(Character.project_id == ctx.project.id)
+            # Thinking: planning phase — before LLM call
+            await self.send_thinking(
+                ctx,
+                phase="planning",
+                content="正在根据已确认大纲规划角色设定...",
             )
-            final_chars = list(char_res.scalars().all())
-            for char in final_chars:
-                await self.send_character_event(ctx, char, "character_updated")
 
-            char_names = [c.name for c in final_chars]
+            data = await self._call_plan_llm(ctx, task="characters")
+            user_message = data.get("user_message") or ""
+
+            # Thinking: decision phase — after LLM returns
+            raw_characters = data.get("characters") or []
+            char_count = len(raw_characters) if isinstance(raw_characters, list) else 0
+            core_idea = user_message or ctx.project.summary or ""
+            await self.send_thinking(
+                ctx,
+                phase="decision",
+                content=f"已规划 {char_count} 个角色。核心创意：{core_idea[:80]}",
+                details=f"故事风格：{ctx.project.style or '未指定'}",
+            )
+
+            if is_incremental:
+                visual_bible = data.get("visual_bible") or ""
+                new_char_count, _ = await self._apply_incremental_changes(ctx, data, visual_bible)
+
+                char_res = await ctx.session.execute(
+                    select(Character).where(Character.project_id == ctx.project.id)
+                )
+                final_chars = list(char_res.scalars().all())
+                for char in final_chars:
+                    await self.send_character_event(ctx, char, "character_updated")
+
+                char_names = [c.name for c in final_chars]
+                ctx.completion_info = CompletionInfo(
+                    completed=user_message or "角色增量更新完成",
+                    details=f"更新后共 {len(final_chars)} 个角色",
+                    next="接下来生成分镜脚本",
+                    question="角色设定是否满意？",
+                )
+                await self.send_message(
+                    ctx,
+                    user_message or f"角色更新完成（{len(final_chars)} 个）",
+                    summary=f"{len(final_chars)} 个角色",
+                    progress=1.0,
+                )
+                return
+
+            raw_characters = data.get("characters") or []
+            lines: list[str] = []
+            await ctx.session.execute(delete(Character).where(Character.project_id == ctx.project.id))
+            await ctx.session.flush()
+
+            new_characters: list[Character] = []
+            if isinstance(raw_characters, list) and raw_characters:
+                char_names: list[str] = []
+                for item in raw_characters:
+                    if not isinstance(item, dict):
+                        continue
+                    name = item.get("name")
+                    if not (isinstance(name, str) and name.strip()):
+                        continue
+                    char_names.append(name.strip())
+                    new_characters.append(
+                        Character(
+                            project_id=ctx.project.id,
+                            name=name.strip(),
+                            description=_character_to_description(item),
+                            visual_notes=_extract_visual_notes(item),
+                            image_url=None,
+                        )
+                    )
+                if new_characters:
+                    ctx.session.add_all(new_characters)
+                    await ctx.session.flush()
+                    for character in new_characters:
+                        await self.send_character_event(ctx, character, "character_created")
+                    lines.append(f"角色：{', '.join(char_names)}")
+
             ctx.completion_info = CompletionInfo(
-                completed=user_message or "角色增量更新完成",
-                details=f"更新后共 {len(final_chars)} 个角色",
+                completed=user_message or "角色设定已生成",
+                details=f"共 {len(new_characters) if isinstance(raw_characters, list) else 0} 个角色",
                 next="接下来生成分镜脚本",
                 question="角色设定是否满意？",
             )
             await self.send_message(
-                ctx,
-                user_message or f"角色更新完成（{len(final_chars)} 个）",
-                summary=f"{len(final_chars)} 个角色",
-                progress=1.0,
+                ctx, user_message or "\n".join(lines) or "角色规划完成", progress=1.0
             )
-            return
-
-        raw_characters = data.get("characters") or []
-        lines: list[str] = []
-        await ctx.session.execute(delete(Character).where(Character.project_id == ctx.project.id))
-        await ctx.session.flush()
-
-        new_characters: list[Character] = []
-        if isinstance(raw_characters, list) and raw_characters:
-            char_names: list[str] = []
-            for item in raw_characters:
-                if not isinstance(item, dict):
-                    continue
-                name = item.get("name")
-                if not (isinstance(name, str) and name.strip()):
-                    continue
-                char_names.append(name.strip())
-                new_characters.append(
-                    Character(
-                        project_id=ctx.project.id,
-                        name=name.strip(),
-                        description=_character_to_description(item),
-                        visual_notes=_extract_visual_notes(item),
-                        image_url=None,
-                    )
-                )
-            if new_characters:
-                ctx.session.add_all(new_characters)
-                await ctx.session.flush()
-                for character in new_characters:
-                    await self.send_character_event(ctx, character, "character_created")
-                lines.append(f"角色：{', '.join(char_names)}")
-
-        ctx.completion_info = CompletionInfo(
-            completed=user_message or "角色设定已生成",
-            details=f"共 {len(new_characters) if isinstance(raw_characters, list) else 0} 个角色",
-            next="接下来生成分镜脚本",
-            question="角色设定是否满意？",
-        )
-        await self.send_message(
-            ctx, user_message or "\n".join(lines) or "角色规划完成", progress=1.0
-        )
 
     async def run_shots(self, ctx: AgentContext) -> None:
-        char_res = await ctx.session.execute(
-            select(Character).where(Character.project_id == ctx.project.id)
-        )
-        characters = list(char_res.scalars().all())
-        cached_data = getattr(ctx, "plan_data", None)
-        if (
-            isinstance(cached_data, dict)
-            and isinstance(cached_data.get("shots"), list)
-            and cached_data.get("shots")
-        ):
-            data = cached_data
-        else:
-            data = await self._call_plan_llm(ctx, task="shots", characters=characters)
-
-        is_incremental = ctx.rerun_mode == "incremental"
-        visual_bible = data.get("visual_bible") or getattr(ctx.project, "visual_bible", None) or ""
-        user_message = data.get("user_message") or ""
-
-        if is_incremental:
-            await self.send_message(ctx, "正在增量更新分镜...", progress=0.0, is_loading=True)
-            _, new_shot_count = await self._apply_incremental_changes(ctx, data, visual_bible)
-
-            shot_res = await ctx.session.execute(
-                select(Shot).where(Shot.project_id == ctx.project.id).order_by(Shot.order.asc())
+        async with self.trace_step(ctx, stage="plan_shots", method="run_shots"):
+            char_res = await ctx.session.execute(
+                select(Character).where(Character.project_id == ctx.project.id)
             )
-            final_shots = list(shot_res.scalars().all())
-            for shot in final_shots:
-                await self.send_shot_event(ctx, shot, "shot_updated")
+            characters = list(char_res.scalars().all())
+            cached_data = getattr(ctx, "plan_data", None)
+            if (
+                isinstance(cached_data, dict)
+                and isinstance(cached_data.get("shots"), list)
+                and cached_data.get("shots")
+            ):
+                data = cached_data
+            else:
+                data = await self._call_plan_llm(ctx, task="shots", characters=characters)
 
-            lines = [f"{len(final_shots)} 个分镜"]
-            summary = ctx.project.summary or f"{len(final_shots)}个分镜"
+            is_incremental = ctx.rerun_mode == "incremental"
+            visual_bible = data.get("visual_bible") or getattr(ctx.project, "visual_bible", None) or ""
+            user_message = data.get("user_message") or ""
+
+            if is_incremental:
+                await self.send_message(ctx, "正在增量更新分镜...", progress=0.0, is_loading=True)
+                _, new_shot_count = await self._apply_incremental_changes(ctx, data, visual_bible)
+
+                shot_res = await ctx.session.execute(
+                    select(Shot).where(Shot.project_id == ctx.project.id).order_by(Shot.order.asc())
+                )
+                final_shots = list(shot_res.scalars().all())
+                for shot in final_shots:
+                    await self.send_shot_event(ctx, shot, "shot_updated")
+
+                lines = [f"{len(final_shots)} 个分镜"]
+                summary = ctx.project.summary or f"{len(final_shots)}个分镜"
+                ctx.completion_info = CompletionInfo(
+                    completed=user_message or "分镜增量更新完成",
+                    details=f"更新后共 {len(final_shots)} 个分镜",
+                    next="接下来为角色和分镜生成参考图片",
+                    question="分镜是否符合预期？",
+                )
+                await self.send_message(
+                    ctx,
+                    user_message or "\n".join(lines) or "分镜更新完成",
+                    summary=summary,
+                    progress=1.0,
+                )
+                return
+
+            await self.send_message(ctx, "正在生成分镜脚本...", progress=0.0, is_loading=True)
+
+            # Thinking: planning phase — before processing shots
+            await self.send_thinking(
+                ctx,
+                phase="planning",
+                content="正在根据角色设定生成分镜脚本...",
+                details=f"视觉圣经长度：{len(visual_bible)} 字符",
+            )
+
+            raw_shots = data.get("shots") or []
+            if not isinstance(raw_shots, list) or not raw_shots:
+                raise ValueError("LLM 响应未返回任何分镜")
+
+            await ctx.session.execute(delete(Shot).where(Shot.project_id == ctx.project.id))
+            await ctx.session.flush()
+
+            new_shots: list[Shot] = []
+            fallback_order = 1
+            for idx, shot_data in enumerate(raw_shots):
+                if not isinstance(shot_data, dict):
+                    continue
+                shot_desc = shot_data.get("description")
+                if not (isinstance(shot_desc, str) and shot_desc.strip()):
+                    continue
+                order = shot_data.get("order")
+                if isinstance(order, int) and order > 0:
+                    shot_order = order
+                else:
+                    shot_order = fallback_order
+                fallback_order = max(fallback_order, shot_order + 1)
+
+                fields = _shot_fields(ctx, shot_data, visual_bible, characters)
+
+                new_shots.append(
+                    Shot(
+                        order=shot_order,
+                        **fields,
+                    )
+                )
+
+            if not new_shots:
+                raise ValueError("LLM 响应的分镜列表为空或无效")
+
+            new_shots.sort(key=lambda s: s.order)
+            ctx.session.add_all(new_shots)
+            await ctx.session.flush()
+            for shot in new_shots:
+                await self.send_shot_event(ctx, shot, "shot_created")
+            await ctx.session.commit()
+
+            raw_characters = data.get("characters") or []
+            char_count = len(raw_characters) if isinstance(raw_characters, list) else 0
+
+            # Thinking: decision phase — shots generated
+            await self.send_thinking(
+                ctx,
+                phase="decision",
+                content=f"已生成 {len(new_shots)} 个分镜和 {char_count} 个角色",
+                details=f"剧情摘要：{(ctx.project.summary or '')[:60]}",
+            )
+
+            summary = ctx.project.summary or f"{char_count}个角色，{len(new_shots)}个分镜"
+            ctx.project.summary = summary
+            ctx.project.updated_at = utcnow()
+            ctx.session.add(ctx.project)
+
             ctx.completion_info = CompletionInfo(
-                completed=user_message or "分镜增量更新完成",
-                details=f"更新后共 {len(final_shots)} 个分镜",
+                completed=user_message or "分镜脚本已生成",
+                details=f"共 {len(new_shots)} 个分镜",
                 next="接下来为角色和分镜生成参考图片",
                 question="分镜是否符合预期？",
             )
             await self.send_message(
-                ctx,
-                user_message or "\n".join(lines) or "分镜更新完成",
-                summary=summary,
-                progress=1.0,
+                ctx, user_message or f"{len(new_shots)} 个分镜已生成", summary=summary, progress=1.0
             )
-            return
-
-        await self.send_message(ctx, "正在生成分镜脚本...", progress=0.0, is_loading=True)
-
-        # Thinking: planning phase — before processing shots
-        await self.send_thinking(
-            ctx,
-            phase="planning",
-            content="正在根据角色设定生成分镜脚本...",
-            details=f"视觉圣经长度：{len(visual_bible)} 字符",
-        )
-
-        raw_shots = data.get("shots") or []
-        if not isinstance(raw_shots, list) or not raw_shots:
-            raise ValueError("LLM 响应未返回任何分镜")
-
-        await ctx.session.execute(delete(Shot).where(Shot.project_id == ctx.project.id))
-        await ctx.session.flush()
-
-        new_shots: list[Shot] = []
-        fallback_order = 1
-        for idx, shot_data in enumerate(raw_shots):
-            if not isinstance(shot_data, dict):
-                continue
-            shot_desc = shot_data.get("description")
-            if not (isinstance(shot_desc, str) and shot_desc.strip()):
-                continue
-            order = shot_data.get("order")
-            if isinstance(order, int) and order > 0:
-                shot_order = order
-            else:
-                shot_order = fallback_order
-            fallback_order = max(fallback_order, shot_order + 1)
-
-            fields = _shot_fields(ctx, shot_data, visual_bible, characters)
-
-            new_shots.append(
-                Shot(
-                    order=shot_order,
-                    **fields,
-                )
-            )
-
-        if not new_shots:
-            raise ValueError("LLM 响应的分镜列表为空或无效")
-
-        new_shots.sort(key=lambda s: s.order)
-        ctx.session.add_all(new_shots)
-        await ctx.session.flush()
-        for shot in new_shots:
-            await self.send_shot_event(ctx, shot, "shot_created")
-        await ctx.session.commit()
-
-        raw_characters = data.get("characters") or []
-        char_count = len(raw_characters) if isinstance(raw_characters, list) else 0
-
-        # Thinking: decision phase — shots generated
-        await self.send_thinking(
-            ctx,
-            phase="decision",
-            content=f"已生成 {len(new_shots)} 个分镜和 {char_count} 个角色",
-            details=f"剧情摘要：{(ctx.project.summary or '')[:60]}",
-        )
-
-        summary = ctx.project.summary or f"{char_count}个角色，{len(new_shots)}个分镜"
-        ctx.project.summary = summary
-        ctx.project.updated_at = utcnow()
-        ctx.session.add(ctx.project)
-
-        ctx.completion_info = CompletionInfo(
-            completed=user_message or "分镜脚本已生成",
-            details=f"共 {len(new_shots)} 个分镜",
-            next="接下来为角色和分镜生成参考图片",
-            question="分镜是否符合预期？",
-        )
-        await self.send_message(
-            ctx, user_message or f"{len(new_shots)} 个分镜已生成", summary=summary, progress=1.0
-        )
 
     async def run(self, ctx: AgentContext) -> None:
         """Legacy entry point — runs both sub-steps sequentially."""

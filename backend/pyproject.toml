@@ -48,6 +48,9 @@ filterwarnings = [
   "error::pytest.PytestUnraisableExceptionWarning",
   "error:coroutine .* was never awaited:RuntimeWarning",
 ]
+markers = [
+  "e2e: mark test as end-to-end test using live backend with stub services",
+]
 
 [tool.coverage.run]
 concurrency = ["thread", "greenlet"]

@@ -445,29 +445,32 @@ class ComposeAgent(BaseAgent):
 
     async def run_videos(self, ctx: AgentContext) -> int:
         """Generate shot videos only (sub-step 1)."""
-        await self.send_message(ctx, "开始生成分镜视频...", progress=0.0, is_loading=True)
-        video_count = await self._generate_videos(ctx)
-        if video_count > 0:
-            ctx.completion_info = CompletionInfo(
-                completed=f"已生成 {video_count} 个分镜视频",
-                next="接下来拼接完整视频",
-                question="分镜视频效果如何？",
-            )
-        else:
-            ctx.completion_info = CompletionInfo(
-                completed="无视频可生成",
-                next="跳过拼接",
-                question="",
-            )
-        return video_count
+        async with self.trace_step(ctx, stage="compose_videos", method="run_videos"):
+            await self.send_message(ctx, "开始生成分镜视频...", progress=0.0, is_loading=True)
+            video_count = await self._generate_videos(ctx)
+            if video_count > 0:
+                ctx.completion_info = CompletionInfo(
+                    completed=f"已生成 {video_count} 个分镜视频",
+                    next="接下来拼接完整视频",
+                    question="分镜视频效果如何？",
+                )
+            else:
+                ctx.completion_info = CompletionInfo(
+                    completed="无视频可生成",
+                    next="跳过拼接",
+                    question="",
+                )
+            return video_count
 
     async def run_merge(self, ctx: AgentContext) -> None:
         """Merge shot videos into final video (sub-step 2)."""
-        await self._merge_videos(ctx)
+        async with self.trace_step(ctx, stage="compose_merge", method="run_merge"):
+            await self._merge_videos(ctx)
 
     async def run_add_audio(self, ctx: AgentContext) -> None:
         """Add TTS dubbing and BGM to shot videos and final merged video (sub-step 3)."""
-        await self._add_audio_to_videos(ctx)
+        async with self.trace_step(ctx, stage="add_audio", method="run_add_audio"):
+            await self._add_audio_to_videos(ctx)
 
     async def run(self, ctx: AgentContext) -> None:
         """Legacy entry point — runs both sub-steps sequentially."""

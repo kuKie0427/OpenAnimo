@@ -599,7 +599,7 @@ async def critique_character_images_node(
             "stage_history": ["critique_character_images"],
             "artifact_lineage": [_stage_key("critique_character_images")],
             "critique_scores": {},
-            "route_stage": "render_shots",
+            "route_stage": "compose_videos" if _parallel_mode else "render_shots",
         }
 
     # Check max rounds
@@ -610,7 +610,7 @@ async def critique_character_images_node(
             "stage_history": ["critique_character_images"],
             "artifact_lineage": [_stage_key("critique_character_images")],
             "critique_scores": state.get("critique_scores", {}),
-            "route_stage": "render_shots",
+            "route_stage": "compose_videos" if _parallel_mode else "render_shots",
         }
 
     orchestrator = runtime.context.orchestrator
@@ -650,7 +650,7 @@ async def critique_character_images_node(
         )
     else:
         # Either quality is OK or we've hit max rounds
-        next_route = "render_shots"
+        next_route = "compose_videos" if _parallel_mode else "render_shots"
         new_round = critique_round
 
     return {
