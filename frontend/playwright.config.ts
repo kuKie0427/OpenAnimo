@@ -8,6 +8,8 @@ const PORT = process.env.PORT || 15173;
 const baseURL = `http://localhost:${PORT}`;
 
 export default defineConfig({
+  globalSetup: './tests/e2e/global-setup.ts',
+  globalTeardown: './tests/e2e/global-teardown.ts',
   testDir: './tests/e2e',
   /* Run tests in files in parallel */
   fullyParallel: true,
