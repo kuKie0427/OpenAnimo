@@ -72,9 +72,90 @@ def _stage_key(stage: str) -> str:
     return _STAGE_ARTIFACT_KEYS.get(stage, f"stage:{stage}")
 
 
+def _completeness_stages() -> set[str]:
+    """Production stages that require artifact completeness validation."""
+    return {"render_characters", "render_shots", "compose_videos"}
+
+
 def _should_skip_stage(state: Phase2State, stage: str) -> bool:
     artifact_lineage = state.get("artifact_lineage") or []
     return _stage_key(stage) in artifact_lineage
+
+
+async def _check_stage_completeness(
+    stage: str,
+    state: Phase2State,
+    runtime: Runtime[Phase2RuntimeContext],
+) -> dict[str, Any] | None:
+    """Verify all entities have required artifacts for this stage.
+
+    Queries the database to count entities missing required artifacts.
+    Returns a warning dict if incomplete, or None if all complete.
+
+    Checked artifacts per stage:
+      - render_characters -> Character.image_url
+      - render_shots      -> Shot.image_url
+      - compose_videos    -> Shot.video_url
+    """
+    if stage not in _completeness_stages():
+        return None
+
+    from sqlmodel import func, select
+
+    from app.models.project import Character, Shot
+
+    session = runtime.context.orchestrator.session
+    project_id = state["project_id"]
+
+    if stage == "render_characters":
+        entity_label = "characters"
+        artifact_label = "image_url"
+        total_q = select(func.count()).select_from(Character).where(
+            Character.project_id == project_id
+        )
+        missing_q = select(func.count()).select_from(Character).where(
+            Character.project_id == project_id,
+            Character.image_url.is_(None),
+        )
+    elif stage == "render_shots":
+        entity_label = "shots"
+        artifact_label = "image_url"
+        total_q = select(func.count()).select_from(Shot).where(
+            Shot.project_id == project_id
+        )
+        missing_q = select(func.count()).select_from(Shot).where(
+            Shot.project_id == project_id,
+            Shot.image_url.is_(None),
+        )
+    elif stage == "compose_videos":
+        entity_label = "shots"
+        artifact_label = "video_url"
+        total_q = select(func.count()).select_from(Shot).where(
+            Shot.project_id == project_id
+        )
+        missing_q = select(func.count()).select_from(Shot).where(
+            Shot.project_id == project_id,
+            Shot.video_url.is_(None),
+        )
+    else:
+        return None
+
+    total = (await session.execute(total_q)).scalar_one()
+    missing = (await session.execute(missing_q)).scalar_one()
+
+    if total == 0:
+        return None
+
+    if missing == 0:
+        return None
+
+    detail = f"{missing}/{total} {entity_label} missing {artifact_label}"
+    return {
+        "stage": stage,
+        "missing_count": missing,
+        "total": total,
+        "detail": detail,
+    }
 
 
 def _is_video_provider_invalid(run_snapshot: dict[str, Any] | None) -> bool:
@@ -163,11 +244,33 @@ async def _run_sub_stage(
     method = getattr(agent, method_name)
     await method(agent_ctx)
 
-    return {
+    # --- Stage completeness assertion ---
+    completeness_warning = await _check_stage_completeness(stage, state, runtime)
+    if completeness_warning is not None:
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.warning(
+            "Stage %s incomplete: %s",
+            stage,
+            completeness_warning["detail"],
+        )
+        await orchestrator.ws.send_event(
+            agent_ctx.project.id,
+            {
+                "type": "stage_completeness_warning",
+                "data": completeness_warning,
+            },
+        )
+
+    initial_return = {
         "current_stage": stage,
         "stage_history": [stage],
         "artifact_lineage": [_stage_key(stage)],
     }
+    if completeness_warning is not None:
+        initial_return["completeness_warnings"] = [completeness_warning]
+    return initial_return
 
 
 # ---------------------------------------------------------------------------

@@ -105,3 +105,11 @@
 - **决策**: _critique_decision 设计为 @staticmethod 便于纯函数测试；维度级检查在聚合分数前（fail-fast 语义）；failed_checks 用 Field(default_factory=list) 保持向后兼容；AgentMessage 内容用 `⚠️ 维度未达标：{list}` 格式
 - **阻断**: 无
 - **下次**: pipeline-quality-p0-stage-completeness（阶段级完整性断言）
+
+## 2026-06-06 — Session: pipeline-quality-p0-stage-completeness
+- **做了什么**: 实现阶段级完整性断言：state.py 添加 completeness_warnings 字段；nodes.py 添加 _completeness_stages() + _check_stage_completeness() 辅助函数；在 _run_sub_stage() 中 agent 方法完成后调用完整性检查，不完整时 logger.warning + WS broadcast；ws.py 添加 StageCompletenessWarningEventData schema；test_stage_completeness.py 9 个测试覆盖全部代码路径；修复 test_phase2_graph.py _Orchestrator mock 缺少 session 属性
+- **改了什么文件**: backend/app/orchestration/state.py (mod), backend/app/orchestration/nodes.py (mod), backend/app/schemas/ws.py (mod), backend/tests/test_orchestration/test_stage_completeness.py (new), backend/tests/test_orchestration/test_phase2_graph.py (mod), feature_list.json (status→passing)
+- **当前状态**: f-stage-completeness=passing ✅
+- **决策**: DB session 通过 runtime.context.orchestrator.session 访问（Phase2RuntimeContext 无 db_session 直接属性）；completeness 检查不阻塞 continue（优雅降级）；completeness_warnings 使用 Annotated[list, add] reducer 跨节点累加；test_phase2_graph.py _Orchestrator 增加 AsyncMock session 以兼容新 _run_sub_stage 中的完整性检查
+- **阻断**: test_route_helpers_fall_back_to_expected_stages 1 项预存失败（路由逻辑问题，非本阶段引入）
+- **下次**: P1a — Critic 反馈注入再生 prompt（f-critic-feedback-injection）

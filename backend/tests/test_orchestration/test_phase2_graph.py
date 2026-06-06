@@ -4,7 +4,7 @@ from operator import add
 from types import SimpleNamespace
 from typing import Any
 from typing import Annotated, get_args, get_origin, get_type_hints
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -252,6 +252,11 @@ class _Ws:
 class _Orchestrator:
     def __init__(self, executed: list[str]) -> None:
         self.ws = _Ws()
+        # Mock session for _check_stage_completeness: return scalar_one=0 so check passes silently
+        _exec_result = AsyncMock()
+        _exec_result.scalar_one = MagicMock(return_value=0)
+        self.session = MagicMock()
+        self.session.execute = AsyncMock(return_value=_exec_result)
         self.agents = [
             _NoopAgent("outline", executed),
             _NoopAgent("plan", executed),

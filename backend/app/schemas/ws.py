@@ -268,6 +268,14 @@ class ConsistencyEvalCompletedEventData(BaseModel):
     character_count: int = 0
 
 
+class StageCompletenessWarningEventData(BaseModel):
+    """Emitted after a production stage when artifacts are incomplete."""
+    stage: str = ""
+    missing_count: int = 0
+    total: int = 0
+    detail: str = ""
+
+
 # Map of event types to their corresponding data models.
 # Events with empty data (connected, pong, echo) map to None.
 EVENT_DATA_MODELS: dict[str, type[BaseModel] | None] = {

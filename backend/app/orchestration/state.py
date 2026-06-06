@@ -103,6 +103,7 @@ class Phase2State(TypedDict, total=False):
     video_generation_skipped: bool
     critique_scores: dict
     critique_round: int
+    completeness_warnings: Annotated[list[dict[str, Any]], add]
 
 
 @dataclass(slots=True)

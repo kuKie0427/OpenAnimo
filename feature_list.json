@@ -288,14 +288,14 @@
       "notes": "改动范围: CriticAgent 评分逻辑 + _critique_decision 路由 + 测试。来源: analysis §4 P0-1"
     },
     {
-      "id": "f-stage-completeness",
+"id": "f-stage-completeness",
       "name": "阶段级完整性断言 (P0)",
       "description": "每个 Production 节点结束时验证产出物完整性（所有角色/分镜都有对应产物），防止部分产出物悄悄缺失。对应 analysis_pipeline_report.md §2.2(b)",
       "dependencies": [],
-      "status": "not_started",
+      "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/test_orchestration/ -q && uv run ruff check app tests",
-      "evidence": null,
+      "evidence": "2026-06-06: nodes.py _check_stage_completeness + _run_sub_stage integration, state.py completeness_warnings, ws.py StageCompletenessWarningEventData, test_stage_completeness.py 9 tests, ruff 0, pytest 1123/1123",
       "notes": "改动范围: nodes.py render_characters/render_shots 节点 + completeness check helpers + 测试。来源: analysis §4 P0-2"
     },
     {
