@@ -4,6 +4,7 @@ import asyncio
 import logging
 
 import httpx
+import random
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -75,7 +76,7 @@ class RenderAgent(BaseAgent):
         # Fallback to hardcoded mapping
         return self._style_descriptor(style), None
 
-    async def _build_character_prompt(self, character: Character, *, style: str, session: "AsyncSession") -> str:
+    async def _build_character_prompt(self, character: Character, *, style: str, session: "AsyncSession", ctx: AgentContext | None = None) -> str:
         desc = character.description or character.name
         # Inject visual_notes into the prompt if available
         if character.visual_notes:
@@ -85,9 +86,16 @@ class RenderAgent(BaseAgent):
         prompt = f"{desc}, {face_anchor}, {style_desc}"
         if negative:
             prompt += f" || negative: {negative}"
+        # Inject critique feedback if available (targeted regeneration)
+        if ctx and ctx.critique_feedback:
+            char_fb = ctx.critique_feedback.get("character", {}).get(str(character.id))
+            if char_fb:
+                suggestions = "；".join(char_fb.get("suggestions", []))
+                if suggestions:
+                    prompt += f"。改进建议: {suggestions}"
         return prompt
 
-    async def _build_shot_prompt(self, shot: Shot, characters: list[Character], *, style: str, session: "AsyncSession") -> str:
+    async def _build_shot_prompt(self, shot: Shot, characters: list[Character], *, style: str, session: "AsyncSession", ctx: AgentContext | None = None) -> str:
         desc = shot.image_prompt or shot.description
         parts = [desc.strip()]
         # Inject character bible text for each character
@@ -102,6 +110,15 @@ class RenderAgent(BaseAgent):
             parts.append("same character face as reference, consistent identity")
         style_desc, negative = await self._style_descriptor_async(session, style)
         parts.append(style_desc)
+
+        # Inject critique feedback if available (targeted regeneration)
+        if ctx and ctx.critique_feedback:
+            shot_fb = ctx.critique_feedback.get("shot", {}).get(str(shot.id))
+            if shot_fb:
+                suggestions = "；".join(shot_fb.get("suggestions", []))
+                if suggestions:
+                    parts.append(f"改进建议: {suggestions}")
+
         if negative:
             parts.append(f"|| negative: {negative}")
         return ", ".join(parts)
@@ -144,7 +161,7 @@ class RenderAgent(BaseAgent):
                     current=i,
                     message=f"   正在绘制：{char.name} ({i + 1}/{total})",
                 )
-                image_prompt = await self._build_character_prompt(char, style=style, session=ctx.session)
+                image_prompt = await self._build_character_prompt(char, style=style, session=ctx.session, ctx=ctx)
                 version = await self.version_service.auto_snapshot_character(
                     ctx.session,
                     char,
@@ -171,7 +188,15 @@ class RenderAgent(BaseAgent):
                     phase="reasoning",
                     content=f"为 {char.name} 生成形象图，prompt 长度 {len(image_prompt)} 字符",
                 )
-                external_url = await self.generate_and_cache_image(ctx, prompt=image_prompt)
+                # Seed management: generate random seed on first render, reuse on regeneration
+                char_seed = getattr(char, "seed", None)
+                if char_seed is None:
+                    char_seed = random.randint(1, 2_147_483_647)
+                    if hasattr(char, "seed"):
+                        char.seed = char_seed
+                        ctx.session.add(char)
+
+                external_url = await self.generate_and_cache_image(ctx, prompt=image_prompt, seed=char_seed)
                 char.image_url = external_url
                 ctx.session.add(char)
                 await ctx.session.flush()
@@ -309,7 +334,7 @@ class RenderAgent(BaseAgent):
                         "No character images available for shot %d; using text-to-image", shot.id
                     )
 
-                image_prompt = await self._build_shot_prompt(shot, characters, style=style, session=ctx.session)
+                image_prompt = await self._build_shot_prompt(shot, characters, style=style, session=ctx.session, ctx=ctx)
                 version = await self.version_service.auto_snapshot_shot(
                     ctx.session,
                     shot,
@@ -331,11 +356,19 @@ class RenderAgent(BaseAgent):
                         },
                     )
 
+                # Seed management: generate random seed on first render, reuse on regeneration
+                render_seed = shot.seed
+                if render_seed is None:
+                    render_seed = random.randint(1, 2_147_483_647)  # int32 range
+                    shot.seed = render_seed
+                    ctx.session.add(shot)
+
                 image_url = await self.generate_and_cache_image(
                     ctx,
                     prompt=image_prompt,
                     image_bytes=reference_image_bytes,
                     timeout_s=480.0,
+                    seed=render_seed,
                 )
 
                 shot.image_url = image_url

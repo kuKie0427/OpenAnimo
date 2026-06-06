@@ -158,6 +158,28 @@ async def _check_stage_completeness(
     }
 
 
+def _compile_critique_feedback(scores: dict[str, dict], entity_type: str) -> dict[str, dict[str, dict[str, list[str]]]]:
+    """Compile critique scores into feedback dict for prompt injection.
+
+    Extracts issues and suggestions from each entity's review, keyed by entity ID.
+    Used to inject targeted improvement instructions into regeneration prompts.
+
+    Args:
+        scores: Per-entity review dicts from CriticAgent.run_*_review()["scores"]
+        entity_type: "character" or "shot"
+
+    Returns:
+        {"character": {"1": {"issues": [...], "suggestions": [...]}}, ...}
+    """
+    feedback: dict[str, dict[str, list[str]]] = {}
+    for eid_str, review in scores.items():
+        feedback[str(eid_str)] = {
+            "issues": [str(i) for i in review.get("issues", [])],
+            "suggestions": [str(s) for s in review.get("suggestions", [])],
+        }
+    return {entity_type: feedback}
+
+
 def _is_video_provider_invalid(run_snapshot: dict[str, Any] | None) -> bool:
     if not isinstance(run_snapshot, dict):
         return False
@@ -623,6 +645,9 @@ async def critique_character_images_node(
         # Route back to render_characters for regeneration
         next_route = "render_characters"
         new_round = critique_round + 1
+        agent_ctx.critique_feedback = _compile_critique_feedback(
+            result.get("scores", {}), "character"
+        )
     else:
         # Either quality is OK or we've hit max rounds
         next_route = "render_shots"
@@ -697,6 +722,9 @@ async def critique_shot_images_node(
     if should_regenerate and critique_round < settings.critique_max_rounds - 1:
         next_route = "render_shots"
         new_round = critique_round + 1
+        agent_ctx.critique_feedback = _compile_critique_feedback(
+            result.get("scores", {}), "shot"
+        )
     else:
         next_route = "compose_videos"
         new_round = critique_round

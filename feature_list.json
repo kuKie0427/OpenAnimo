@@ -325,10 +325,10 @@
       "name": "Seed 管理：生成可复现 (P2)",
       "description": "ImageService 传递 seed 参数到图像生成 API，支持锁定+微调工作流。Shot.seed 字段已存在（migration 0011），需在服务层传递。对应 analysis_pipeline_report.md §3.2(f)",
       "dependencies": ["f-critic-feedback-injection"],
-      "status": "not_started",
+      "status": "passing",
       "domain": "backend",
-      "verification": "cd backend && uv run pytest tests/test_services/ -k 'image or render' -q && uv run ruff check app tests",
-      "evidence": null,
+      "verification": "cd backend && uv run pytest tests/ -q && uv run ruff check app tests",
+      "evidence": "2026-06-06: seed param added to generate_and_cache_image(), dict-based kwarg merging in base.py; seed management (random int32 on first render, reuse on regeneration) in _render_shots() and _render_characters(); ruff 0, pytest 1152/1152",
       "notes": "改动范围: ImageService + RenderAgent + API 层 seed 传递 + 测试。来源: analysis §4 P2"
     }
   ]

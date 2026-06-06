@@ -122,6 +122,14 @@
 - **阻断**: 无（test_route_helpers_fall_back_to_expected_stages 预存失败非本阶段引入）
 - **下次**: P1b — 节拍分析注入分镜（f-beat-analysis）或 P2 — Seed 管理（f-seed-management）
 
+## 2026-06-06 — Session: pipeline-quality-p2-seed-management
+- **做了什么**: 实现 Seed 管理（f-seed-management）。在 base.py generate_and_cache_image() 添加显式 seed 参数及 dict 合并透传；在 render.py _render_shots() 中添加首次生成随机 int32 种子并持久化到 shot.seed、再生时复用逻辑；在 render.py _render_characters() 中添加 getattr/hasattr 防御式 seed 支持；同时修复 P1a（f-critic-feedback-injection）代码缺失问题（critique_feedback 字段 + _compile_critique_feedback + prompt 注入 + 测试）
+- **改了什么文件**: backend/app/agents/base.py (mod: seed param + critique_feedback field), backend/app/agents/render.py (mod: seed management + critique feedback injection), backend/app/orchestration/nodes.py (mod: +_compile_critique_feedback), backend/tests/test_agents/test_critic_feedback.py (new), feature_list.json (status: active→passing)
+- **当前状态**: f-seed-management=passing ✅
+- **决策**: seed 用 int32 范围 (1~2^31-1) 避免 0（某些 API 0 表示随机）；getattr/hasattr 防御式访问 Character 模型（当前无 seed 字段）；generate_kwargs dict 合并确保 seed 不与已有 kwargs 冲突；seed 仅当 is not None 时传递保持向后兼容
+- **阻断**: 无（frontend 构建超时属已知问题）
+- **下次**: 所有 5 项 Pipeline Quality features 全部 passing → 分析报告 §4 优先级行动清单交付完成
+
 ## 2026-06-06 — Session: pipeline-quality-p1-beat-analysis
 - **做了什么**: 实现节拍分析注入分镜（f-beat-analysis）。创建 BeatAnalyzer 纯计算模块（beat_analyzer.py）；在 _call_plan_llm() 中注入 beat_schedule；plan.py prompt v3.1.0 添加节拍调度指令；outline.py prompt v2.1.0 增强 emotional_arc 结构；更新 CHANGELOG；创建 17 个 beat_analyzer 测试
 - **改了什么文件**: backend/app/services/beat_analyzer.py (new), backend/app/agents/plan.py (mod), backend/app/agents/prompts/plan.py (mod), backend/app/agents/prompts/outline.py (mod), backend/app/agents/prompts/CHANGELOG.md (mod), backend/tests/test_services/test_beat_analyzer.py (new), feature_list.json (status: not_started→active→passing)

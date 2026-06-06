@@ -68,6 +68,8 @@ class AgentContext:
     completion_info: CompletionInfo | None = None
     plan_data: dict | None = None  # Cached LLM response from plan_characters for plan_shots
     fault_injector: dict | None = None  # 仅测试环境使用
+    # Critique feedback from CriticAgent for targeted regeneration (set by nodes.py)
+    critique_feedback: dict[str, dict[str, dict[str, list[str]]]] | None = None
 
 
 class BaseAgent:
@@ -221,6 +223,7 @@ class BaseAgent:
         prompt: str,
         image_bytes: bytes | None = None,
         timeout_s: float | None = None,
+        seed: int | None = None,
         **kwargs: Any,
     ) -> str:
         """生成图片并缓存到本地
@@ -230,15 +233,20 @@ class BaseAgent:
             prompt: 图片生成 prompt
             image_bytes: 可选的参考图片字节流（用于 I2I）
             timeout_s: 仅对 generate_url 阶段生效的超时（秒）；缓存/下载不受此超时影响
+            seed: 随机种子，用于控制图片生成的确定性
             **kwargs: 传递给 generate_url 的额外参数
 
         Returns:
             缓存后的图片 URL
         """
+        generate_kwargs: dict[str, Any] = {}
+        if seed is not None:
+            generate_kwargs["seed"] = seed
+        generate_kwargs.update(kwargs)
         generate_url_coro = ctx.image.generate_url(
             prompt=prompt,
             image_bytes=image_bytes,
-            **kwargs,
+            **generate_kwargs,
         )
         if timeout_s is not None:
             try:
