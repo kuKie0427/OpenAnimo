@@ -153,3 +153,29 @@
 - **决策**: async_session_maker 需要模块级 + 本地绑定双重 patch；BackgroundTasks 在 ASGITransport 模式需 immediate_exec 替代；trace_step 调用需 wrap 整个 run_* 方法体；critique_character_images_node 并行路由 unconditional render_shots 需改为 compose_videos if _parallel_mode
 - **阻断**: WS E2E 测试需同步 TestClient 重构（WS 连接必须在 generate 前建立且兼容 async fixture 生命周期）
 - **下次**: Phase 3 — e2e-testing-p3-frontend-integration（前端 Playwright E2E）
+
+## 2026-06-07 — E2E Real Integration Tests
+
+### 已完成
+- Pre-Gate: stub_services config field, Playwright install, mock E2E fixes (openChatPanel → Zustand localStorage, "待确认" → "规划 已完成")
+- Task 0: feature_list.json entry, global-setup.ts (uv path, random port, SQLite, alembic, seed project), global-teardown.ts, conftest.ts (BACKEND_PORT, SEED_PROJECT_ID, seedProject)
+- Task 1: workflow-real-api.spec.ts — 4 serial real API integration tests
+- Task 2: workflow-real-ws.spec.ts — 3 serial real WS tests
+- Task 3: Full generation flow test appended to workflow-real-api.spec.ts
+- Task 4: workflow-real-recovery.spec.ts — 2 serial recovery flow tests
+- Task 5: Feedback test appended to workflow-real-api.spec.ts
+
+### 决策
+- global-setup 使用 `resolveUvBinary()` 搜索 `which uv` 和已知路径，修复 Playwright 进程找不到 uv 的 PATH 问题
+- ChatPanel 通过 Zustand persist localStorage 键 "openOii-chat-panel" 来打开
+- 后端通过 `STUB_SERVICES=true` 环境变量切换所有 provider 为 fake（非 `OPENOII_STUB_SERVICES`，pydantic-settings 无 env_prefix）
+- 使用 `test.describe.configure({ mode: 'serial' })` 避免真实后端的并发数据竞争
+- 使用 `page.addInitScript()` + `page.reload()` 模式初始化 localStorage 状态
+
+### 阻断
+- `backend/tests/e2e/test_parallel_e2e.py::test_convergence_before_compose` 因 SQLite 并发锁定持续失败（预存问题，与本 Phase 无关）
+
+### 文件改动
+- 新建: global-setup.ts, global-teardown.ts, conftest.ts, workflow-real-api.spec.ts, workflow-real-ws.spec.ts, workflow-real-recovery.spec.ts
+- 修改: config.py (stub_services), feature_list.json, playwright.config.ts, workflow-stage-sync.spec.ts (2次预存测试修复)
+- 零改动: frontend/app/ 目录下的源代码

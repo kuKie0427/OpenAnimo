@@ -196,7 +196,14 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function openChatPanel(page: Page) {
-	await page.locator('button[title="对话面板"]').first().click();
+	await page.addInitScript(() => {
+		localStorage.setItem(
+			"openOii-chat-panel",
+			JSON.stringify({ state: { isOpen: true }, version: 0 }),
+		);
+	});
+	await page.reload();
+	await page.waitForLoadState("networkidle");
 }
 
 test("canvas progressively reveals sections following 3-stage plan→render→compose pipeline", async ({
@@ -246,7 +253,7 @@ test("canvas progressively reveals sections following 3-stage plan→render→co
 
 	await expect(page.getByText("确认继续？")).toBeVisible();
 	await expect(page.getByRole("button", { name: "通过" })).toBeVisible();
-	await expect(page.getByText("待确认")).toBeVisible();
+	await expect(page.getByText("规划 已完成")).toBeVisible();
 
 	await page.evaluate(() => {
 		window.__mockWs.dispatch({
