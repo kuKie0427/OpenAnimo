@@ -12,7 +12,8 @@
     "test:coverage": "vitest run --coverage",
     "e2e": "playwright test",
     "e2e:report": "playwright show-report",
-    "e2e:install": "playwright install --with-deps"
+    "e2e:install": "playwright install --with-deps",
+    "e2e:integration": "playwright test tests/e2e/workflow-real-*.spec.ts"
   },
   "dependencies": {
     "@fontsource/bangers": "^5.2.8",

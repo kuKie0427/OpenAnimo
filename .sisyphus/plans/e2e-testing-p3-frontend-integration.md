@@ -344,23 +344,23 @@ cd frontend && npx playwright test tests/e2e/workflow-real-api.spec.ts -g "feedb
 ## Guardrails（检查清单）
 
 **向后兼容**:
-- [ ] `workflow-stage-sync.spec.ts` 的 4 个 mock 测试不变、不过、不被 skip
-- [ ] `pnpm e2e`（默认命令）仍然只跑 mock 测试（集成测试通过 `test.describe` name 过滤或单独 project）
+- [x] `workflow-stage-sync.spec.ts` 的 4 个 mock 测试不变、不过、不被 skip
+- [x] `pnpm e2e`（默认命令）仍然只跑 mock 测试 — 所有集成测试通过 `test.describe("Real...")` 名称区分
 
 **后端 stub 隔离**:
-- [ ] 后端 stub 服务不向外部发送任何 HTTP 请求（LLM/Image/Video API key 不参与）
-- [ ] 后端 stub 使用独立 SQLite 文件（不影响开发/生产数据库）
-- [ ] 后端 stub 进程在测试完成后一定被杀死（globalTeardown 保证）
+- [x] 后端 stub 服务不向外部发送任何 HTTP 请求（LLM/Image/Video API key 不参与 — 所有 provider 设为 fake）
+- [x] 后端 stub 使用独立 SQLite 文件（global-setup 创建临时目录，不影响开发/生产数据库）
+- [x] 后端 stub 进程在测试完成后一定被杀死（globalTeardown SIGTERM→10s→SIGKILL）
 
 **端口管理**:
-- [ ] 后端使用随机端口（`net.createServer` + listen + close 获取）
-- [ ] 前端 Vite 使用固定端口 15173（现有行为不变）
-- [ ] globalSetup 写入的端口号在 globalTeardown 前被清理
+- [x] 后端使用随机端口（`net.createServer` + listen + close 获取）
+- [x] 前端 Vite 使用固定端口 15173（未修改）
+- [x] globalSetup 写入的端口号在 globalTeardown 前被清理（`.e2e-state.json` deleted）
 
 **代码质量**:
-- [ ] 新增文件全部 TypeScript（`conftest.ts`, `global-setup.ts`, `global-teardown.ts`, spec 文件）
-- [ ] 不引入新 npm 依赖（使用 Node.js 内置 `child_process`, `net`, `fs` 模块）
-- [ ] 不修改前端源代码（`app/` 目录零改动）
+- [x] 新增文件全部 TypeScript（`conftest.ts`, `global-setup.ts`, `global-teardown.ts`, 3 个 spec 文件）
+- [x] 不引入新 npm 依赖（仅使用 Node.js 内置 `child_process`, `net`, `fs`, `path`, `os`）
+- [x] 不修改前端源代码（`app/` 目录零改动 — 已验证 editorStore.ts 回滚）
 
 ---
 
