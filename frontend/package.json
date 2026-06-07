@@ -1,5 +1,5 @@
 {
-  "name": "openOii-frontend",
+  "name": "openanimo-frontend",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -16,10 +16,10 @@
     "e2e:integration": "playwright test tests/e2e/workflow-real-*.spec.ts"
   },
   "dependencies": {
-    "@fontsource/bangers": "^5.2.8",
-    "@fontsource/caveat": "^5.2.8",
-    "@fontsource/fredoka": "^5.2.10",
-    "@fontsource/nunito": "^5.2.7",
+    "@fontsource/cormorant-garamond": "^5.2.11",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/playfair-display": "^5.2.8",
+    "@fontsource/source-sans-3": "^5.2.9",
     "@heroicons/react": "^2.2.0",
     "@tanstack/react-query": "^5.62.0",
     "clsx": "^2.1.1",

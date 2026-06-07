@@ -5,10 +5,6 @@
 
 @layer base {
   :root {
-    /* CMYK Registration Colors (theme-aware) */
-    --cmyk-cyan: 0.55 0.14 180;
-    --cmyk-magenta: 0.55 0.26 330;
-
     /* Spacing Scale */
     --space-xs: 0.25rem;  /* 4px */
     --space-sm: 0.5rem;   /* 8px */
@@ -16,11 +12,6 @@
     --space-lg: 1.5rem;   /* 24px */
     --space-xl: 2rem;     /* 32px */
     --space-2xl: 3rem;    /* 48px */
-
-    /* Border Widths */
-    --border-thin: 2px;
-    --border-medium: 3px;
-    --border-thick: 4px;
 
     /* Touch Targets */
     --touch-target-min: 44px;
@@ -39,11 +30,6 @@
     --z-popover: 60;
     --z-tooltip: 70;
   }
-
-  [data-theme="doodle-dark"] {
-    --cmyk-cyan: 0.6 0.12 195;
-    --cmyk-magenta: 0.6 0.24 340;
-  }
 }
 
 /* Utility Classes for Design Tokens */
@@ -52,18 +38,5 @@
   .touch-target {
     min-width: var(--touch-target-min);
     min-height: var(--touch-target-min);
-  }
-
-  /* Brutal Shadow Hover Pattern */
-  .brutal-hover {
-    @apply transition-all duration-200;
-  }
-
-  .brutal-hover:hover {
-    @apply shadow-brutal-lg -translate-x-0.5 -translate-y-0.5;
-  }
-
-  .brutal-hover:active {
-    @apply shadow-brutal translate-x-0 translate-y-0;
   }
 }

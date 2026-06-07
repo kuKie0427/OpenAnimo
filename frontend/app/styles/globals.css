@@ -27,7 +27,7 @@
     outline: none;
   }
 
-  [data-theme], .btn, .card-doodle, .card-comic, .btn-doodle, .btn-comic, .input-doodle, a, nav, header, aside {
+  [data-theme], .btn, .card-screen, .card-feature, .btn-projection, .input-field, .message-ai, .message-user, a, nav, header, aside {
     transition-property: background-color, border-color, color, fill, stroke;
     transition-duration: 200ms;
     transition-timing-function: ease-in-out;
@@ -74,319 +74,139 @@
 }
 
 @layer components {
-  .card-doodle {
-    @apply bg-base-100 border-3 border-base-content/30 rounded-xl transition-all duration-200;
-    box-shadow: 4px 4px 0px 0px oklch(var(--bc) / 0.3);
+  /* Card components */
+  .card-screen {
+    @apply bg-base-200 rounded-lg border border-base-content/6;
+    box-shadow: 0 0 1px oklch(var(--bc) / 0.08), 0 0 8px oklch(var(--bc) / 0.04);
+    transition: box-shadow 200ms ease-out;
   }
-  .card-doodle:hover {
-    @apply -translate-x-0.5 -translate-y-0.5;
-    box-shadow: 6px 6px 0px 0px oklch(var(--bc) / 0.3);
-  }
-
-  .card-comic {
-    @apply bg-base-100 border-3 border-base-content/40 rounded-lg transition-all duration-150;
-    box-shadow: 4px 4px 0px 0px oklch(var(--cmyk-cyan) / 0.7), 7px 7px 0px 0px oklch(var(--cmyk-magenta) / 0.5);
-  }
-  .card-comic:hover {
-    @apply -translate-x-0.5 -translate-y-0.5;
-    box-shadow: 5px 5px 0px 0px oklch(var(--cmyk-cyan) / 0.8), 9px 9px 0px 0px oklch(var(--cmyk-magenta) / 0.6);
-  }
-  [data-theme="doodle-dark"] .card-comic:hover {
-    border-color: oklch(var(--bc) / 0.5);
-    box-shadow: 5px 5px 0px 0px oklch(var(--cmyk-cyan) / 0.7), 9px 9px 0px 0px oklch(var(--cmyk-magenta) / 0.5);
+  .card-screen:hover {
+    box-shadow: 0 0 40px oklch(var(--p) / 0.15), 0 0 80px oklch(var(--p) / 0.06);
   }
 
-  .btn-doodle {
-    @apply border-3 border-base-content/30 rounded-lg font-bold uppercase tracking-wide transition-all duration-150 flex items-center whitespace-nowrap gap-1;
-    box-shadow: 4px 4px 0px 0px oklch(var(--bc) / 0.3);
+  .card-feature {
+    @apply bg-base-300 rounded-xl border border-primary/12;
+    box-shadow: 0 0 0 1px oklch(var(--p) / 0.12), 0 0 20px oklch(var(--p) / 0.08);
   }
-  .btn-doodle:hover:not(:disabled) {
-    @apply -translate-x-0.5 -translate-y-0.5;
-    box-shadow: 6px 6px 0px 0px oklch(var(--bc) / 0.3);
+
+  /* Button */
+  .btn-projection {
+    @apply bg-primary text-primary-content rounded-sm border border-primary/50 font-heading;
+    padding: 10px 24px;
+    transition: box-shadow 200ms ease-out, background-color 150ms ease-out;
   }
-  .btn-doodle:active:not(:disabled) {
-    @apply translate-x-1 translate-y-1;
+  .btn-projection:hover:not(:disabled) {
+    box-shadow: 0 0 40px oklch(var(--p) / 0.15), 0 0 80px oklch(var(--p) / 0.06);
+  }
+  .btn-projection:active:not(:disabled) {
     box-shadow: none;
+    @apply bg-primary/80;
   }
-  .btn-doodle:disabled {
-    @apply cursor-not-allowed;
-  }
-
-  .btn-comic {
-    @apply border-3 border-base-content/40 rounded-lg font-bold tracking-wide transition-all duration-150;
-    box-shadow: 4px 4px 0px 0px oklch(var(--cmyk-cyan) / 0.7), 7px 7px 0px 0px oklch(var(--cmyk-magenta) / 0.5);
-  }
-  .btn-comic:hover:not(:disabled) {
-    @apply -translate-x-0.5 -translate-y-0.5;
-    box-shadow: 5px 5px 0px 0px oklch(var(--cmyk-cyan) / 0.8), 9px 9px 0px 0px oklch(var(--cmyk-magenta) / 0.6);
-  }
-  .btn-comic:active:not(:disabled) {
-    @apply translate-x-1 translate-y-1;
-    box-shadow: none;
+  .btn-projection:disabled {
+    @apply opacity-40 cursor-not-allowed;
   }
 
-  .input-doodle {
-    @apply border-3 border-base-content/30 rounded-lg bg-base-100 outline-none focus:border-primary transition-colors;
+  /* Input */
+  .input-field {
+    @apply bg-base-300 rounded-sm border border-base-content/12 outline-none;
+    transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+  }
+  .input-field:focus {
+    @apply border-primary;
+    box-shadow: 0 0 1px oklch(var(--bc) / 0.08), 0 0 8px oklch(var(--bc) / 0.04);
   }
 
-  .halftone-bg {
-    background-image: radial-gradient(circle, oklch(var(--bc) / 0.08) 1.2px, transparent 1.2px);
-    background-size: 7px 7px;
+  /* Chat messages */
+  .message-ai {
+    @apply bg-base-300 rounded-lg border border-base-content/6;
+    border-left: 1px solid oklch(var(--p) / 0.4);
   }
 
-  .halftone-bg-accent {
-    background-image: radial-gradient(circle, oklch(var(--p) / 0.16) 1.2px, transparent 1.2px);
-    background-size: 7px 7px;
+  .message-user {
+    @apply bg-primary/8 rounded-lg border border-primary/15;
   }
 
-  .halftone-bg-dense {
-    background-image: radial-gradient(circle, oklch(var(--bc) / 0.1) 1.4px, transparent 1.4px);
-    background-size: 5px 5px;
-  }
-
-  [data-theme="doodle-dark"] .halftone-bg {
-    background-image: radial-gradient(circle, oklch(var(--bc) / 0.2) 1.2px, transparent 1.2px);
-  }
-  [data-theme="doodle-dark"] .halftone-bg-dense {
-    background-image: radial-gradient(circle, oklch(var(--bc) / 0.25) 1.4px, transparent 1.4px);
-  }
-  [data-theme="doodle-dark"] .halftone-bg-accent {
-    background-image: radial-gradient(circle, oklch(var(--p) / 0.3) 1.2px, transparent 1.2px);
-  }
-
-  .speech-bubble {
-    @apply relative bg-base-300/50 rounded-xl px-3 py-2;
-    font-family: "Bangers", "Impact", sans-serif;
-  }
-  .speech-bubble::after {
+  /* Film grain textures - using SVG feTurbulence via CSS */
+  .grain-subtle::before {
     content: "";
-    @apply absolute -left-1.5 top-2.5;
-    width: 0;
-    height: 0;
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-right: 6px solid oklch(var(--b3) / 0.5);
-  }
-  [data-theme="doodle-dark"] .speech-bubble::after {
-    border-right: 6px solid oklch(var(--b3) / 0.7);
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+    pointer-events: none;
+    z-index: 0;
   }
 
-  .speech-bubble-user {
-    @apply relative bg-primary/10 rounded-xl px-3 py-2;
-  }
-  .speech-bubble-user::after {
+  .grain-hero::before {
     content: "";
-    @apply absolute -right-1.5 top-2.5;
-    width: 0;
-    height: 0;
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-left: 6px solid oklch(var(--p) / 0.1);
+    position: absolute;
+    inset: 0;
+    opacity: 0.06;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), radial-gradient(ellipse at center, transparent 60%, oklch(0% 0 0 / 0.15) 100%);
+    background-repeat: repeat, no-repeat;
+    background-size: 256px 256px, 100% 100%;
+    pointer-events: none;
+    z-index: 0;
   }
-  [data-theme="doodle-dark"] .speech-bubble-user::after {
-    border-left: 6px solid oklch(var(--p) / 0.3);
-  }
 
-  .underline-sketch {
-     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10'%3E%3Cpath d='M0 8 Q 25 2, 50 8 T 100 8' stroke='%23FFDE59' stroke-width='3' fill='none'/%3E%3C/svg%3E");
-     background-repeat: repeat-x;
-     background-position: bottom;
-     background-size: 100px 10px;
-     padding-bottom: 8px;
-   }
-
-  .doodle-star::before {
-     content: "✦";
-    @apply absolute -top-2 -right-2 text-primary text-xl animate-pulse;
-   }
-
-  .doodle-circle {
-    @apply relative;
-   }
-  .doodle-circle::after {
+  .grain-dense::before {
     content: "";
-    @apply absolute -inset-2 border-2 border-dashed border-secondary rounded-full opacity-50;
-   }
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), repeating-linear-gradient(0deg, transparent, transparent 1px, oklch(0% 0 0 / 0.02) 1px, oklch(0% 0 0 / 0.02) 2px);
+    background-repeat: repeat, repeat;
+    background-size: 256px 256px, 2px 2px;
+    pointer-events: none;
+    z-index: 0;
+  }
 }
 
 @layer utilities {
- /* 手绘边框效果 */
- .border-sketch {
-    border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
-  }
-
- /* 抖动动画 */
- .animate-wiggle {
-    animation: wiggle 0.3s ease-in-out infinite;
-    will-change: transform;
-  }
-
- @keyframes wiggle {
-    0%, 100% { transform: rotate(-1deg); }
-    50% { transform: rotate(1deg); }
-  }
-
- /* 弹跳进入 */
- .animate-bounce-in {
-    animation: bounce-in 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-    will-change: transform, opacity;
-  }
-
-  @keyframes bounce-in {
-     0% { transform: scale(0) rotate(-5deg); opacity: 0; }
-     60% { transform: scale(1.02) rotate(0.5deg); }
-     100% { transform: scale(1) rotate(0deg); opacity: 1; }
-   }
-
- /* 手绘描边动画 */
- .animate-draw-in {
-    animation: draw-in 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-    will-change: transform, opacity;
-  }
-
- @keyframes draw-in {
-    0% {
-      opacity: 0;
-      transform: scale(0.8) rotate(-3deg);
-      filter: blur(4px);
-    }
-    50% {
-      opacity: 0.5;
-      transform: scale(1.02) rotate(1deg);
-      filter: blur(2px);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1) rotate(0deg);
-      filter: blur(0);
-    }
-  }
-
- /* 涂鸦浮现 */
- .animate-doodle-pop {
-    animation: doodle-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: transform, opacity;
-  }
-
- @keyframes doodle-pop {
-    0% {
-      transform: scale(0) rotate(-12deg);
-      opacity: 0;
-    }
-    70% {
-      transform: scale(1.08) rotate(3deg);
-    }
-    100% {
-      transform: scale(1) rotate(0deg);
-      opacity: 1;
-    }
-  }
-
- /* 水平弹跳动画 */
- .animate-bounce-x {
-    animation: bounce-x 1s infinite;
-    will-change: transform;
-  }
-
- @keyframes bounce-x {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(-8px); }
-  }
-
- /* 淡入动画 */
- .animate-fade-in {
+  /* 淡入动画 */
+  .animate-fade-in {
     animation: fade-in 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     will-change: opacity, transform;
   }
 
- @keyframes fade-in {
+  @keyframes fade-in {
     0% { opacity: 0; transform: translateY(-4px); }
     100% { opacity: 1; transform: translateY(0); }
   }
 
- /* 消息滑入动画 */
- .animate-slide-in-left {
-    animation: slide-in-left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    will-change: opacity, transform;
-  }
-
- .animate-slide-in-right {
-    animation: slide-in-right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    will-change: opacity, transform;
-  }
-
- @keyframes slide-in-left {
-    0% { opacity: 0; transform: translateX(-16px); }
-    100% { opacity: 1; transform: translateX(0); }
-  }
-
- @keyframes slide-in-right {
-    0% { opacity: 0; transform: translateX(16px); }
-    100% { opacity: 1; transform: translateX(0); }
-  }
-
- /* 进度条闪光效果 */
- .animate-shimmer {
-    animation: shimmer 2s infinite;
-    will-change: opacity;
-  }
-
- @keyframes shimmer {
-    0% { opacity: 0; }
-    50% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-
- /* 成功庆祝动画 */
- .animate-success-celebration {
-    animation: success-celebration 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: transform;
-  }
-
- @keyframes success-celebration {
-    0% { transform: scale(1); }
-    25% { transform: scale(1.1) rotate(5deg); }
-    50% { transform: scale(0.95) rotate(-5deg); }
-    75% { transform: scale(1.05) rotate(3deg); }
-    100% { transform: scale(1) rotate(0deg); }
-  }
-
- /* 脉冲高亮 */
- .animate-pulse-highlight {
-    animation: pulse-highlight 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-  }
-
- @keyframes pulse-highlight {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0); }
-    50% { box-shadow: 0 0 0 8px rgba(var(--color-primary-rgb), 0.3); }
-  }
-
- /* 触摸目标最小尺寸 */
- .touch-target {
-   @apply min-w-[44px] min-h-[44px];
+  /* 触摸目标最小尺寸 */
+  .touch-target {
+    @apply min-w-[44px] min-h-[44px];
   }
 }
 
  /* 减少动画偏好 */
 @media (prefers-reduced-motion: reduce) {
- .animate-wiggle,
- .animate-bounce-in,
- .animate-bounce-x,
- .animate-fade-in,
- .animate-slide-in-left,
- .animate-slide-in-right,
- .animate-shimmer {
+  .animate-fade-in {
     animation: none;
   }
 
- [data-theme],
- .btn,
- .card-doodle,
- a,
- nav,
- input,
- select,
- textarea {
+  .grain-subtle::before,
+  .grain-hero::before,
+  .grain-dense::before {
+    display: none;
+  }
+
+  [data-theme],
+  .btn,
+  .card-screen,
+  .card-feature,
+  .btn-projection,
+  .input-field,
+  .message-ai,
+  .message-user,
+  a,
+  nav,
+  input,
+  select,
+  textarea {
     transition-duration: 0.01ms !important;
   }
 }
@@ -410,7 +230,7 @@
 }
 
 .infinite-canvas-container .tl-container {
-  --tl-font-family: 'Nunito', 'Comic Neue', sans-serif;
+  --tl-font-family: 'Source Sans 3', system-ui, sans-serif;
   background: transparent !important;
 }
 
@@ -453,7 +273,7 @@
   display: none !important;
 }
 
-/* 禁用 tldraw 内部的 hover 效果，使用自定义的 card-doodle hover */
+/* 禁用 tldraw 内部的 hover 效果，使用自定义的 hover */
 .infinite-canvas-container .tl-shape:hover {
   /* 不添加额外效果 */
 }

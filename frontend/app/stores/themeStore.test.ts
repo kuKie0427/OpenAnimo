@@ -8,27 +8,27 @@ vi.mock("zustand/middleware", () => ({
 const { useThemeStore } = await import("./themeStore");
 
 describe("themeStore", () => {
-  it("defaults to doodle theme", () => {
-    expect(useThemeStore.getState().theme).toBe("doodle");
+  it("defaults to projection theme", () => {
+    expect(useThemeStore.getState().theme).toBe("projection");
   });
 
-  it("toggleTheme switches to doodle-dark", () => {
-    useThemeStore.getState().setTheme("doodle");
+  it("toggleTheme switches to rushes", () => {
+    useThemeStore.getState().setTheme("projection");
     useThemeStore.getState().toggleTheme();
-    expect(useThemeStore.getState().theme).toBe("doodle-dark");
-    expect(document.documentElement.getAttribute("data-theme")).toBe("doodle-dark");
+    expect(useThemeStore.getState().theme).toBe("rushes");
+    expect(document.documentElement.getAttribute("data-theme")).toBe("rushes");
   });
 
-  it("toggleTheme toggles back to doodle", () => {
-    useThemeStore.getState().setTheme("doodle-dark");
+  it("toggleTheme toggles back to projection", () => {
+    useThemeStore.getState().setTheme("rushes");
     useThemeStore.getState().toggleTheme();
-    expect(useThemeStore.getState().theme).toBe("doodle");
-    expect(document.documentElement.getAttribute("data-theme")).toBe("doodle");
+    expect(useThemeStore.getState().theme).toBe("projection");
+    expect(document.documentElement.getAttribute("data-theme")).toBe("projection");
   });
 
   it("setTheme sets specific theme", () => {
-    useThemeStore.getState().setTheme("doodle-dark");
-    expect(useThemeStore.getState().theme).toBe("doodle-dark");
-    expect(document.documentElement.getAttribute("data-theme")).toBe("doodle-dark");
+    useThemeStore.getState().setTheme("rushes");
+    expect(useThemeStore.getState().theme).toBe("rushes");
+    expect(document.documentElement.getAttribute("data-theme")).toBe("rushes");
   });
 });
