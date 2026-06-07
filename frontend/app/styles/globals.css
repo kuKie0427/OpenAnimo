@@ -76,7 +76,7 @@
 @layer components {
   /* Card components */
   .card-screen {
-    @apply bg-base-200 rounded-lg border border-base-content/6;
+    @apply bg-base-200 rounded-lg border border-base-content/5;
     box-shadow: 0 0 1px oklch(var(--bc) / 0.08), 0 0 8px oklch(var(--bc) / 0.04);
     transition: box-shadow 200ms ease-out;
   }
@@ -85,7 +85,7 @@
   }
 
   .card-feature {
-    @apply bg-base-300 rounded-xl border border-primary/12;
+    @apply bg-base-300 rounded-xl border border-primary/10;
     box-shadow: 0 0 0 1px oklch(var(--p) / 0.12), 0 0 20px oklch(var(--p) / 0.08);
   }
 
@@ -108,7 +108,7 @@
 
   /* Input */
   .input-field {
-    @apply bg-base-300 rounded-sm border border-base-content/12 outline-none;
+    @apply bg-base-300 rounded-sm border border-base-content/10 outline-none;
     transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
   }
   .input-field:focus {
@@ -118,12 +118,12 @@
 
   /* Chat messages */
   .message-ai {
-    @apply bg-base-300 rounded-lg border border-base-content/6;
+    @apply bg-base-300 rounded-lg border border-base-content/5;
     border-left: 1px solid oklch(var(--p) / 0.4);
   }
 
   .message-user {
-    @apply bg-primary/8 rounded-lg border border-primary/15;
+    @apply bg-primary/10 rounded-lg border border-primary/20;
   }
 
   /* Film grain textures - using SVG feTurbulence via CSS */

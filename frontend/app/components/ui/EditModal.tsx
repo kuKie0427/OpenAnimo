@@ -50,7 +50,7 @@ export function EditModal({
 
   return (
     <div className={`modal ${isOpen ? "modal-open" : ""}`}>
-      <div className="modal-box card-doodle">
+      <div className="modal-box card-screen">
         <h3 className="font-bold text-lg mb-4">{title}</h3>
         <button
           className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
@@ -73,7 +73,7 @@ export function EditModal({
                     name={field.name}
                     value={formData[field.name] || ""}
                     onChange={handleChange}
-                    className="textarea textarea-bordered h-24 input-doodle"
+                    className="textarea textarea-bordered h-24 input-field"
                     rows={4}
                   />
                 ) : (
@@ -83,7 +83,7 @@ export function EditModal({
                     name={field.name}
                     value={formData[field.name] || ""}
                     onChange={handleChange}
-                    className="input input-bordered input-doodle"
+                    className="input input-bordered input-field"
                   />
                 )}
               </div>
@@ -96,7 +96,7 @@ export function EditModal({
             Cancel
           </button>
           <button
-            className={`btn btn-primary btn-doodle ${isLoading ? "loading" : ""}`}
+            className={`btn btn-primary btn-projection ${isLoading ? "loading" : ""}`}
             onClick={handleSave}
             disabled={isLoading}
           >

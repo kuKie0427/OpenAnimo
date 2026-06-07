@@ -31,9 +31,9 @@ export function Toast({ toast }: ToastProps) {
       className={`
         relative min-w-[320px] max-w-[480px] p-4 bg-base-100
         border-2 ${typeStyles[toast.type]}
-        shadow-brutal
+        shadow-aperture
         transform -rotate-[0.5deg]
-        animate-slide-in-right
+        animate-fade-in
       `}
     >
       {/* 标题和关闭按钮 */}

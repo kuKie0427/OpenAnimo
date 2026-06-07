@@ -18,14 +18,10 @@ export function Card({ title, children, className, style, variant = "default" }:
   };
 
   return (
-    <div className={clsx("card-doodle p-6", variantStyles[variant], className)} style={style}>
+    <div className={clsx("card-screen p-6", variantStyles[variant], className)} style={style}>
       {title && (
         <h3 className="text-xl font-heading font-bold mb-4 flex items-center gap-2">
-          {typeof title === "string" ? (
-            <span className="underline-sketch">{title}</span>
-          ) : (
-            title
-          )}
+          {title}
         </h3>
       )}
       {children}

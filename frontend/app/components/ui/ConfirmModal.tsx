@@ -47,7 +47,7 @@ export function ConfirmModal({
 
   return (
     <dialog className="modal modal-open" open>
-      <div className="modal-box bg-base-100 border-3 border-base-content/30 shadow-brutal">
+      <div className="modal-box bg-base-100 border border-base-content/30 shadow-aperture">
         <div className="flex items-start gap-4">
           {/* 图标 */}
           <div className={`p-3 rounded-full ${styles.iconBg}`}>

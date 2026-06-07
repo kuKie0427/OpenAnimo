@@ -23,7 +23,7 @@ describe('Card', () => {
     const { container } = render(<Card className="my-custom-class">Content</Card>);
     const card = container.firstChild as HTMLElement;
     expect(card).toHaveClass('my-custom-class');
-    expect(card).toHaveClass('card-doodle');
+    expect(card).toHaveClass('card-screen');
   });
 
   it('applies custom style', () => {

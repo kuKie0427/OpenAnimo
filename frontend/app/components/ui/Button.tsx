@@ -19,13 +19,13 @@ export function Button({
   type = "button",
   ...props
 }: ButtonProps) {
-  const baseStyles = "btn-doodle font-heading cursor-pointer";
+  const baseStyles = "btn-projection font-heading cursor-pointer";
 
   const variantStyles = {
     primary: "bg-primary text-primary-content hover:bg-primary/90",
     secondary: "bg-secondary text-secondary-content hover:bg-secondary/90",
     accent: "bg-accent text-accent-content hover:bg-accent/90",
-    ghost: "bg-transparent border-transparent shadow-none hover:bg-base-200 hover:shadow-brutal-sm",
+    ghost: "bg-transparent border-transparent shadow-none hover:bg-base-200 hover:shadow-aperture",
     error: "bg-error text-error-content hover:bg-error/90",
   };
 

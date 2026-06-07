@@ -73,6 +73,6 @@ export default {
         },
       },
     ],
-    darkTheme: "rushes",
+    darkTheme: "projection",
   },
 } satisfies Config;
