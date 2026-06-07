@@ -89,7 +89,7 @@ export function NewProjectPage() {
             title={
               <span className="inline-flex items-center gap-2">
                 <DocumentTextIcon className="w-5 h-5" aria-hidden="true" />
-                <span className="underline-sketch">讲述你的故事</span>
+                讲述你的故事
               </span>
             }
           >
@@ -150,7 +150,7 @@ export function NewProjectPage() {
             title={
               <span className="inline-flex items-center gap-2">
                 <PaintBrushIcon className="w-5 h-5" aria-hidden="true" />
-                <span className="underline-sketch">选择风格</span>
+                选择风格
               </span>
             }
           >
@@ -194,7 +194,7 @@ export function NewProjectPage() {
             title={
               <span className="inline-flex items-center gap-2">
                 <CheckCircleIcon className="w-5 h-5" aria-hidden="true" />
-                <span className="underline-sketch">确认项目</span>
+                确认项目
               </span>
             }
           >

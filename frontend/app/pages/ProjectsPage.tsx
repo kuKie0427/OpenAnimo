@@ -109,7 +109,7 @@ export function ProjectsPage() {
   return (
     <div className="min-h-screen bg-base-100 font-sans">
       <header className="flex items-center justify-between px-4 h-10 border-b border-base-content/10">
-        <Link to="/" className="font-comic text-lg text-primary font-bold tracking-wider">openOii</Link>
+        <Link to="/" className="font-heading text-lg text-primary font-bold tracking-wider">OpenAnimo</Link>
         <div className="flex items-center gap-1">
           <Link to="/" className="btn btn-ghost btn-xs !px-1 !min-h-0 !h-6 text-xs">新建</Link>
           <button
@@ -133,7 +133,7 @@ export function ProjectsPage() {
       <div className="flex flex-col min-h-[calc(100vh-40px)]">
         <header className="bg-base-100 border-b-3 border-base-content/30 px-6 py-4">
           <h1 className="text-2xl font-heading font-bold">
-            <span className="underline-sketch">全部项目</span>
+            全部项目
           </h1>
           <div className="mt-3 flex items-center gap-3">
             <label className="cursor-pointer select-none">
@@ -162,7 +162,7 @@ export function ProjectsPage() {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-12 gap-4">
                 <PencilIcon className="w-6 h-6 animate-pulse" aria-hidden="true" />
-                <p className="font-sketch text-lg text-base-content/70">加载中...</p>
+                <p className="font-heading text-lg text-base-content/70">加载中...</p>
               </div>
             ) : error ? (
               <Card className="text-center py-8">

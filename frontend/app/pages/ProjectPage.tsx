@@ -435,7 +435,7 @@ export function ProjectPage() {
 		return (
 			<div className="min-h-screen flex items-center justify-center flex-col gap-4 bg-base-100">
 				<ArrowPathIcon className="w-6 h-6 animate-pulse text-base-content/60" />
-				<p className="font-sketch text-2xl text-base-content/80">
+				<p className="font-heading text-2xl text-base-content/80">
 					正在加载项目...
 				</p>
 			</div>

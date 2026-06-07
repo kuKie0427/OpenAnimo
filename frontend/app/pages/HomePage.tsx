@@ -205,25 +205,25 @@ export function HomePage() {
 				onClose={() => setHistoryOpen(false)}
 				onNavigate={(id) => navigate(`/project/${id}`)}
 			/>
-			<div className="flex flex-col items-center justify-center p-4 sm:p-6 halftone-bg-accent min-h-[calc(100vh-40px)]">
+			<div className="flex flex-col items-center justify-center p-4 sm:p-6 grain-hero min-h-[calc(100vh-40px)]">
 				<main className="w-full max-w-2xl mx-auto">
-					<div className="text-center mb-8 animate-doodle-pop">
-						<h1 className="text-6xl sm:text-8xl font-comic tracking-wider text-primary leading-none">
-							openOii
+					<div className="text-center mb-8 animate-fade-in">
+						<h1 className="text-6xl sm:text-8xl font-heading tracking-wider text-base-content leading-none">
+							OpenAnimo
 						</h1>
-						<p className="font-sketch text-sm text-base-content/40 mt-2 tracking-wide">
+						<p className="font-heading text-sm text-base-content/50 mt-2 tracking-wide">
 							用 AI 将故事转化为漫剧视频
 						</p>
 						<Link
 							to="/universes"
-							className="inline-flex items-center gap-1 mt-2 text-xs text-primary/60 hover:text-primary transition-colors font-heading font-bold"
+							className="inline-flex items-center gap-1 mt-2 text-xs text-base-content/50 hover:text-primary transition-colors font-heading font-bold"
 						>
 							<GlobeAltIcon className="w-3.5 h-3.5" aria-hidden="true" />
 							IP 宇宙
 						</Link>
 					</div>
 
-					<Card className="w-full card-comic animate-draw-in">
+					<Card className="w-full">
 						<div className="space-y-4">
 							{/* Story Input + Reference Images */}
 							<div className="relative" onPaste={handlePaste}>
@@ -232,7 +232,7 @@ export function HomePage() {
 								</label>
 								<textarea
 									id="story-input"
-									className="input-doodle w-full min-h-28 text-sm resize-none p-3 pr-12 bg-base-100/80"
+									className="input-field w-full min-h-28 text-sm resize-none p-3 pr-12 bg-base-100/80"
 									placeholder="写下你的故事创意…"
 									value={story}
 									onChange={(e) => setStory(e.target.value)}
@@ -252,7 +252,7 @@ export function HomePage() {
 								<Button
 									variant="primary"
 									size="sm"
-									className="absolute right-2 bottom-2 rounded-full !p-2 min-w-[40px] min-h-[40px] transition-all duration-150 hover:scale-110 active:scale-90 shadow-comic border-3 border-primary-content/20"
+									className="absolute right-2 bottom-2 rounded-full !p-2 min-w-[40px] min-h-[40px] transition-all duration-150 hover:scale-105 active:scale-95"
 									onClick={handleSubmit}
 									disabled={!story.trim() || createMutation.isPending}
 									loading={createMutation.isPending}
@@ -342,7 +342,7 @@ export function HomePage() {
 													type="button"
 													className={`px-2 py-0.5 rounded-full border-2 text-[11px] font-bold transition-all duration-150 ${
 														style === opt.value
-															? "border-primary bg-primary/10 text-primary -translate-y-0.5 shadow-comic"
+															? "border-primary bg-primary/10 text-primary shadow-gate-glow"
 															: "border-base-content/10 bg-base-200/50 text-base-content/50 hover:border-primary/30 hover:-translate-y-0.5"
 													}`}
 													onClick={() => setStyle(opt.value)}
@@ -378,7 +378,7 @@ export function HomePage() {
 									<div>
 										<label
 											htmlFor="shot-count"
-											className="text-xs text-base-content/40 mb-0.5 block font-comic uppercase tracking-wide"
+											className="text-xs text-base-content/40 mb-0.5 block font-heading uppercase tracking-wide"
 										>
 											镜头数 {shotCount ?? "自动"}
 										</label>
@@ -394,7 +394,7 @@ export function HomePage() {
 									</div>
 
 									<div>
-										<label className="text-xs text-base-content/40 mb-0.5 block font-comic uppercase tracking-wide">
+										<label className="text-xs text-base-content/40 mb-0.5 block font-heading uppercase tracking-wide">
 											角色提示
 										</label>
 										{characterHints.map((hint, i) => (

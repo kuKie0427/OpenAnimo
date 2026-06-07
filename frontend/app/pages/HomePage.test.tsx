@@ -50,7 +50,7 @@ describe("HomePage", () => {
 
   it("renders title and textarea", () => {
     renderHomePage();
-    expect(screen.getAllByText("openOii").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("OpenAnimo").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByLabelText("输入你的故事创意")).toBeInTheDocument();
   });
 

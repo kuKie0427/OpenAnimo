@@ -114,7 +114,7 @@ export function UniverseDetailPage() {
 
 				{/* Header */}
 				<div className="mb-8">
-					<h1 className="text-3xl font-heading font-bold underline-sketch">
+					<h1 className="text-3xl font-heading font-bold">
 						{u.name}
 					</h1>
 					{u.description && (

@@ -63,7 +63,7 @@ export function UniversesPage() {
 						← 返回首页
 					</Link>
 				</div>
-				<div className="font-comic text-lg text-primary font-bold tracking-wider">
+				<div className="font-heading text-lg text-primary font-bold tracking-wider">
 					<span className="inline-flex items-center gap-2">
 						<GlobeAltIcon className="w-5 h-5" aria-hidden="true" />
 						IP 宇宙
@@ -76,7 +76,7 @@ export function UniversesPage() {
 				{/* Header */}
 				<div className="flex items-center justify-between mb-8">
 					<div>
-						<h1 className="text-3xl font-heading font-bold underline-sketch">
+						<h1 className="text-3xl font-heading font-bold">
 							IP 宇宙
 						</h1>
 						<p className="text-sm text-base-content/50 mt-1">
