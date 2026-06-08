@@ -506,6 +506,15 @@
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm build"
+    },
+    {
+      "id": "f-ui-layout-fix-p3",
+      "name": "UI 排版修复 P3 — 响应式布局",
+      "description": "修复 ChatDrawer 固定宽度 + flex-1 缺少 min-w-0 + 抽屉响应式",
+      "dependencies": ["f-ui-layout-fix-p2"],
+      "status": "passing",
+      "domain": "frontend",
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm build"
     }
   ]
 }

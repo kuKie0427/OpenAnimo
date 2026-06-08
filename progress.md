@@ -1,5 +1,18 @@
 # Progress Log
 
+## 2026-06-08 — Session: f-ui-layout-fix-p3 — 响应式布局修复
+- **做了什么**: 修复 4 个组件的响应式布局问题
+  - Task 0: feature_list.json 添加 f-ui-layout-fix-p3 条目 (active→passing)
+  - Task 1: ChatDrawer.tsx — 固定宽度 `w-[360px]` → 响应式 `w-[280px] lg:w-[360px]`
+  - Task 2: SettingsModal.tsx — flex-1 添加 `min-w-0` 修复文本溢出
+  - Task 3: HistoryDrawer.tsx + AssetDrawer.tsx — 固定宽度 `w-80` → 响应式 `w-72 lg:w-80`
+  - Task 4: Playwright 768px 视口测试 — 2 tests passed, 零水平溢出
+- **改了什么文件**: ChatDrawer.tsx (mod), SettingsModal.tsx (mod), HistoryDrawer.tsx (mod), AssetDrawer.tsx (mod), feature_list.json (mod, +entry + passing), viewport-768.spec.ts (new)
+- **当前状态**: Gate 全部通过 ✅ (tsc clean, pnpm build OK, Playwright 2/2 passed)
+- **决策**: 小屏 280px/288px (w-72)，大屏 360px/320px (lg:w-80) 保持 flex-shrink-0；SettingsModal 底部 flex-1 容器添加 min-w-0 防止文本溢出
+- **阻断**: 无
+- **下次**: Phase 3 完成，全链路 UI 排版修复结束
+
 ## 2026-06-08 — Session: f-ui-layout-fix-p2 — 表格溢出修复
 - **做了什么**: 修复画布 3 个 Shape 组件表格内容 `<td>` 溢出问题
   - Task 0: feature_list.json 添加 f-ui-layout-fix-p2 条目 (active→passing)
