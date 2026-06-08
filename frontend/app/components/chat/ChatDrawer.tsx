@@ -39,7 +39,7 @@ export function ChatDrawer({
 	if (!isOpen) return null;
 
 	return (
-		<div className="flex-shrink-0 w-[360px] flex flex-col bg-base-100 border-l border-base-300 h-full">
+		<div className="flex-shrink-0 w-[280px] lg:w-[360px] flex flex-col bg-base-100 border-l border-base-300 h-full">
 			<div className="flex items-center justify-end px-2 py-1.5 border-b border-base-300">
 				<button
 					className="btn btn-xs btn-circle btn-ghost"
