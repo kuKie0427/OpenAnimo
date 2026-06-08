@@ -145,7 +145,7 @@ export function PreviewableImage({
       onClick={() => onPreview(src, alt)}
       aria-label={`预览图片：${alt}`}
     >
-      <img src={src} alt={alt} className="w-full h-full object-inherit" />
+      <img src={src} alt={alt} className="w-full h-full object-cover" />
     </button>
   );
 }

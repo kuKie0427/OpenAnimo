@@ -3,6 +3,91 @@
 <!--
 
 ## YYYY-MM-DD — Session: <description>
+
+## 2026-06-08 — Session: hotfix-static-path-resolution
+- **做了什么**: 修复 character_bible.py 和 consistency_eval.py 的 `/static/` 文件路径解析错误
+  - `parents[3]` → 项目根目录（本地 `~/openOii/`，Docker `/`），均为错误位置
+  - `parents[1]` → `backend/app/`（本地和 Docker 均正确：本地 `backend/app/static/`，Docker `/app/app/static/`）
+  - 验证：`parents[1] / static/images/35029caef...png` → `exists = True`
+- **改了什么文件**:
+  - `backend/app/services/character_bible.py` (mod, parents[3]→parents[1])
+  - `backend/app/services/consistency_eval.py` (mod, parents[3]→parents[1])
+- **当前状态**: ruff 0, pyright 0, 1247 passed
+- **阻断**: 无
+
+## 2026-06-08 — Session: bugfix-insightface-relative-url
+- **做了什么**: 修复 InsightFace 嵌入计算失败 —— `character_bible.compute_face_embedding` 直接将相对路径 `/static/images/xxx.png` 传给 `httpx.get()`，httpx 不识别无协议的 URL
+  - 根源：`image.py:cache_external_image` 返回相对路径，存入 `char.image_url`；`compute_face_embedding` 仅尝试 HTTP 下载，未处理本地 `/static/` 路径
+  - 修复：添加 `/static/` 本地文件系统读取分支（`Path(__file__).parents[3] / image_url.lstrip("/")`），匹配 `consistency_eval.py:_download_image` 的已有模式
+  - 影响：render 流程自动嵌入计算 + 手动 API 嵌入计算
+- **改了什么文件**:
+  - `backend/app/services/character_bible.py` (mod, +17/-6 lines, 3-branch URL handler)
+- **当前状态**: ruff 0, pyright 0, 1245 passed (2 预存 E2E 失败)
+- **决策**: 采用本地文件系统读取（与 consistency_eval/export_service/image_composer 一致），而非 build_public_url（PUBLIC_BASE_URL 默认未配置）
+- **阻断**: 无
+- **下次**: WIP=0
+
+## 2026-06-08 — Session: fe-be-interaction-gap-fix
+- **做了什么**: 修复前后端交互完整性分析的 3 个 gap（1 个 bug + 2 个缺失连接）
+  1. **ChatPanel YOLO "继续" 按钮调用错误 handler** — `onClick={onPause}` → `onClick={onResume}`，`_onResume` → `onResume`（真正的 bug：暂停栏"继续"按钮调用了暂停函数）
+  2. **UniverseDetailPage 共享角色导入按钮未连接** — 添加 importCharacter mutation + 项目选择 Modal + SharedCharacterCard 传入 `showImport`/`onImport`
+  3. **EntityApprovalCard 死代码清理** — 移除未使用的 `onSingleRegenerate` prop（interface + destructure）
+  4. syncCharacter 跳过 — 需要 universe 上下文，放置位置需进一步设计
+- **改了什么文件**:
+  - `frontend/app/components/chat/ChatPanel.tsx` (mod, onPause→_onPause, _onResume→onResume, onClick onPause→onResume)
+  - `frontend/app/pages/UniverseDetailPage.tsx` (mod, +importCharacter mutation + 导入 Modal + SharedCharacterCard wiring)
+  - `frontend/app/components/chat/EntityApprovalCard.tsx` (mod, -onSingleRegenerate prop)
+- **当前状态**: tsc 0, vitest 412 passed, pnpm build OK
+- **决策**: syncCharacter 取消 — 需在 CharacterSectionShape 中判断 universe 归属，改动范围大，留待后续
+- **阻断**: 无
+- **下次**: WIP=0
+
+## 2026-06-08 — Session: bugfix-extract-json-hardening
+- **做了什么**: extract_json 运行时解析失败系统性修复（4 项）
+  - P0: plan.py `max_tokens` 4096→16384（shots 任务 JSON 超大，中文 token 密度高，原值不足导致截断）
+  - P0: orchestrator.py 异常捕获补充 `ValueError`（`run_from_agent` + `resume_from_recovery` 两处）
+  - P1: plan.py + outline.py `extract_json` 失败时 `logger.exception` 记录完整 `resp.text[:2000]`
+  - P2: extract_json 新增第 6 修复策略 `_fix_python_literals`（`True`/`False`/`None`→`true`/`false`/`null` + 单引号→双引号）
+- **改了什么文件**:
+  - `backend/app/agents/plan.py` (mod, max_tokens + try/except logger)
+  - `backend/app/agents/outline.py` (mod, +import logging + try/except logger + max_tokens 2048→4096)
+  - `backend/app/agents/orchestrator.py` (mod, 2 处 except 加 ValueError)
+  - `backend/app/agents/utils.py` (mod, +_fix_python_literals + 策略列表插入)
+- **当前状态**: 1247 passed, 1 skipped, ruff 0, pyright 0
+- **决策**:
+  1. max_tokens 16384 针对 shots 任务（10 shots × 15 字段中文），outline 同步升至 4096
+  2. ValueError 同时加入 run_from_agent 和 resume_from_recovery（两处都会执行 graph.ainvoke）
+  3. `_fix_python_literals` 用正向/反向 lookahead/lookbehind 精准匹配 JSON 结构位单引号（不误伤内容中的撇号）
+  4. 未加 LLM 重试逻辑（改动较大，留待后续）
+- **阻断**: 无
+- **下次**: WIP=0
+
+## 2026-06-08 — Session: bugfix-agent-trace-tz-aware-postgresql
+- **做了什么**: 修复 AgentTrace 写入 PostgreSQL 失败 —— `start_time` 带 UTC tzinfo 无法写入 `TIMESTAMP WITHOUT TIME ZONE` 列
+  - 根源：`base.py` 的 `trace_step()` 内部定义了局部 `utcnow()` → `datetime.now(timezone.utc)`（返回 tz-aware），遮盖了 `db/utils.py` 中正确的 `utcnow()`（`datetime.now(UTC).replace(tzinfo=None)`，返回 tz-naive）
+  - 修复：删除局部 `utcnow()` + unused `datetime`/`timezone` import，改用模块级 `from app.db.utils import utcnow`
+- **改了什么文件**:
+  - `backend/app/agents/base.py` (mod, +1 import, -4 lines local utcnow, -1 unused import)
+- **当前状态**: 1247 passed, 1 skipped, ruff 0, pyright 0
+- **决策**: 复用 `db/utils.py` 的 tz-naive `utcnow()` — 22 个文件已使用，语义一致
+- **阻断**: 无
+- **下次**: WIP=0
+
+## 2026-06-08 — Session: bugfix-missing-greenlet + fake-session-ctx-close
+- **做了什么**: 修复 2 个 bug
+  1. nodes.py MissingGreenlet — 8 处 `agent_ctx.project.characters/shots` 懒加载在 async 上下文中触发 SQLAlchemy MissingGreenlet，导致 E2E 测试超时失败。创建 `_eager_load_project` helper (selectinload + identity map) + 8 处 `getattr` 防御式访问，测试 mock 兼容 (hasattr 守卫)
+  2. test_main.py FakeSessionCtx 缺少 `close()`/`rollback()` 方法导致 `test_ws_projects_confirm_invalid_run_sends_error` 失败，6 处类定义补全方法
+- **改了什么文件**:
+  - `backend/app/orchestration/nodes.py` (mod, +imports + `_eager_load_project` helper + 8 处 getattr 修复)
+  - `backend/tests/test_main.py` (mod, 6 处 FakeSessionCtx +close/+rollback)
+- **当前状态**: 全部 1247 tests pass (1238 non-e2e + 9 e2e), 1 skipped, ruff 0, pyright 0, 0 warnings
+- **决策**:
+  1. `_eager_load_project` 用 `hasattr` 守卫 mock context (test 中 agent_ctx 是 SimpleNamespace)
+  2. 节点函数中用 `getattr(project, "characters/shots", None)` 而非直接属性访问，保持 mock 兼容
+  3. `_build_entity_summaries` 保持 `getattr` — eager_load 已验证属性存在于 identity map
+  4. fake session mock 统一添加 `close()`/`rollback()` async no-op
+- **阻断**: 无
+- **下次**: WIP=0，可启动新 feature
 - **做了什么**: <brief summary>
 - **改了什么文件**: <file1> (status), <file2> (status), ...
 - **当前状态**: <phase> → <status>
@@ -557,3 +642,24 @@
   4. 未往 `feature_list.json` 添加条目 — 这是维护性工作，非产品 feature
 - **阻断**: 无
 
+
+## 2026-06-08 — Session: f-ui-layout-fix-p0
+- **做了什么**: 修复两个 P0 严重 UI 排版问题
+  - Task 0: 初始化 feature_list.json 中 `f-ui-layout-fix-p0` 条目（status: active）
+  - Task 1: 修复 `PreviewModals.tsx:148` — `object-inherit`（无效 CSS）→ `object-cover`
+  - Task 2: 修复 `ProjectsPage.tsx:110` — 外层容器添加 `overflow-x-hidden`，消除水平溢出
+- **改了什么文件**:
+  - `feature_list.json` (add f-ui-layout-fix-p0 entry)
+  - `frontend/app/components/canvas/PreviewModals.tsx` (148: object-inherit→object-cover)
+  - `frontend/app/pages/ProjectsPage.tsx` (110: 添加 overflow-x-hidden)
+- **验证结果**:
+  - LSP diagnostics: 0 errors on both files
+  - `tsc --noEmit`: passed
+  - `pnpm build`: success (16.87s)
+  - Playwright: `/projects` 页面 `scrollWidth <= clientWidth + 10` ✅ (1 passed, 9.3s)
+- **当前状态**: `f-ui-layout-fix-p0 = passing`，Gate 全绿
+- **决策**: 
+  - `object-inherit` → `object-cover` (避免 `object-contain` 留白)
+  - `overflow-x-hidden` 加在 ProjectsPage 根容器（最外层 div），最小改动
+- **阻断**: 无
+- **下次**: Phase 0 全部完成 → 执行 `/handoff` 后等待新会话加载 Phase 1

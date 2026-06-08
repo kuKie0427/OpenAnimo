@@ -107,7 +107,7 @@ export function ProjectsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-base-100 font-sans">
+    <div className="overflow-x-hidden min-h-screen bg-base-100 font-sans">
       <header className="flex items-center justify-between px-4 h-10 border-b border-base-content/10">
         <Link to="/" className="font-heading text-lg text-primary font-bold tracking-wider">OpenAnimo</Link>
         <div className="flex items-center gap-1">

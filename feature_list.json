@@ -479,6 +479,15 @@
       "dependencies": ["f-entity-approval"],
       "verification": "cd backend && uv run pytest tests/test_orchestration/ -k 'approval or entity' -q && cd ../frontend && pnpm exec vitest run app/components/chat/EntityApprovalCard",
       "description": "shots_approval 展示角色+分镜混合实体列表，shot_images_approval 展示角色图片+分镜图片混合列表。已审批实体以只读态展示（绿色 badge，禁用 toggle）。零图拓扑变更。"
+    },
+    {
+      "id": "f-ui-layout-fix-p0",
+      "name": "UI 排版修复 P0 — 严重问题",
+      "description": "修复 object-inherit 无效值 + 画布页面水平溢出",
+      "dependencies": [],
+      "status": "passing",
+      "domain": "frontend",
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm build"
     }
   ]
 }
