@@ -76,12 +76,12 @@
 @layer components {
   /* Card components */
   .card-screen {
-    @apply bg-base-200 rounded-lg border border-base-content/5;
-    box-shadow: 0 0 1px oklch(var(--bc) / 0.08), 0 0 8px oklch(var(--bc) / 0.04);
+    @apply bg-base-200 rounded-lg border border-base-content/10;
+    box-shadow: 0 0 0 1px oklch(var(--p) / 0.1), 0 0 3px oklch(var(--p) / 0.15), 0 0 24px oklch(var(--p) / 0.08);
     transition: box-shadow 200ms ease-out;
   }
   .card-screen:hover {
-    box-shadow: 0 0 40px oklch(var(--p) / 0.15), 0 0 80px oklch(var(--p) / 0.06);
+    box-shadow: 0 0 40px oklch(var(--p) / 0.25), 0 0 80px oklch(var(--p) / 0.12);
   }
 
   .card-feature {
@@ -91,16 +91,31 @@
 
   /* Button */
   .btn-projection {
-    @apply bg-primary text-primary-content rounded-sm border border-primary/50 font-heading;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 0.1875rem;
+    border: 1px solid oklch(var(--p) / 0.5);
+    font-family: Cormorant Garamond, Georgia, serif;
+    font-weight: 600;
     padding: 10px 24px;
-    transition: box-shadow 200ms ease-out, background-color 150ms ease-out;
+    line-height: 1;
+    transition: box-shadow 200ms ease-out, background-color 150ms ease-out, filter 150ms ease-out;
+  }
+  .btn-projection:focus-visible {
+    outline: 2px solid oklch(var(--p));
+    outline-offset: 2px;
   }
   .btn-projection:hover:not(:disabled) {
     box-shadow: 0 0 40px oklch(var(--p) / 0.15), 0 0 80px oklch(var(--p) / 0.06);
   }
   .btn-projection:active:not(:disabled) {
     box-shadow: none;
-    @apply bg-primary/80;
+    background-color: oklch(var(--p) / 0.8);
   }
   .btn-projection:disabled {
     @apply opacity-40 cursor-not-allowed;

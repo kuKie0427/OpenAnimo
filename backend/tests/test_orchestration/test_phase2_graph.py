@@ -111,6 +111,7 @@ async def test_manual_approval_node_auto_mode_short_circuits() -> None:
     runtime = SimpleNamespace(
         context=SimpleNamespace(
             auto_mode=True,
+            gate_modes=set(),
             agent_context=SimpleNamespace(
                 project=SimpleNamespace(id=1),
                 run=SimpleNamespace(id=1, thread_id=None),
@@ -144,6 +145,7 @@ async def test_manual_approval_node_normalizes_interrupt_resume(monkeypatch) -> 
     runtime = SimpleNamespace(
         context=SimpleNamespace(
             auto_mode=False,
+            gate_modes=set(),
             agent_context=SimpleNamespace(
                 project=SimpleNamespace(id=1),
                 run=SimpleNamespace(id=1, thread_id=None),
@@ -179,6 +181,7 @@ async def test_manual_approval_node_routes_to_review_when_feedback_present(monke
     runtime = SimpleNamespace(
         context=SimpleNamespace(
             auto_mode=False,
+            gate_modes=set(),
             agent_context=SimpleNamespace(
                 project=SimpleNamespace(id=1),
                 run=SimpleNamespace(id=1, thread_id=None),
@@ -311,14 +314,14 @@ def _initial_state(start_stage: str) -> dict[str, Any]:
             "plan_characters_node",
             "characters_approval_node",
             ["plan_characters"],
-            "plan",
+            "characters",
         ),
         (
             "render_characters",
             "render_characters_node",
             "character_images_approval_node",
             ["render_characters"],
-            "render",
+            "character_images",
         ),
     ],
 )
@@ -473,7 +476,7 @@ async def test_shot_images_approval_auto_routes_to_compose_when_video_invalid() 
         project=project, run=run, session=SimpleNamespace(), target_ids=None, completion_info=None
     )
     runtime = SimpleNamespace(
-        context=SimpleNamespace(auto_mode=False, orchestrator=orchestrator, agent_context=agent_ctx)
+        context=SimpleNamespace(auto_mode=False, gate_modes=set(), orchestrator=orchestrator, agent_context=agent_ctx)
     )
 
     state = await shot_images_approval_node({}, runtime)

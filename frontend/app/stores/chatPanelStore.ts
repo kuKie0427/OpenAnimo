@@ -17,7 +17,7 @@ export const useChatPanelStore = create<ChatPanelState>()(
 			close: () => set({ isOpen: false }),
 		}),
 		{
-			name: "openOii-chat-panel",
+			name: "openanimo-chat-panel",
 		}
 	)
 );

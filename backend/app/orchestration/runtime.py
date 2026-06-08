@@ -4,7 +4,7 @@ from typing import Any
 
 from app.models.run import Run
 
-from .state import Phase2RuntimeContext, Phase2Stage
+from .state import ALL_GATES, Phase2RuntimeContext, Phase2Stage
 
 
 def build_graph_config(run: Run | Any) -> dict[str, dict[str, str]]:
@@ -23,18 +23,37 @@ def build_phase2_runtime_context(
     agent_context: Any,
     start_stage: Phase2Stage = "plan_outline",
     auto_mode: bool = False,
+    gate_modes: set[str] | None = None,
 ) -> Phase2RuntimeContext:
+    if gate_modes is not None:
+        return Phase2RuntimeContext(
+            orchestrator=orchestrator,
+            agent_context=agent_context,
+            start_stage=start_stage,
+            auto_mode=auto_mode,
+            gate_modes=gate_modes,
+        )
+    elif auto_mode:
+        # 向后兼容：auto_mode=True → 所有闸门自动
+        return Phase2RuntimeContext(
+            orchestrator=orchestrator,
+            agent_context=agent_context,
+            start_stage=start_stage,
+            auto_mode=True,
+            gate_modes=set(ALL_GATES),
+        )
     return Phase2RuntimeContext(
         orchestrator=orchestrator,
         agent_context=agent_context,
         start_stage=start_stage,
-        auto_mode=auto_mode,
+        auto_mode=False,
+        gate_modes=set(),
     )
 
 
 async def build_stage_recovery_config(
     graph: Any,
-    run: Run,
+    run: Any,  # Accepts Run | AgentRun (both have project_id / thread_id)
     *,
     before_stage: str,
     limit: int | None = None,

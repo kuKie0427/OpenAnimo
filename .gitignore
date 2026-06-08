@@ -27,3 +27,13 @@ backend/coverage.json
 backend/.coverage
 dump.rdb
 *.log
+
+# Internal tooling (AI-assisted development artifacts)
+.sisyphus/
+.trellis/
+.impeccable/
+.pi/
+.run/
+feature_list.json
+progress.md
+analysis_pipeline_report.md

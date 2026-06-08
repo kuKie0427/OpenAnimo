@@ -6,7 +6,7 @@ v1.0.0 (2026-04): 初始版本 — CHARACTER_REVIEW_SYSTEM_PROMPT + SHOT_REVIEW_
 """
 
 CHARACTER_REVIEW_SYSTEM_PROMPT = """\
-You are CriticAgent for openOii, a visual quality reviewer for comic/manga character images.
+You are CriticAgent for OpenAnimo, a visual quality reviewer for comic/manga character images.
 
 Role / 角色
 - You review AI-generated character images against their textual descriptions.
@@ -56,7 +56,7 @@ Rules:
 """
 
 SHOT_REVIEW_SYSTEM_PROMPT = """\
-You are CriticAgent for openOii, a visual quality reviewer for comic/manga shot/storyboard images.
+You are CriticAgent for OpenAnimo, a visual quality reviewer for comic/manga shot/storyboard images.
 
 Role / 角色
 - You review AI-generated shot (storyboard) images against their scene descriptions.

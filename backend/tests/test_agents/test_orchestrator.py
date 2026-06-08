@@ -214,12 +214,12 @@ async def test_redis_helpers_round_trip(monkeypatch):
     payload = {"run_id": 1, "project_id": 2}
     await store_awaiting_payload(1, payload)
     assert await get_awaiting_payload(1) == payload
-    assert get_awaiting_payload_key(1) == "openoii:awaiting:1"
-    assert get_confirm_event_key(1) == "openoii:confirm:1"
-    assert get_confirm_channel(1) == "openoii:confirm_channel:1"
+    assert get_awaiting_payload_key(1) == "openanimo:awaiting:1"
+    assert get_confirm_event_key(1) == "openanimo:confirm:1"
+    assert get_confirm_channel(1) == "openanimo:confirm_channel:1"
 
     await trigger_confirm_redis(1)
-    assert fake.published == [("openoii:confirm_channel:1", "confirm")]
+    assert fake.published == [("openanimo:confirm_channel:1", "confirm")]
 
     await clear_confirm_event_redis(1)
     await clear_awaiting_payload(1)
@@ -520,7 +520,7 @@ async def test_invoke_phase2_graph_handles_interrupt_and_completion(monkeypatch)
         session=session,
     )
 
-    async def fake_wait_for_confirm(project_id, run_obj, agent_name, agent_ctx=None):
+    async def fake_wait_for_confirm(project_id, run_obj, agent_name, agent_ctx=None, interrupt_data=None):
         return "好的"
 
     monkeypatch.setattr(orchestrator, "_wait_for_confirm", fake_wait_for_confirm)
@@ -1084,6 +1084,126 @@ async def test_invoke_phase2_graph_invalid_gate_raises(monkeypatch):
             initial_payload={"x": 1},
             auto_mode=False,
         )
+
+
+@pytest.mark.asyncio
+async def test_invoke_phase2_graph_gate_modes_skips_confirm(monkeypatch):
+    """Per-gate: when gate is in runtime_context.gate_modes, _wait_for_confirm is skipped."""
+    project = SimpleNamespace(id=1, status="draft")
+    run = SimpleNamespace(id=2, thread_id=None)
+    session = FakeSession(project=project, run=run)
+    ws = MockWsManager()
+    orchestrator = GenerationOrchestrator(
+        settings=Settings(
+            database_url="sqlite+aiosqlite:///:memory:",
+            anthropic_api_key="test",
+            image_api_key="test",
+            video_api_key="test",
+        ),
+        ws=ws,
+        session=session,
+    )
+
+    confirm_called = False
+
+    async def fake_wait_for_confirm(*args, **kwargs):
+        nonlocal confirm_called
+        confirm_called = True
+        return "ok"
+
+    monkeypatch.setattr(orchestrator, "_wait_for_confirm", fake_wait_for_confirm)
+
+    auto_approval_called = False
+
+    async def fake_send_auto_approval(*args, **kwargs):
+        nonlocal auto_approval_called
+        auto_approval_called = True
+
+    monkeypatch.setattr(orchestrator, "_send_auto_approval_events", fake_send_auto_approval)
+
+    compiled_graph = FakeCompiledGraph(
+        [
+            {"__interrupt__": [SimpleNamespace(value={"gate": "director"})]},
+            {},
+        ]
+    )
+
+    runtime_ctx = SimpleNamespace(gate_modes={"director"})
+
+    result = await orchestrator._invoke_phase2_graph(
+        project=project,
+        run=run,
+        ctx=SimpleNamespace(project=project),
+        compiled_graph=compiled_graph,
+        graph_config={"configurable": {"thread_id": "t1"}},
+        runtime_context=runtime_ctx,
+        initial_payload={"x": 1},
+        auto_mode=False,
+    )
+
+    assert not confirm_called
+    assert auto_approval_called
+    assert result == (False, "compose")
+
+
+@pytest.mark.asyncio
+async def test_invoke_phase2_graph_gate_modes_no_match_confirms(monkeypatch):
+    """Per-gate: when gate NOT in runtime_context.gate_modes, _wait_for_confirm is called."""
+    project = SimpleNamespace(id=1, status="draft")
+    run = SimpleNamespace(id=2, thread_id=None)
+    session = FakeSession(project=project, run=run)
+    ws = MockWsManager()
+    orchestrator = GenerationOrchestrator(
+        settings=Settings(
+            database_url="sqlite+aiosqlite:///:memory:",
+            anthropic_api_key="test",
+            image_api_key="test",
+            video_api_key="test",
+        ),
+        ws=ws,
+        session=session,
+    )
+
+    confirm_called = False
+
+    async def fake_wait_for_confirm(*args, **kwargs):
+        nonlocal confirm_called
+        confirm_called = True
+        return "ok"
+
+    monkeypatch.setattr(orchestrator, "_wait_for_confirm", fake_wait_for_confirm)
+
+    auto_approval_called = False
+
+    async def fake_send_auto_approval(*args, **kwargs):
+        nonlocal auto_approval_called
+        auto_approval_called = True
+
+    monkeypatch.setattr(orchestrator, "_send_auto_approval_events", fake_send_auto_approval)
+
+    compiled_graph = FakeCompiledGraph(
+        [
+            {"__interrupt__": [SimpleNamespace(value={"gate": "plan"})]},
+            {},
+        ]
+    )
+
+    runtime_ctx = SimpleNamespace(gate_modes={"director"})
+
+    result = await orchestrator._invoke_phase2_graph(
+        project=project,
+        run=run,
+        ctx=SimpleNamespace(project=project),
+        compiled_graph=compiled_graph,
+        graph_config={"configurable": {"thread_id": "t1"}},
+        runtime_context=runtime_ctx,
+        initial_payload={"x": 1},
+        auto_mode=False,
+    )
+
+    assert confirm_called
+    assert not auto_approval_called
+    assert result == (False, "compose")
 
 
 @pytest.mark.asyncio

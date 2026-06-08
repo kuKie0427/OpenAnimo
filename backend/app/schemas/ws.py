@@ -39,6 +39,7 @@ WsEventType = Literal[
     "project_updated",
     "data_cleared",
     "critique_result",
+    "critique_review",
     "bible_updated",
     "version_created",
     "version_rollback",
@@ -154,6 +155,12 @@ class RunAwaitingConfirmEventData(BaseModel):
     auto_mode: bool | None = None
     story_outline: StoryOutlineRead | None = None
     visual_bible: str | None = None
+    entity_type: str | None = Field(default=None, description="被审批的实体类型: character | shot")
+    entity_ids: list[int] | None = Field(default=None, description="被审批的实体 ID 列表")
+    entity_summaries: list[dict] | None = Field(
+        default=None,
+        description="逐实体摘要列表（含 entity_id/name/description/image_url/approval_state）",
+    )
 
 
 class RunConfirmedEventData(BaseModel):
@@ -219,6 +226,24 @@ class CritiqueResultEventData(BaseModel):
     entity_id: int = 0
     will_regenerate: bool = False
     failed_checks: list[str] = Field(default_factory=list)
+
+
+class CritiqueEntityResult(BaseModel):
+    entity_id: int
+    entity_name: str
+    score: float
+    dimensions: dict[str, int] = Field(default_factory=dict)
+    issues: list[str] = Field(default_factory=list)
+    suggestions: list[str] = Field(default_factory=list)
+    will_regenerate: bool = False
+    failed_checks: list[str] = Field(default_factory=list)
+    image_url: str | None = None
+
+
+class CritiqueReviewEventData(BaseModel):
+    entity_type: str  # "character" | "shot"
+    total: int
+    results: list[CritiqueEntityResult]
 
 
 class BibleUpdatedEventData(BaseModel):
@@ -302,6 +327,7 @@ EVENT_DATA_MODELS: dict[str, type[BaseModel] | None] = {
     "project_updated": ProjectUpdatedEventData,
     "data_cleared": DataClearedEventData,
     "critique_result": CritiqueResultEventData,
+    "critique_review": CritiqueReviewEventData,
     "bible_updated": BibleUpdatedEventData,
     "version_created": VersionCreatedEventData,
     "version_rollback": VersionRollbackEventData,

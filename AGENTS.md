@@ -18,7 +18,7 @@ cat progress.md              # 上次会话做了什么
 3. 运行 `./init.sh` — 必须全绿
 4. Git commit
 
-# openOii — 项目知识库（根）
+# OpenAnimo — 项目知识库（根）
 
 **生成时间:** 2026-06-05
 **语言:** 中文
@@ -27,7 +27,7 @@ cat progress.md              # 上次会话做了什么
 
 ## 概览
 
-openOii 是"故事想法 → 漫剧成片"的 **AI 多 Agent 长链路生成平台**。双包 Monorepo（后端 Python/FastAPI + 前端 React/Vite），无根级统一脚本。
+OpenAnimo 是"故事想法 → 漫剧成片"的 **AI 多 Agent 长链路生成平台**。双包 Monorepo（后端 Python/FastAPI + 前端 React/Vite），无根级统一脚本。
 
 - **后端**: FastAPI + LangGraph + SQLModel + Anthropic SDK — Agent 编排、LLM 调用、图像/视频/音频生成
 - **前端**: React 18 + TypeScript + Vite 6 + tldraw 4 + TailwindCSS 3 + daisyUI 4 — 画布交互、实时 WebSocket、项目面板
@@ -40,7 +40,7 @@ openOii 是"故事想法 → 漫剧成片"的 **AI 多 Agent 长链路生成平�
 ## 目录结构
 
 ```
-openOii/
+OpenAnimo/
 ├── backend/                    # Python FastAPI 后端（uv 管理）
 │   ├── app/
 │   │   ├── main.py             # ⭐ FastAPI 入口（应用工厂）
@@ -90,7 +90,7 @@ openOii/
 | 了解前端路由 | `frontend/app/App.tsx` | 7 条 react-router 路由 |
 | 了解 WebSocket | `backend/app/ws/manager.py` + `frontend/app/hooks/useWebSocket.ts` | `/ws/projects/{id}` |
 | 了解配置机制 | `backend/app/config.py` + `frontend/app/utils/runtimeBase.ts` | 后端 .env，前端自动推导 |
-| 了解设计规范 | `DESIGN.md` | CMYK 漫画风主题，15 条 Don't |
+| 了解设计规范 | `DESIGN.md` | Projection Room 放映室主题，15 条 Do/Don't |
 | 查看产品定义 | `PRODUCT.md` | 产品功能与用户流程 |
 
 ---

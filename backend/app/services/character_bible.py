@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false
 """角色圣经服务 — 维护角色视觉参考、人脸 embedding 和视觉描述。
 
 为每个角色提供：

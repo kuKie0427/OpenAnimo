@@ -75,7 +75,7 @@ async function fetchApi<T>(
 	try {
 		let adminToken: string | null = null;
 		try {
-			adminToken = localStorage.getItem("openoii_admin_token");
+			adminToken = localStorage.getItem("openanimo_admin_token");
 		} catch {}
 		const res = await fetch(`${API_BASE}${endpoint}`, {
 			...options,
@@ -221,7 +221,7 @@ export const projectsApi = {
 
 	generate: (
 		id: number,
-		data?: { seed?: number; notes?: string; auto_mode?: boolean },
+		data?: { seed?: number; notes?: string; auto_mode?: boolean; gate_modes?: string[] },
 	) =>
 		fetchApi<import("~/types").AgentRun>(`/api/v1/projects/${id}/generate`, {
 			method: "POST",
@@ -236,10 +236,10 @@ export const projectsApi = {
 			},
 		),
 
-	resume: (id: number, runId: number) =>
+	resume: (id: number, runId: number, body?: Record<string, unknown>) =>
 		fetchApi<import("~/types").AgentRun>(`/api/v1/projects/${id}/resume`, {
 			method: "POST",
-			body: JSON.stringify({ run_id: runId }),
+			body: JSON.stringify({ run_id: runId, ...(body || {}) }),
 		}),
 
 	feedback: (
@@ -439,9 +439,9 @@ export const configApi = {
 				if ("ADMIN_TOKEN" in config) {
 					const token = config.ADMIN_TOKEN;
 					if (typeof token === "string" && token.length > 0) {
-						localStorage.setItem("openoii_admin_token", token);
+						localStorage.setItem("openanimo_admin_token", token);
 				} else {
-					localStorage.removeItem("openoii_admin_token");
+					localStorage.removeItem("openanimo_admin_token");
 				}
 				}
 				return res;

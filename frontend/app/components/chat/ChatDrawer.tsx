@@ -5,8 +5,10 @@ import { useChatPanelStore } from "~/stores/chatPanelStore";
 import { ChatPanel } from "~/components/chat/ChatPanel";
 
 interface ChatDrawerProps {
+	projectId?: number;
 	onSendFeedback: (content: string) => void;
 	onConfirm: (feedback?: string) => void;
+	onEntityConfirm: (decisions: import("~/types").EntityDecision[]) => void;
 	onGenerate: () => void;
 	onCancel: () => void;
 	isGenerating: boolean;
@@ -15,8 +17,10 @@ interface ChatDrawerProps {
 }
 
 export function ChatDrawer({
+	projectId,
 	onSendFeedback,
 	onConfirm,
+	onEntityConfirm,
 	onGenerate,
 	onCancel,
 	isGenerating,
@@ -47,15 +51,17 @@ export function ChatDrawer({
 			</div>
 
 			<div className="flex-1 overflow-hidden">
-				<ChatPanel
-					onSendFeedback={onSendFeedback}
-					onConfirm={onConfirm}
-					onGenerate={onGenerate}
-					onCancel={onCancel}
-					isGenerating={isGenerating}
-					generateDisabled={generateDisabled}
-					generateDisabledReason={generateDisabledReason}
-				/>
+			<ChatPanel
+				projectId={projectId}
+				onSendFeedback={onSendFeedback}
+				onConfirm={onConfirm}
+				onEntityConfirm={onEntityConfirm}
+				onGenerate={onGenerate}
+				onCancel={onCancel}
+				isGenerating={isGenerating}
+				generateDisabled={generateDisabled}
+				generateDisabledReason={generateDisabledReason}
+			/>
 			</div>
 		</div>
 	);

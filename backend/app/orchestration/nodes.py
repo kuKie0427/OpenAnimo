@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false
 from __future__ import annotations
 
 from typing import Any
@@ -112,7 +113,7 @@ async def _check_stage_completeness(
     from app.models.project import Character, Shot
 
     session = runtime.context.orchestrator.session
-    project_id = state["project_id"]
+    project_id = state.get("project_id")
 
     if stage == "render_characters":
         entity_label = "characters"

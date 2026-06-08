@@ -59,7 +59,7 @@ function ProjectDropdown({ currentId }: { currentId?: number }) {
 			</button>
 
 			{open && (
-				<div className="absolute left-0 top-full mt-1 w-64 bg-base-200 border-2 border-base-content/15 rounded-lg shadow-comic z-50 py-1 max-h-80 overflow-y-auto">
+				<div className="absolute left-0 top-full mt-1 w-64 bg-base-200 border border-base-content/15 rounded-lg shadow-gate-glow z-50 py-1 max-h-80 overflow-y-auto">
 					<Link
 						to="/"
 						onClick={() => setOpen(false)}
@@ -115,7 +115,7 @@ export function TopBar({
 	const isDark = theme.endsWith("dark");
 	const { openModal: openSettingsModal } = useSettingsStore();
 
-		const btnCls = "flex items-center whitespace-nowrap !px-1.5 !min-h-0 !h-6 gap-1";
+		const btnCls = "flex items-center whitespace-nowrap !px-1.5 !min-h-0 !h-6 gap-1 text-base-content/70 hover:text-base-content";
 		const iconCls = "w-3.5 h-3.5";
 
 		return (
@@ -124,8 +124,8 @@ export function TopBar({
 					{projectId ? (
 						<ProjectDropdown currentId={projectId} />
 					) : (
-						<Link to="/" className="font-comic text-lg text-primary font-bold tracking-wider">
-							openOii
+						<Link to="/" className="font-heading text-lg text-primary font-bold tracking-wider">
+							OpenAnimo
 						</Link>
 					)}
 				</div>

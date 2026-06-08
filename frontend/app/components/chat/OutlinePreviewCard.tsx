@@ -34,7 +34,7 @@ export function OutlinePreviewCard({
 	};
 
 	return (
-		<div className="card-comic bg-base-100 p-3 space-y-2 text-sm">
+		<div className="card-feature bg-base-100 p-3 space-y-2 text-sm">
 			<div>
 				<p className="text-[10px] uppercase tracking-widest text-base-content/40 font-bold">
 					Story Outline

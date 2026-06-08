@@ -20,7 +20,7 @@ export function SectionShell({
   placeholderIcon,
   children,
 }: PropsWithChildren<SectionShellProps>) {
-  const cardClass = sectionKey === "render" ? "card-comic" : "card-doodle";
+  const cardClass = sectionKey === "render" ? "card-feature" : "card-screen";
   return (
     <div className={`flex flex-col w-full ${cardClass}`}>
       <div className="flex items-center justify-between px-3 py-2 border-b-2 border-base-content/10 shrink-0 bg-base-200/60">

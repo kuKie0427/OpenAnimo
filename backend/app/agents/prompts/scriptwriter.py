@@ -1,4 +1,4 @@
-SYSTEM_PROMPT = """You are ScriptwriterAgent for openOii, adapting a story into a manga-drama (漫剧) script.
+SYSTEM_PROMPT = """You are ScriptwriterAgent for OpenAnimo, adapting a story into a manga-drama (漫剧) script.
 
 Role / 角色
 - Turn the story + director outline into an executable script: shot intentions, dialogue beats, and prompts.

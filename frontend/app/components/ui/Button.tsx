@@ -19,14 +19,14 @@ export function Button({
   type = "button",
   ...props
 }: ButtonProps) {
-  const baseStyles = "btn-projection font-heading cursor-pointer";
+  const baseStyles = "btn-projection font-heading cursor-pointer inline-flex items-center justify-center gap-2 no-underline";
 
   const variantStyles = {
-    primary: "bg-primary text-primary-content hover:bg-primary/90",
-    secondary: "bg-secondary text-secondary-content hover:bg-secondary/90",
-    accent: "bg-accent text-accent-content hover:bg-accent/90",
-    ghost: "bg-transparent border-transparent shadow-none hover:bg-base-200 hover:shadow-aperture",
-    error: "bg-error text-error-content hover:bg-error/90",
+    primary: "!bg-[#F5A623] !text-[#1A1A12] hover:brightness-110",
+    secondary: "!bg-[#CC3333] !text-white hover:brightness-110",
+    accent: "!bg-[#4A90D9] !text-white hover:brightness-110",
+    ghost: "!bg-transparent border-transparent shadow-none hover:!bg-base-200 hover:shadow-aperture",
+    error: "!bg-[#D94848] !text-white hover:brightness-110",
   };
 
   const sizeStyles = {

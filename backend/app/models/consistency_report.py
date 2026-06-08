@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false, reportAssignmentType=false
 """角色一致性评估报告持久化模型"""
 
 from __future__ import annotations

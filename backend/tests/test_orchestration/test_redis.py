@@ -22,13 +22,13 @@ from app.orchestration.redis import (
 
 class TestKeyHelpers:
     def test_confirm_event_key(self):
-        assert get_confirm_event_key(42) == "openoii:confirm:42"
+        assert get_confirm_event_key(42) == "openanimo:confirm:42"
 
     def test_confirm_channel(self):
-        assert get_confirm_channel(99) == "openoii:confirm_channel:99"
+        assert get_confirm_channel(99) == "openanimo:confirm_channel:99"
 
     def test_awaiting_payload_key(self):
-        assert get_awaiting_payload_key(7) == "openoii:awaiting:7"
+        assert get_awaiting_payload_key(7) == "openanimo:awaiting:7"
 
 
 # ---------------------------------------------------------------------------

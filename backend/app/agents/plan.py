@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false
 from __future__ import annotations
 
 import json
@@ -159,7 +160,7 @@ def _shot_fields(
     video_prompt = _compose_video_prompt(shot_data)
     motion_note = _optional_text(shot_data.get("motion_note")) or video_prompt
     return {
-        "project_id": ctx.project.id,
+        "project_id": ctx.project_id,
         "description": str(shot_data["description"]).strip(),
         "prompt": video_prompt,
         "image_prompt": image_prompt,
@@ -225,7 +226,7 @@ class PlanAgent(BaseAgent):
 
     async def _get_existing_state(self, ctx: AgentContext) -> dict[str, Any]:
         char_res = await ctx.session.execute(
-            select(Character).where(Character.project_id == ctx.project.id)
+            select(Character).where(Character.project_id == ctx.project_id)
         )
         characters = [
             {"id": c.id, "name": c.name, "description": c.description}
@@ -233,7 +234,7 @@ class PlanAgent(BaseAgent):
         ]
 
         shot_res = await ctx.session.execute(
-            select(Shot).where(Shot.project_id == ctx.project.id).order_by(Shot.order)
+            select(Shot).where(Shot.project_id == ctx.project_id).order_by(Shot.order)
         )
         shots = [
             {
@@ -261,7 +262,7 @@ class PlanAgent(BaseAgent):
         preserve_shot_ids = set(preserve_ids.get("shots") or [])
 
         char_res = await ctx.session.execute(
-            select(Character).where(Character.project_id == ctx.project.id)
+            select(Character).where(Character.project_id == ctx.project_id)
         )
         deleted_char_ids = []
         for char in char_res.scalars().all():
@@ -270,7 +271,7 @@ class PlanAgent(BaseAgent):
                 await ctx.session.delete(char)
 
         deleted_shot_ids = []
-        shot_res = await ctx.session.execute(select(Shot).where(Shot.project_id == ctx.project.id))
+        shot_res = await ctx.session.execute(select(Shot).where(Shot.project_id == ctx.project_id))
         for shot in shot_res.scalars().all():
             if shot.id not in preserve_shot_ids:
                 deleted_shot_ids.append(shot.id)
@@ -280,12 +281,12 @@ class PlanAgent(BaseAgent):
 
         for char_id in deleted_char_ids:
             await ctx.ws.send_event(
-                ctx.project.id,
+                ctx.project_id,
                 {"type": "character_deleted", "data": {"character_id": char_id}},
             )
         for shot_id in deleted_shot_ids:
             await ctx.ws.send_event(
-                ctx.project.id,
+                ctx.project_id,
                 {"type": "shot_deleted", "data": {"shot_id": shot_id}},
             )
 
@@ -301,7 +302,7 @@ class PlanAgent(BaseAgent):
                 char_id = item.get("id")
                 if char_id is None:
                     new_char = Character(
-                        project_id=ctx.project.id,
+                        project_id=ctx.project_id,
                         name=name.strip(),
                         description=_character_to_description(item),
                         visual_notes=_extract_visual_notes(item),
@@ -311,7 +312,7 @@ class PlanAgent(BaseAgent):
                     new_char_count += 1
                 else:
                     existing_char = await ctx.session.get(Character, char_id)
-                    if existing_char and existing_char.project_id == ctx.project.id:
+                    if existing_char and existing_char.project_id == ctx.project_id:
                         version = await self.version_service.auto_snapshot_character(
                             ctx.session,
                             existing_char,
@@ -320,7 +321,7 @@ class PlanAgent(BaseAgent):
                         )
                         if version is not None:
                             await ctx.ws.send_event(
-                                ctx.project.id,
+                                ctx.project_id,
                                 {
                                     "type": "version_created",
                                     "data": {
@@ -347,7 +348,7 @@ class PlanAgent(BaseAgent):
                             trigger="feedback",
                         )
                         await ctx.ws.send_event(
-                            ctx.project.id,
+                            ctx.project_id,
                             {
                                 "type": "version_created",
                                 "data": {
@@ -362,7 +363,7 @@ class PlanAgent(BaseAgent):
         await ctx.session.flush()
 
         char_res = await ctx.session.execute(
-            select(Character).where(Character.project_id == ctx.project.id)
+            select(Character).where(Character.project_id == ctx.project_id)
         )
         project_characters = list(char_res.scalars().all())
 
@@ -390,7 +391,7 @@ class PlanAgent(BaseAgent):
                     new_shot_count += 1
                 else:
                     existing_shot = await ctx.session.get(Shot, shot_id)
-                    if existing_shot and existing_shot.project_id == ctx.project.id:
+                    if existing_shot and existing_shot.project_id == ctx.project_id:
                         version = await self.version_service.auto_snapshot_shot(
                             ctx.session,
                             existing_shot,
@@ -399,7 +400,7 @@ class PlanAgent(BaseAgent):
                         )
                         if version is not None:
                             await ctx.ws.send_event(
-                                ctx.project.id,
+                                ctx.project_id,
                                 {
                                     "type": "version_created",
                                     "data": {
@@ -425,7 +426,7 @@ class PlanAgent(BaseAgent):
                             trigger="feedback",
                         )
                         await ctx.ws.send_event(
-                            ctx.project.id,
+                            ctx.project_id,
                             {
                                 "type": "version_created",
                                 "data": {
@@ -451,7 +452,7 @@ class PlanAgent(BaseAgent):
         is_incremental = ctx.rerun_mode == "incremental"
         payload: dict[str, Any] = {
             "project": {
-                "id": ctx.project.id,
+                "id": ctx.project_id,
                 "title": ctx.project.title,
                 "story": ctx.project.story,
                 "style": ctx.project.style,
@@ -513,10 +514,10 @@ class PlanAgent(BaseAgent):
 
         if updated_fields:
             await ctx.ws.send_event(
-                ctx.project.id,
+                ctx.project_id,
                 {
                     "type": "project_updated",
-                    "data": {"project": {"id": ctx.project.id, **updated_fields}},
+                    "data": {"project": {"id": ctx.project_id, **updated_fields}},
                 },
             )
 
@@ -536,7 +537,7 @@ class PlanAgent(BaseAgent):
                 try:
                     from app.services.universe_service import UniverseService
                     svc = UniverseService(ctx.session)
-                    imported = await svc.auto_import_shared_characters(ctx.project.id)
+                    imported = await svc.auto_import_shared_characters(ctx.project_id)
                     if imported:
                         for char in imported:
                             await self.send_character_event(ctx, char, "character_created")
@@ -574,7 +575,7 @@ class PlanAgent(BaseAgent):
                 new_char_count, _ = await self._apply_incremental_changes(ctx, data, visual_bible)
 
                 char_res = await ctx.session.execute(
-                    select(Character).where(Character.project_id == ctx.project.id)
+                    select(Character).where(Character.project_id == ctx.project_id)
                 )
                 final_chars = list(char_res.scalars().all())
                 for char in final_chars:
@@ -597,7 +598,7 @@ class PlanAgent(BaseAgent):
 
             raw_characters = data.get("characters") or []
             lines: list[str] = []
-            await ctx.session.execute(delete(Character).where(Character.project_id == ctx.project.id))
+            await ctx.session.execute(delete(Character).where(Character.project_id == ctx.project_id))
             await ctx.session.flush()
 
             new_characters: list[Character] = []
@@ -612,7 +613,7 @@ class PlanAgent(BaseAgent):
                     char_names.append(name.strip())
                     new_characters.append(
                         Character(
-                            project_id=ctx.project.id,
+                            project_id=ctx.project_id,
                             name=name.strip(),
                             description=_character_to_description(item),
                             visual_notes=_extract_visual_notes(item),
@@ -639,7 +640,7 @@ class PlanAgent(BaseAgent):
     async def run_shots(self, ctx: AgentContext) -> None:
         async with self.trace_step(ctx, stage="plan_shots", method="run_shots"):
             char_res = await ctx.session.execute(
-                select(Character).where(Character.project_id == ctx.project.id)
+                select(Character).where(Character.project_id == ctx.project_id)
             )
             characters = list(char_res.scalars().all())
             cached_data = getattr(ctx, "plan_data", None)
@@ -661,7 +662,7 @@ class PlanAgent(BaseAgent):
                 _, new_shot_count = await self._apply_incremental_changes(ctx, data, visual_bible)
 
                 shot_res = await ctx.session.execute(
-                    select(Shot).where(Shot.project_id == ctx.project.id).order_by(Shot.order.asc())
+                    select(Shot).where(Shot.project_id == ctx.project_id).order_by(Shot.order.asc())
                 )
                 final_shots = list(shot_res.scalars().all())
                 for shot in final_shots:
@@ -697,7 +698,7 @@ class PlanAgent(BaseAgent):
             if not isinstance(raw_shots, list) or not raw_shots:
                 raise ValueError("LLM 响应未返回任何分镜")
 
-            await ctx.session.execute(delete(Shot).where(Shot.project_id == ctx.project.id))
+            await ctx.session.execute(delete(Shot).where(Shot.project_id == ctx.project_id))
             await ctx.session.flush()
 
             new_shots: list[Shot] = []

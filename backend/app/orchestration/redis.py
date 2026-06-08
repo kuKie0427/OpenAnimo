@@ -22,16 +22,16 @@ async def get_redis() -> redis.Redis:
 
 
 def get_confirm_event_key(run_id: int) -> str:
-    return f"openoii:confirm:{run_id}"
+    return f"openanimo:confirm:{run_id}"
 
 
 def get_confirm_channel(run_id: int) -> str:
-    return f"openoii:confirm_channel:{run_id}"
+    return f"openanimo:confirm_channel:{run_id}"
 
 
 def get_awaiting_payload_key(run_id: int) -> str:
     """Redis 缓存 run 当前 gate 的 awaiting payload，用于 WS 重连补发"""
-    return f"openoii:awaiting:{run_id}"
+    return f"openanimo:awaiting:{run_id}"
 
 
 async def store_awaiting_payload(run_id: int, payload: dict) -> None:

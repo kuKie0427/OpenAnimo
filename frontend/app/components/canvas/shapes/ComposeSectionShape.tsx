@@ -14,6 +14,7 @@ import {
 	getWorkspaceSectionStatusLabel,
 } from "~/utils/workspaceStatus";
 import { SectionShell } from "./SectionShell";
+import { Button } from "~/components/ui/Button";
 import type { ComposeSectionShape } from "./types";
 
 const VIDEO_PLACEHOLDER_ICON = (
@@ -130,15 +131,26 @@ export class ComposeSectionShapeUtil extends ShapeUtil<ComposeSectionShape> {
 									/>
 								</video>
 								<div className="flex justify-end">
-									<a
-										href={getStaticUrl(downloadUrl || videoUrl) ?? undefined}
-										download
-										className="btn btn-sm btn-doodle gap-1 text-xs"
+									<Button
+										variant="primary"
+										size="sm"
+										className="gap-1 text-xs"
 										onPointerDown={stopCanvasDrag}
+										onClick={() => {
+											const url = getStaticUrl(downloadUrl || videoUrl);
+											if (url) {
+												const a = document.createElement("a");
+												a.href = url;
+												a.download = "";
+												document.body.appendChild(a);
+												a.click();
+												document.body.removeChild(a);
+											}
+										}}
 									>
 										<SvgIcon name="download" size={12} />
 										下载
-									</a>
+									</Button>
 								</div>
 							</div>
 						) : null}

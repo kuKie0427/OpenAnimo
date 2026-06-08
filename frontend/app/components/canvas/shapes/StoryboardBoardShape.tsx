@@ -13,6 +13,7 @@ import { getShapeSize, useDomSize } from "~/hooks/useDomSize";
 import { getWorkspaceSectionPlaceholderText } from "~/utils/workspaceStatus";
 import { canvasEvents } from "../canvasEvents";
 import type { ShapeActionName, ShapeActionPayload } from "../canvasEvents";
+import { Button } from "~/components/ui/Button";
 import { SectionShell } from "./SectionShell";
 import type {
 	ReviewedCharacter,
@@ -110,7 +111,7 @@ function CharacterCard({ character }: { character: ReviewedCharacter }) {
 	};
 
 	return (
-		<article className="group overflow-hidden card-doodle">
+		<article className="group overflow-hidden card-screen">
 			<div className="relative aspect-[4/3] bg-base-300">
 				{displayImage ? (
 					<img
@@ -194,7 +195,7 @@ function CharacterCard({ character }: { character: ReviewedCharacter }) {
 				{isEditing ? (
 					<div className="space-y-1.5 pt-1">
 						<textarea
-							className="input-doodle w-full text-xs p-2 resize-none"
+							className="input-field w-full text-xs p-2 resize-none"
 							rows={2}
 							placeholder="修改意见"
 							value={feedbackText}
@@ -208,14 +209,14 @@ function CharacterCard({ character }: { character: ReviewedCharacter }) {
 							}}
 						/>
 						<div className="flex gap-1">
-							<button
-								type="button"
-								className="btn btn-xs btn-doodle btn-primary"
-								onPointerDown={stopCanvasDrag}
-								onClick={handleSaveEdit}
-							>
-								提交
-							</button>
+						<Button
+							variant="primary"
+							size="sm"
+							onPointerDown={stopCanvasDrag}
+							onClick={handleSaveEdit}
+						>
+							提交
+						</Button>
 							<button
 								type="button"
 								className="btn btn-xs btn-ghost"
@@ -280,7 +281,7 @@ function ShotCard({ shot }: { shot: ReviewedShot }) {
 
 	return (
 		<article
-			className={`group overflow-hidden card-comic ${isApproved ? "ring-2 ring-success/50" : ""}`}
+			className={`group overflow-hidden card-feature ${isApproved ? "ring-2 ring-success/50" : ""}`}
 		>
 			<div className="relative aspect-video bg-base-300">
 				{imageUrl ? (
@@ -402,7 +403,7 @@ function ShotCard({ shot }: { shot: ReviewedShot }) {
 					<div className="space-y-1.5 pt-1">
 						<input
 							type="text"
-							className="input-doodle w-full text-xs p-2"
+							className="input-field w-full text-xs p-2"
 							placeholder="动作"
 							value={editAction}
 							onPointerDown={stopCanvasDrag}
@@ -410,7 +411,7 @@ function ShotCard({ shot }: { shot: ReviewedShot }) {
 						/>
 						<input
 							type="text"
-							className="input-doodle w-full text-xs p-2"
+							className="input-field w-full text-xs p-2"
 							placeholder="对话"
 							value={editDialogue}
 							onPointerDown={stopCanvasDrag}
@@ -418,14 +419,14 @@ function ShotCard({ shot }: { shot: ReviewedShot }) {
 							onKeyDown={(e) => e.key === "Enter" && handleSaveEdit()}
 						/>
 						<div className="flex gap-1">
-							<button
-								type="button"
-								className="btn btn-xs btn-doodle btn-primary"
-								onPointerDown={stopCanvasDrag}
-								onClick={handleSaveEdit}
-							>
-								保存
-							</button>
+						<Button
+							variant="primary"
+							size="sm"
+							onPointerDown={stopCanvasDrag}
+							onClick={handleSaveEdit}
+						>
+							保存
+						</Button>
 							<button
 								type="button"
 								className="btn btn-xs btn-ghost"
@@ -625,7 +626,6 @@ export class StoryboardBoardShapeUtil extends ShapeUtil<StoryboardBoardShape> {
 			placeholders,
 			statusLabels,
 			placeholderTexts,
-			downloadUrl,
 		} = shape.props;
 		const ref = useDomSize(shape, this.editor ?? null);
 		const typedCharacters = characters as ReviewedCharacter[];
@@ -668,7 +668,7 @@ export class StoryboardBoardShapeUtil extends ShapeUtil<StoryboardBoardShape> {
 													strokeLinecap="round"
 												/>
 											</svg>
-											<span className="absolute rounded-full border-2 border-base-content/20 bg-base-100 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-base-content/60 shadow-comic-sm">
+											<span className="absolute rounded-full border-2 border-base-content/20 bg-base-100 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-base-content/60 shadow-aperture">
 												{SECTION_FLOW_COPY[section] ?? "流程推进"}
 											</span>
 										</div>
@@ -750,17 +750,26 @@ export class StoryboardBoardShapeUtil extends ShapeUtil<StoryboardBoardShape> {
 														/>
 													</video>
 													<div className="flex justify-end">
-														<a
-															href={
-																getStaticUrl(downloadUrl || videoUrl) ?? undefined
-															}
-															download
-															className="btn btn-sm btn-doodle gap-1 text-xs"
-															onPointerDown={stopCanvasDrag}
-														>
-															<SvgIcon name="download" size={12} />
-															下载
-														</a>
+												<Button
+													variant="primary"
+													size="sm"
+													className="gap-1 text-xs"
+													onPointerDown={stopCanvasDrag}
+													onClick={() => {
+														const url = getStaticUrl(shape.props.downloadUrl || videoUrl);
+														if (url) {
+															const a = document.createElement("a");
+															a.href = url;
+															a.download = "";
+															document.body.appendChild(a);
+															a.click();
+															document.body.removeChild(a);
+														}
+													}}
+												>
+													<SvgIcon name="download" size={12} />
+													下载
+												</Button>
 													</div>
 												</div>
 											) : null}

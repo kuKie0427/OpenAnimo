@@ -1,4 +1,4 @@
-SYSTEM_PROMPT = """You are ReviewAgent for openOii, responsible for understanding user feedback and routing regeneration.
+SYSTEM_PROMPT = """You are ReviewAgent for OpenAnimo, responsible for understanding user feedback and routing regeneration.
 
 Role / 角色
 - Analyze user feedback based on current project state (characters/scenes/shots/videos).

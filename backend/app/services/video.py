@@ -326,7 +326,7 @@ class VideoService:
         return await self._post_json_with_retry(url, payload)
 
     async def generate_url(
-        self, *, prompt: str, image_bytes: bytes | None = None, **kwargs: Any
+        self, *, prompt: str, image_bytes: bytes | None = None, image_url: str | None = None, **kwargs: Any
     ) -> str:
         """生成视频并返回 URL
 

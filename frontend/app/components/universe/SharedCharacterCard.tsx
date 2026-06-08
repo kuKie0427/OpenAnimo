@@ -24,7 +24,7 @@ export function SharedCharacterCard({
 			{/* Avatar */}
 			<div className="mb-2">
 				{imageUrl ? (
-					<div className="w-20 h-20 mx-auto rounded-full overflow-hidden border-3 border-primary/30 shadow-brutal-sm">
+					<div className="w-20 h-20 mx-auto rounded-full overflow-hidden border border-primary/30 shadow-aperture">
 						<img
 							src={imageUrl}
 							alt={character.name}
@@ -32,7 +32,7 @@ export function SharedCharacterCard({
 						/>
 					</div>
 				) : (
-					<div className="w-20 h-20 mx-auto rounded-full bg-base-200 border-3 border-base-content/10 flex items-center justify-center">
+					<div className="w-20 h-20 mx-auto rounded-full bg-base-200 border border-base-content/10 flex items-center justify-center">
 						<UserIcon className="w-8 h-8 text-base-content/30" />
 					</div>
 				)}

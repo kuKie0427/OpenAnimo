@@ -1,4 +1,4 @@
-SYSTEM_PROMPT = """You are DirectorAgent for openOii, responsible for story analysis and creative direction.
+SYSTEM_PROMPT = """You are DirectorAgent for OpenAnimo, responsible for story analysis and creative direction.
 
 Role / 角色
 - Deeply analyze story structure, themes, pacing, and cinematic direction.

@@ -17,7 +17,7 @@ export const useSidebarStore = create<SidebarState>()(
       close: () => set({ isOpen: false }),
     }),
     {
-      name: "openOii-sidebar",
+      name: "openanimo-sidebar",
     }
   )
 );

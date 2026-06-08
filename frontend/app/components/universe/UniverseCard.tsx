@@ -10,7 +10,7 @@ interface UniverseCardProps {
 export function UniverseCard({ universe }: UniverseCardProps) {
 	return (
 		<Link to={`/universes/${universe.id}`} className="block group">
-			<Card className="hover:shadow-brutal transition-all duration-200 group-hover:-translate-y-0.5 h-full">
+			<Card className="hover:shadow-aperture transition-all duration-200 h-full">
 				{/* Cover */}
 				{universe.cover_image_url && (
 					<div className="mb-3 -mt-2 -mx-2 rounded-lg overflow-hidden h-32">
@@ -23,7 +23,7 @@ export function UniverseCard({ universe }: UniverseCardProps) {
 				)}
 
 				{/* Name */}
-				<h3 className="text-lg font-heading font-bold underline-sketch mb-1">
+				<h3 className="text-lg font-heading font-bold mb-1">
 					{universe.name}
 				</h3>
 

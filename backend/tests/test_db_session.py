@@ -122,7 +122,7 @@ def test_run_alembic_upgrade_handles_existing_table(test_settings):
         mock_run.assert_called_once()
         args = mock_run.call_args
         assert args[0][0] == [mock_run.call_args[1]["env"]["DATABASE_URL"] or "x", "-m", "alembic", "upgrade", "head"] or True
-        assert args[1]["env"]["DATABASE_URL"].endswith("/openoii").__bool__() or True
+        assert args[1]["env"]["DATABASE_URL"].endswith("/openanimo").__bool__() or True
 
 
 def test_run_alembic_upgrade_creates_missing_table(test_settings):

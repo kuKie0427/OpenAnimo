@@ -4,7 +4,7 @@ import { SEED_PROJECT_ID } from "./conftest";
 async function preopenChatPanel(page: import("@playwright/test").Page) {
 	await page.addInitScript(() => {
 		localStorage.setItem(
-			"openOii-chat-panel",
+			"openanimo-chat-panel",
 			JSON.stringify({ state: { isOpen: true }, version: 0 }),
 		);
 	});

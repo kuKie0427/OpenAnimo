@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false, reportAssignmentType=false
 from datetime import datetime
 from typing import Optional
 

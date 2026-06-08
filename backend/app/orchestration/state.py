@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from operator import add
 from typing import Annotated, Any, Literal, TypedDict
 
@@ -106,9 +106,17 @@ class Phase2State(TypedDict, total=False):
     completeness_warnings: Annotated[list[dict[str, Any]], add]
 
 
+ALL_GATES = frozenset({
+    "outline", "characters", "shots",
+    "character_images", "shot_images", "compose",
+    "critique_characters", "critique_shots",
+})
+
+
 @dataclass(slots=True)
 class Phase2RuntimeContext:
     orchestrator: Any
     agent_context: Any
     start_stage: Phase2Stage = "plan_outline"
-    auto_mode: bool = False
+    auto_mode: bool = False       # 保留向后兼容（老 API 不传 gate_modes 时使用）
+    gate_modes: set[str] = field(default_factory=set)  # 应自动通过的闸门名称集合

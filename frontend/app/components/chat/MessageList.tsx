@@ -66,7 +66,7 @@ function ThinkingMessage({ msg }: { msg: AgentMessage }) {
     <div className="group">
       <div className="flex items-center gap-1 mb-0.5">
         <AgentIcon className={`w-3 h-3 ${agentColors[msg.agent] || "text-base-content/30"}`} aria-hidden="true" />
-        <span className="text-xs font-comic uppercase tracking-wide text-base-content/40">{agentNameMap[msg.agent] || msg.agent}</span>
+                <span className="text-xs uppercase tracking-wide text-base-content/40">{agentNameMap[msg.agent] || msg.agent}</span>
         {phaseLabel && (
           <span className={`badge ${phaseBadge} badge-xs ml-1 font-mono text-[10px]`}>{phaseLabel}</span>
         )}
@@ -236,11 +236,11 @@ export function MessageList({ messages }: MessageListProps) {
             {!sameAgentAsPrev && (
               <div className="flex items-center gap-1 mb-0.5">
                 <AgentIcon className={`w-3 h-3 ${agentColors[msg.agent] || "text-base-content/30"}`} aria-hidden="true" />
-                <span className="text-xs font-comic uppercase tracking-wide text-base-content/40">{agentNameMap[msg.agent] || msg.agent}</span>
+        <span className="text-xs uppercase tracking-wide text-base-content/40">{agentNameMap[msg.agent] || msg.agent}</span>
               </div>
             )}
             <div
-              className={`${isUserMessage ? "speech-bubble-user ml-3" : "speech-bubble mr-3"} select-text text-sm leading-relaxed ${
+              className={`${isUserMessage ? "message-user" : "message-ai"} select-text text-sm leading-relaxed ${
                 msg.role === "error"
                   ? "!bg-error/10 !text-error rounded-lg"
                   : ""

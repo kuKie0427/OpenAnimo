@@ -126,6 +126,7 @@ class TextService:
                     await asyncio.sleep(0.5 * (2**attempt))
 
         self._raise_for_status(last_exc, last_status, last_body)
+        raise AssertionError("unreachable: _raise_for_status always raises")
 
     async def _post_stream_with_retry(
         self, url: str, payload: dict[str, Any]

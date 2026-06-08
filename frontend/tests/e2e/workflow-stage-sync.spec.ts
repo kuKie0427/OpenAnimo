@@ -198,7 +198,7 @@ test.beforeEach(async ({ page }) => {
 async function openChatPanel(page: Page) {
 	await page.addInitScript(() => {
 		localStorage.setItem(
-			"openOii-chat-panel",
+			"openanimo-chat-panel",
 			JSON.stringify({ state: { isOpen: true }, version: 0 }),
 		);
 	});

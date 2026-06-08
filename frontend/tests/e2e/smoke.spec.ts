@@ -4,7 +4,7 @@ test('homepage has title and sidebar works', async ({ page }) => {
   await page.goto('/');
 
   // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/openOii/);
+  await expect(page).toHaveTitle(/OpenAnimo/);
 
   // Check if sidebar is closed and open it if needed.
   const openSidebarButton = page.getByTitle('展开侧边栏');

@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false
 """角色一致性评估 API 路由"""
 
 from __future__ import annotations

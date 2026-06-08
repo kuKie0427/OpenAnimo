@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 TextProviderKey = Literal["anthropic", "openai", "fake"]
@@ -266,6 +266,28 @@ class GenerateRequest(BaseModel):
     seed: int | None = None
     notes: str | None = None
     auto_mode: bool = False
+    gate_modes: list[str] | None = Field(
+        default=None,
+        description="应自动通过的闸门名称列表，None 时使用 auto_mode 行为。",
+    )
+
+    @field_validator("gate_modes")
+    @classmethod
+    def _validate_gate_names(cls, v: list[str] | None) -> list[str] | None:
+        if v is not None:
+            invalid = set(v) - _VALID_GATE_NAMES
+            if invalid:
+                raise ValueError(
+                    f"无效的闸门名称: {sorted(invalid)}。有效值: {sorted(_VALID_GATE_NAMES)}"
+                )
+        return v
+
+
+_VALID_GATE_NAMES: frozenset[str] = frozenset({
+    "outline", "characters", "shots",
+    "character_images", "shot_images", "compose",
+    "critique_characters", "critique_shots",
+})
 
 
 class ResumeRequest(BaseModel):

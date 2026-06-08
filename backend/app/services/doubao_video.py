@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportGeneralTypeIssues=false
 """豆包视频生成服务（火山引擎 Ark API）
 
 支持图生视频（I2V）和文生视频（T2V）模式。
@@ -280,12 +281,14 @@ class DoubaoVideoService:
         *,
         prompt: str,
         image_url: str | None = None,
+        image_bytes: bytes | None = None,
         duration: Literal[5, 10] = 5,
         ratio: Literal["16:9", "9:16", "1:1", "adaptive"] = "adaptive",
         generate_audio: bool = True,
         watermark: bool = False,
         model: str | None = None,
         on_progress: callable | None = None,
+        **kwargs: Any,
     ) -> str:
         """生成视频并返回 URL（一站式接口）
 

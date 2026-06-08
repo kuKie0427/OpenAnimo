@@ -143,7 +143,7 @@ async function globalSetup(_config: FullConfig): Promise<void> {
 	console.log(`[global-setup] Using backend port: ${backendPort}`);
 
 	// 2. Create a temp directory for SQLite database
-	const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "openOii-e2e-"));
+	const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "openanimo-e2e-"));
 	console.log(`[global-setup] SQLite temp dir: ${tmpDir}`);
 
 	const databaseUrl = `sqlite+aiosqlite:///${tmpDir}/test.db`;

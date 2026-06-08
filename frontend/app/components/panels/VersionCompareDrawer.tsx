@@ -56,7 +56,7 @@ function versionLabel(version: ArtifactVersion): string {
 	return `v${version.version} · ${version.trigger}`;
 }
 
-function VersionColumn({ title, version }: { title: string; version?: ArtifactVersion }) {
+export function VersionColumn({ title, version }: { title: string; version?: ArtifactVersion }) {
 	const imageUrl = getStaticUrl(version?.snapshot.image_url as string | null | undefined);
 	return (
 		<section className="min-w-0 rounded-box border-2 border-base-content/15 bg-base-200/60 p-3">
@@ -86,7 +86,7 @@ function VersionColumn({ title, version }: { title: string; version?: ArtifactVe
 	);
 }
 
-function DiffRow({ diff }: { diff: VersionDiff }) {
+export function DiffRow({ diff }: { diff: VersionDiff }) {
 	return (
 		<li className="rounded border border-base-content/10 bg-base-100 p-2 text-xs">
 			<div className="mb-1 font-semibold">{LABELS[diff.field_name] || diff.field_name}</div>

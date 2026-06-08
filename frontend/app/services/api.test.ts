@@ -262,11 +262,11 @@ describe("admin token localStorage", () => {
 
 		await configApi.update({ ADMIN_TOKEN: "my-secret", LLM_API_KEY: "sk-123" });
 
-		expect(store["openoii_admin_token"]).toBe("my-secret");
+		expect(store["openanimo_admin_token"]).toBe("my-secret");
 	});
 
 	it("removes ADMIN_TOKEN from localStorage when set to empty", async () => {
-		store["openoii_admin_token"] = "old-token";
+		store["openanimo_admin_token"] = "old-token";
 
 		mockFetch.mockResolvedValueOnce(
 			new Response(
@@ -283,11 +283,11 @@ describe("admin token localStorage", () => {
 
 		await configApi.update({ ADMIN_TOKEN: "" });
 
-		expect(store["openoii_admin_token"]).toBeUndefined();
+		expect(store["openanimo_admin_token"]).toBeUndefined();
 	});
 
 	it("includes X-Admin-Token header when token is in localStorage", async () => {
-		store["openoii_admin_token"] = "test-token";
+		store["openanimo_admin_token"] = "test-token";
 
 		mockFetch.mockResolvedValue(
 			new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),
@@ -302,7 +302,7 @@ describe("admin token localStorage", () => {
 	});
 
 	it("does not include X-Admin-Token header when no token", async () => {
-		delete store["openoii_admin_token"];
+		delete store["openanimo_admin_token"];
 
 		mockFetch.mockResolvedValue(
 			new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),

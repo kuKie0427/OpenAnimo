@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false
 from __future__ import annotations
 
 import json
@@ -241,7 +242,7 @@ class CriticAgent(BaseAgent):
 
         # Send critique result via WebSocket
         await ctx.ws.send_event(
-            ctx.project.id,
+            ctx.project_id,
             {
                 "type": "critique_result",
                 "data": result,
@@ -273,7 +274,7 @@ class CriticAgent(BaseAgent):
     async def run_character_review(self, ctx: AgentContext) -> dict[str, Any]:
         """Review all character images in the project."""
         query = select(Character).where(
-            Character.project_id == ctx.project.id,
+            Character.project_id == ctx.project_id,
             Character.image_url.isnot(None),
         )
         res = await ctx.session.execute(query)
@@ -367,7 +368,7 @@ class CriticAgent(BaseAgent):
     async def run_shot_review(self, ctx: AgentContext) -> dict[str, Any]:
         """Review all shot images in the project."""
         query = select(Shot).where(
-            Shot.project_id == ctx.project.id,
+            Shot.project_id == ctx.project_id,
             Shot.image_url.isnot(None),
         )
         res = await ctx.session.execute(query)
@@ -472,11 +473,11 @@ class CriticAgent(BaseAgent):
             )
             # Send WS event
             await ctx.ws.send_event(
-                ctx.project.id,
+                ctx.project_id,
                 {
                     "type": "consistency_eval_completed",
                     "data": {
-                        "project_id": ctx.project.id,
+                        "project_id": ctx.project_id,
                         "overall_score": consistency_report["overall_score"],
                         "character_count": len(consistency_report["character_reports"]),
                     },

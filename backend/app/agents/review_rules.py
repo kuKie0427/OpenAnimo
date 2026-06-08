@@ -85,7 +85,7 @@ class ReviewRuleEngine(BaseAgent):
             mode = "incremental"
             target_ids = infer_feedback_targets(
                 {"routing": {"start_agent": start_agent, "mode": mode}},
-                {"project_id": ctx.project.id},
+                {"project_id": ctx.project_id},
             )
             if ctx.entity_type == "character" and target_ids:
                 target_ids.character_ids = [ctx.entity_id]
@@ -114,7 +114,7 @@ class ReviewRuleEngine(BaseAgent):
 
         target_ids = infer_feedback_targets(
             {"routing": {"start_agent": start_agent, "mode": mode}},
-            {"project_id": ctx.project.id},
+            {"project_id": ctx.project_id},
         )
 
         if retry_merge_requested:

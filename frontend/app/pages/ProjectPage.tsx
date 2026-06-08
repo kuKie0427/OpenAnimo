@@ -37,7 +37,6 @@ export function ProjectPage() {
 		currentStage: storeCurrentStage,
 		awaitingConfirm: storeAwaitingConfirm,
 		recoveryControl: storeRecoveryControl,
-		runMode: storeRunMode,
 	} = useEditorStore(
 		useShallow((s) => ({
 			isGenerating: s.isGenerating,
@@ -45,7 +44,6 @@ export function ProjectPage() {
 			currentStage: s.currentStage,
 			awaitingConfirm: s.awaitingConfirm,
 			recoveryControl: s.recoveryControl,
-			runMode: s.runMode,
 		})),
 	);
 	const hasActiveRun = storeIsGenerating || Boolean(storeCurrentRunId);
@@ -208,10 +206,16 @@ export function ProjectPage() {
 	}, [messages]);
 
 	const generateMutation = useMutation({
-		mutationFn: ({ requestToken }: { requestToken: number }) =>
-			projectsApi
-				.generate(projectId, { auto_mode: storeRunMode === "yolo" })
-				.then((run) => ({ run, requestToken })),
+		mutationFn: ({ requestToken }: { requestToken: number }) => {
+			const editorState = useEditorStore.getState();
+			const gateModes = editorState.gateModes;
+			const body = gateModes.size > 0
+				? { gate_modes: [...gateModes] }
+				: { auto_mode: editorState.runMode === "yolo" };
+			return projectsApi
+				.generate(projectId, body)
+				.then((run) => ({ run, requestToken }));
+		},
 		onSuccess: ({ run, requestToken }) => {
 			if (requestToken !== generateRequestTokenRef.current) return;
 			syncStoreWithActiveRun(run);
@@ -375,6 +379,13 @@ export function ProjectPage() {
 		}
 	};
 
+	const handleEntityConfirm = (decisions: Array<{ entity_id: number; approved: boolean; feedback?: string }>) => {
+		const runId = storeCurrentRunId;
+		if (runId) {
+			send({ type: "confirm", data: { run_id: runId, entity_decisions: decisions } });
+		}
+	};
+
 	const handleCancel = () => {
 		const activeRunId =
 			storeCurrentRunId ?? storeRecoveryControl?.active_run.id ?? null;
@@ -478,15 +489,17 @@ export function ProjectPage() {
 					<StageView projectId={projectId} />
 				</div>
 
-				<ChatDrawer
-					onSendFeedback={handleFeedback}
-					onConfirm={handleConfirm}
-					onGenerate={handleGenerate}
-					onCancel={handleCancel}
-					isGenerating={hasActiveRun}
-					generateDisabled={false}
-					generateDisabledReason={undefined}
-				/>
+			<ChatDrawer
+				projectId={projectId}
+				onSendFeedback={handleFeedback}
+				onConfirm={handleConfirm}
+				onEntityConfirm={handleEntityConfirm}
+				onGenerate={handleGenerate}
+				onCancel={handleCancel}
+				isGenerating={hasActiveRun}
+				generateDisabled={false}
+				generateDisabledReason={undefined}
+			/>
 			</div>
 
 			<AssetDrawer

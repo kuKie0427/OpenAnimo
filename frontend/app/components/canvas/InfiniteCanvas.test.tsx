@@ -389,7 +389,7 @@ describe("InfiniteCanvas", () => {
 			expect.arrayContaining([
 				expect.objectContaining({
 					type: "arrow",
-					meta: { "openoii-workflow-arrow": true },
+					meta: { "openanimo-workflow-arrow": true },
 				}),
 			]),
 		);

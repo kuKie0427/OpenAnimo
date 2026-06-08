@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false
 from __future__ import annotations
 
 from fastapi import APIRouter

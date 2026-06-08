@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false
 from __future__ import annotations
 
 import logging
@@ -27,7 +28,7 @@ STATIC_DIR = Path(__file__).parent / "static"
 async def lifespan(_: FastAPI):
     import logging
 
-    log = logging.getLogger("openOii.lifespan")
+    log = logging.getLogger("openanimo.lifespan")
     STATIC_DIR.mkdir(parents=True, exist_ok=True)
     (STATIC_DIR / "videos").mkdir(parents=True, exist_ok=True)
     (STATIC_DIR / "images").mkdir(parents=True, exist_ok=True)
@@ -126,12 +127,12 @@ def create_app() -> FastAPI:
 
             # 补发当前项目下任意 running run 的状态，防止客户端错过事件
             try:
-                from app.db.session import async_session_maker
-                from app.models.agent_run import AgentRun
-                from sqlalchemy import select
+                    from app.db.session import async_session_maker
+                    from app.models.agent_run import AgentRun
+                    from sqlalchemy import select
 
-                async with async_session_maker() as session:
-                    res = await session.execute(
+                    async with async_session_maker() as session:
+                        res = await session.execute(
                         select(AgentRun)
                         .where(AgentRun.project_id == project_id)
                         .where(AgentRun.status == "running")
@@ -188,37 +189,70 @@ def create_app() -> FastAPI:
                     elif msg_type == "confirm":
                         run_id = msg.get("data", {}).get("run_id")
                         feedback = msg.get("data", {}).get("feedback")
+                        entity_decisions = msg.get("data", {}).get("entity_decisions")
                         if run_id:
-                            if isinstance(feedback, str) and feedback.strip():
+                            from app.db.session import async_session_maker
+                            from app.models.agent_run import AgentRun, AgentMessage
+                            from app.models.message import Message
+                            from app.models.project import Character, Shot
+                            async with async_session_maker() as session:
                                 try:
-                                    from app.db.session import async_session_maker
-                                    from app.models.agent_run import AgentMessage
-                                    from app.models.message import Message
+                                    run = await session.get(AgentRun, run_id)
+                                    if not run or run.project_id != project_id:
+                                        await session.close()
+                                        continue
+                                except SQLAlchemyError:
+                                    await session.close()
+                                    continue
 
+                                # 保存反馈文本到消息表
+                                if isinstance(feedback, str) and feedback.strip():
                                     content = feedback.strip()
-                                    async with async_session_maker() as session:
-                                        run = await session.get(AgentRun, run_id)
-                                        if run and run.project_id == project_id:
-                                            session.add(
-                                                AgentMessage(
-                                                    run_id=run_id,
-                                                    agent="user",
-                                                    role="user",
-                                                    content=content,
-                                                )
+                                    session.add(AgentMessage(
+                                        run_id=run_id, agent="user", role="user", content=content,
+                                    ))
+                                    session.add(Message(
+                                        project_id=project_id, run_id=run_id,
+                                        agent="user", role="user", content=content,
+                                    ))
+
+                                # 逐实体审批决定：应用 approval_state
+                                if isinstance(entity_decisions, list):
+                                    rejected_feedback_parts: list[str] = []
+                                    for dec in entity_decisions:
+                                        if not isinstance(dec, dict):
+                                            continue
+                                        entity_id = dec.get("entity_id")
+                                        approved = dec.get("approved", True)
+                                        dec_feedback = dec.get("feedback", "")
+
+                                        if approved and entity_id:
+                                            # 尝试 Character
+                                            entity = await session.get(Character, entity_id)
+                                            if entity is None:
+                                                entity = await session.get(Shot, entity_id)
+                                            if entity is not None:
+                                                entity.freeze_approval()
+                                                session.add(entity)
+                                        elif dec_feedback:
+                                            rejected_feedback_parts.append(
+                                                f"[{entity_id}] {dec_feedback}"
                                             )
-                                            session.add(
-                                                Message(
-                                                    project_id=project_id,
-                                                    run_id=run_id,
-                                                    agent="user",
-                                                    role="user",
-                                                    content=content,
-                                                )
-                                            )
-                                            await session.commit()
-                                except SQLAlchemyError as e:
-                                    logger.error(f"Failed to save feedback for run {run_id}: {e}")
+
+                                    # 保存被拒绝实体的反馈
+                                    if rejected_feedback_parts:
+                                        rejected_content = "\n".join(rejected_feedback_parts)
+                                        session.add(AgentMessage(
+                                            run_id=run_id, agent="user", role="user",
+                                            content=rejected_content,
+                                        ))
+                                        session.add(Message(
+                                            project_id=project_id, run_id=run_id,
+                                            agent="user", role="user", content=rejected_content,
+                                        ))
+
+                                await session.commit()
+
                             await trigger_confirm_redis(run_id)
                 except WebSocketDisconnect:
                     logger.info(f"WebSocket disconnected for project {project_id}")

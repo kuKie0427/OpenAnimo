@@ -71,6 +71,13 @@ class AgentContext:
     # Critique feedback from CriticAgent for targeted regeneration (set by nodes.py)
     critique_feedback: dict[str, dict[str, dict[str, list[str]]]] | None = None
 
+    @property
+    def project_id(self) -> int:
+        """Typed accessor for project.id — guaranteed non-None after DB load."""
+        if self.project.id is None:
+            raise RuntimeError("Project must be persisted before accessing project_id")
+        return self.project.id
+
 
 class BaseAgent:
     name: str = "base"
@@ -96,7 +103,7 @@ class BaseAgent:
             "agent": self.name,
             "role": "assistant",
             "content": content,
-            "project_id": ctx.project.id,
+            "project_id": ctx.project_id,
             "run_id": ctx.run.id,
         }
         if summary is not None:
@@ -108,7 +115,7 @@ class BaseAgent:
 
         # 保存到数据库
         message = Message(
-            project_id=ctx.project.id,
+            project_id=ctx.project_id,
             run_id=ctx.run.id,
             agent=self.name,
             role="assistant",
@@ -122,7 +129,7 @@ class BaseAgent:
 
         # 发送 WebSocket 事件
         await ctx.ws.send_event(
-            ctx.project.id,
+            ctx.project_id,
             {"type": "run_message", "data": data},
         )
 
@@ -162,7 +169,7 @@ class BaseAgent:
         try:
             # 1. Send dedicated agent_thinking WS event
             await ctx.ws.send_event(
-                ctx.project.id,
+                ctx.project_id,
                 {
                     "type": "agent_thinking",
                     "data": {
@@ -178,14 +185,14 @@ class BaseAgent:
                 "agent": self.name,
                 "role": "thinking",
                 "content": content,
-                "project_id": ctx.project.id,
+                "project_id": ctx.project_id,
                 "run_id": ctx.run.id,
             }
             if details:
                 data["summary"] = content
                 data["content"] = f"{content}\n{details}"
             await ctx.ws.send_event(
-                ctx.project.id,
+                ctx.project_id,
                 {"type": "run_message", "data": data},
             )
         except (RuntimeError, OSError):
@@ -197,7 +204,7 @@ class BaseAgent:
         """发送角色创建/更新事件"""
         payload = CharacterRead.model_validate(character).model_dump(mode="json")
         await ctx.ws.send_event(
-            ctx.project.id,
+            ctx.project_id,
             {
                 "type": event_type,
                 "data": {"character": payload},
@@ -210,7 +217,7 @@ class BaseAgent:
         """发送分镜创建/更新事件"""
         payload = ShotRead.model_validate(shot).model_dump(mode="json")
         await ctx.ws.send_event(
-            ctx.project.id,
+            ctx.project_id,
             {
                 "type": event_type,
                 "data": {"shot": payload},
@@ -270,7 +277,7 @@ class BaseAgent:
         from sqlalchemy import select
 
         res = await ctx.session.execute(
-            select(Character).where(Character.project_id == ctx.project.id)
+            select(Character).where(Character.project_id == ctx.project_id)  # pyright: ignore[reportArgumentType]
         )
         return list(res.scalars().all())
 
@@ -352,7 +359,7 @@ class BaseAgent:
             return datetime.now(timezone.utc)
 
         trace = AgentTrace(
-            run_id=ctx.run.id,
+            run_id=ctx.run.id,  # pyright: ignore[reportArgumentType]
             agent_name=self.name,
             stage=stage,
             method=method,

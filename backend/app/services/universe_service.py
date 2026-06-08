@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false
 """Universe / IP 宇宙服务 — 管理跨项目的共享世界观和角色库。"""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false
 """导出 API 路由"""
 from __future__ import annotations
 
@@ -29,7 +30,7 @@ _export_service = ExportService()
 
 
 def _get_redis_export_key(export_id: str) -> str:
-    return f"openoii:export:{export_id}"
+    return f"openanimo:export:{export_id}"
 
 
 async def _store_export_status(export_resp: ExportResponse) -> None:

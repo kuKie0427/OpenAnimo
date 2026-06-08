@@ -87,7 +87,7 @@ export function StagePipeline({
 
 				{hasRecovery && !isGenerating && (
 					<div className="flex items-center gap-1">
-						<Button variant="primary" size="sm" className="!px-2 !py-0 !min-h-0 !h-6 text-xs gap-0.5 border-2 shadow-brutal-sm" onClick={onResume}>
+						<Button variant="primary" size="sm" className="!px-2 !py-0 !min-h-0 !h-6 text-xs gap-0.5 border-2 shadow-aperture" onClick={onResume}>
 							<ArrowPathIcon className="w-2.5 h-2.5" />
 							恢复
 						</Button>

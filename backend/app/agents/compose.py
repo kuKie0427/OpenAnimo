@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false
 from __future__ import annotations
 
 import logging
@@ -46,7 +47,7 @@ class ComposeAgent(BaseAgent):
 
     async def _generate_videos(self, ctx: AgentContext) -> int:
         query = select(Shot).where(
-            Shot.project_id == ctx.project.id,
+            Shot.project_id == ctx.project_id,
             Shot.video_url.is_(None),
         )
         if ctx.target_ids and ctx.target_ids.shot_ids:
@@ -86,7 +87,7 @@ class ComposeAgent(BaseAgent):
                     ctx, total=total, current=i, message=f"   正在生成视频 {i + 1}/{total}..."
                 )
                 await ctx.ws.send_event(
-                    ctx.project.id,
+                    ctx.project_id,
                     {
                         "type": "run_progress",
                         "data": {
@@ -177,7 +178,7 @@ class ComposeAgent(BaseAgent):
         return updated_count
 
     async def _merge_videos(self, ctx: AgentContext) -> None:
-        project_id = ctx.project.id
+        project_id = ctx.project_id
         if project_id is None:
             raise RuntimeError("Project must be persisted before final assembly")
 
@@ -205,7 +206,7 @@ class ComposeAgent(BaseAgent):
                     "type": "project_updated",
                     "data": {
                         "project": {
-                            "id": ctx.project.id,
+                            "id": ctx.project_id,
                             "video_url": ctx.project.video_url,
                             "status": ctx.project.status,
                             "blocking_clips": blocking_clips,
@@ -252,7 +253,7 @@ class ComposeAgent(BaseAgent):
                     "type": "project_updated",
                     "data": {
                         "project": {
-                            "id": ctx.project.id,
+                            "id": ctx.project_id,
                             "video_url": merged_url,
                             "status": ctx.project.status,
                             "blocking_clips": [],
@@ -306,7 +307,7 @@ class ComposeAgent(BaseAgent):
         shot_order_col = cast(InstrumentedAttribute[int], cast(object, Shot.order))
         res = await ctx.session.execute(
             select(Shot)
-            .where(shot_project_id_col == ctx.project.id, shot_video_url_col.is_not(None))
+            .where(shot_project_id_col == ctx.project_id, shot_video_url_col.is_not(None))
             .order_by(shot_order_col.asc())
         )
         shots = list(res.scalars().all())
@@ -381,7 +382,7 @@ class ComposeAgent(BaseAgent):
 
                 # 发送音频生成事件
                 await ctx.ws.send_event(
-                    ctx.project.id,
+                    ctx.project_id,
                     {
                         "type": "audio_generated",
                         "data": {

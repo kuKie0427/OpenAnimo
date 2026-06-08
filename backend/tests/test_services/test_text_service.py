@@ -599,7 +599,7 @@ def test_text_headers_without_api_key():
     )
     headers = settings.text_headers()
     assert "Authorization" not in headers
-    assert headers["User-Agent"] == "openOii-backend"
+    assert headers["User-Agent"] == "openanimo-backend"
 
 
 def test_text_headers_with_api_key():

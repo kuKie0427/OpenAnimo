@@ -167,7 +167,7 @@ async def test_get_redis_returns_singleton(monkeypatch):
 async def test_store_awaiting_payload_writes_json(fake_redis):
     payload = {"foo": "bar", "n": 1}
     await store_awaiting_payload(123, payload)
-    raw = fake_redis.store["openoii:awaiting:123"]
+    raw = fake_redis.store["openanimo:awaiting:123"]
     assert json.loads(raw) == payload
 
 
@@ -193,7 +193,7 @@ async def test_clear_awaiting_payload_swallow_redis_error(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_get_awaiting_payload_returns_dict(fake_redis):
-    fake_redis.store["openoii:awaiting:7"] = json.dumps({"x": 9})
+    fake_redis.store["openanimo:awaiting:7"] = json.dumps({"x": 9})
     out = await get_awaiting_payload(7)
     assert out == {"x": 9}
 
@@ -214,35 +214,35 @@ async def test_get_awaiting_payload_missing_key_returns_none(fake_redis):
 
 @pytest.mark.asyncio
 async def test_get_awaiting_payload_invalid_json_returns_none(fake_redis):
-    fake_redis.store["openoii:awaiting:42"] = "not-json"
+    fake_redis.store["openanimo:awaiting:42"] = "not-json"
     assert await get_awaiting_payload(42) is None
 
 
 @pytest.mark.asyncio
 async def test_clear_awaiting_payload_removes_key(fake_redis):
-    fake_redis.store["openoii:awaiting:5"] = "{}"
+    fake_redis.store["openanimo:awaiting:5"] = "{}"
     await clear_awaiting_payload(5)
-    assert "openoii:awaiting:5" not in fake_redis.store
+    assert "openanimo:awaiting:5" not in fake_redis.store
 
 
 @pytest.mark.asyncio
 async def test_clear_confirm_event_redis_removes_key(fake_redis):
-    fake_redis.store["openoii:confirm:9"] = "1"
+    fake_redis.store["openanimo:confirm:9"] = "1"
     await clear_confirm_event_redis(9)
-    assert "openoii:confirm:9" not in fake_redis.store
+    assert "openanimo:confirm:9" not in fake_redis.store
 
 
 @pytest.mark.asyncio
 async def test_trigger_confirm_redis_publishes(fake_redis):
     ok = await trigger_confirm_redis(11)
     assert ok is True
-    assert fake_redis.store["openoii:confirm:11"] == "1"
-    assert fake_redis.published == [("openoii:confirm_channel:11", "confirm")]
+    assert fake_redis.store["openanimo:confirm:11"] == "1"
+    assert fake_redis.published == [("openanimo:confirm_channel:11", "confirm")]
 
 
 @pytest.mark.asyncio
 async def test_wait_for_confirm_redis_returns_true_when_already_set(fake_redis):
-    fake_redis.store["openoii:confirm:33"] = "1"
+    fake_redis.store["openanimo:confirm:33"] = "1"
     ok = await wait_for_confirm_redis(33, timeout=1)
     assert ok is True
 

@@ -4,6 +4,7 @@ import { projectsApi } from "~/services/api";
 import { useEditorStore } from "~/stores/editorStore";
 import { toast } from "~/utils/toast";
 import { ConfirmModal } from "~/components/ui/ConfirmModal";
+import { Button } from "~/components/ui/Button";
 import { SHAPE_TYPES } from "./shapes/types";
 
 interface MenuPosition {
@@ -193,7 +194,7 @@ export function ShapeContextMenu() {
 		<>
 			<div
 				ref={menuRef}
-				className="fixed z-[var(--z-popover,60)] min-w-[180px] py-1 rounded-xl card-doodle"
+				className="fixed z-[var(--z-popover,60)] min-w-[180px] py-1 rounded-lg card-screen"
 				style={{ left: position.x, top: position.y }}
 				role="menu"
 			>
@@ -201,7 +202,7 @@ export function ShapeContextMenu() {
 					<button
 						ref={i === 0 ? firstBtnRef : undefined}
 						key={action}
-						className="w-full px-3 py-2 text-left text-sm hover:bg-base-200/60 transition-colors brutal-hover font-heading"
+						className="w-full px-3 py-2 text-left text-sm hover:bg-base-200/60 transition-shadow duration-200 hover:shadow-aperture font-heading"
 						role="menuitem"
 						onClick={() => handleAction(action)}
 					>
@@ -217,12 +218,12 @@ export function ShapeContextMenu() {
 					}}
 				>
 					<div
-						className="card-doodle p-4 w-80 space-y-3"
+						className="card-screen p-4 w-80 space-y-3"
 						onClick={(e) => e.stopPropagation()}
 					>
 						<h3 className="font-heading font-bold text-sm m-0">修改意见</h3>
 						<textarea
-							className="input-doodle w-full text-sm p-2 resize-none"
+							className="input-field w-full text-sm p-2 resize-none"
 							rows={3}
 							placeholder="请描述修改方向"
 							value={editContent}
@@ -244,13 +245,9 @@ export function ShapeContextMenu() {
 							>
 								取消
 							</button>
-							<button
-								type="button"
-								className="btn btn-sm btn-doodle btn-primary"
-								onClick={handleSaveEdit}
-							>
-								提交
-							</button>
+<Button variant="primary" size="sm" onClick={handleSaveEdit}>
+							提交
+						</Button>
 						</div>
 					</div>
 				</div>

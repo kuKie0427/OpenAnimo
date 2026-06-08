@@ -22,16 +22,19 @@ backend/
 │   │   └── routes/             # 按资源分文件（generation/projects/config/...）
 │   ├── orchestration/          # LangGraph 编排核心
 │   │   ├── graph.py            # 状态图定义
-│   │   ├── nodes.py            # 41 个节点函数（756 行，需关注）
+│   │   ├── nodes.py            # 41 个节点函数（909 行，需关注）
 │   │   ├── state.py            # 图状态
 │   │   ├── runtime.py          # 运行时上下文
 │   │   └── persistence.py      # 持久化/恢复
 │   ├── agents/                 # AI Agent 实现
-│   │   ├── orchestrator.py     # 总调度器（1127 行，最大文件）
-│   │   ├── plan.py             # 规划 Agent（754 行）
-│   │   ├── compose.py          # 合成 Agent
+│   │   ├── orchestrator.py     # 总调度器（1035 行）
+│   │   ├── outline.py          # 大纲 Agent
+│   │   ├── plan.py             # 规划 Agent
 │   │   ├── render.py           # 渲染 Agent
-│   │   ├── review.py           # 审查 Agent
+│   │   ├── compose.py          # 合成 Agent
+│   │   ├── critic.py           # VLM 审查 Agent
+│   │   ├── review_rules.py     # 反馈路由引擎
+│   │   ├── base.py             # Agent 基类 + AgentContext
 │   │   └── prompts/            # Prompt 模板（Python 文件）
 │   ├── services/               # 36 个业务服务模块
 │   │   ├── text.py             # 文本生成（多 Provider/Stream）
@@ -128,7 +131,6 @@ uv run alembic upgrade head
 
 ## 已知问题
 
-- `orchestration/nodes.py` 756 行，41 个函数 — 可不拆分但需留意
-- `agents/orchestrator.py` 1127 行 — 职责过重，恢复/WS 推送/CC 处理可拆出
-- 32 处 `except Exception:` 需逐步迁移为具体异常
+- `orchestration/nodes.py` 909 行，41 个函数 — 可不拆分但需留意
+- `agents/orchestrator.py` 1035 行 — 职责偏重，恢复/WS 推送/CC 处理可进一步拆分
 - `coverage.xml` 和 `.run/backend.pid` 应加入 `.gitignore`

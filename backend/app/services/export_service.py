@@ -429,7 +429,7 @@ class ExportService:
                 ratio = TARGET_WIDTH / img.width
                 scaled_w = TARGET_WIDTH
                 scaled_h = int(img.height * ratio)
-                resized = img.resize((scaled_w, scaled_h), Image.LANCZOS)
+                resized = img.resize((scaled_w, scaled_h), Image.Resampling.LANCZOS)
 
                 # 叠加对白
                 if include_dialogue and shot.dialogue:

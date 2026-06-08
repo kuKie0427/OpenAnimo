@@ -70,7 +70,7 @@ const STALE_SHAPE_TYPES = new Set([
 	"video-section",
 ]);
 
-const WORKFLOW_ARROW_META = "openoii-workflow-arrow";
+const WORKFLOW_ARROW_META = "openanimo-workflow-arrow";
 const MANUAL_POSITION_META = "manualPosition";
 const CARD_PADDING = 32;
 
@@ -591,7 +591,7 @@ export function InfiniteCanvas({ projectId }: InfiniteCanvasProps) {
 					shapeUtils={customShapeUtils}
 					components={components}
 					onMount={handleMount}
-					persistenceKey="openoii-canvas-v12"
+					persistenceKey="openanimo-canvas-v12"
 				>
 					<CanvasToolbar projectId={projectId} />
 					<ShapeContextMenu />

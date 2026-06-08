@@ -54,7 +54,7 @@ class OutlineAgent(BaseAgent):
 
             payload: dict[str, Any] = {
                 "project": {
-                    "id": ctx.project.id,
+                    "id": ctx.project_id,
                     "title": ctx.project.title,
                     "story": ctx.project.story,
                     "style": ctx.project.style,
@@ -73,10 +73,11 @@ class OutlineAgent(BaseAgent):
             outline = _clean_outline(data)
             visual_bible = data.get("visual_bible") if isinstance(data.get("visual_bible"), str) else ""
             user_message = data.get("user_message") if isinstance(data.get("user_message"), str) else ""
-            project_update = data.get("project_update") if isinstance(data.get("project_update"), dict) else {}
+            raw_update = data.get("project_update")
+            project_update: dict[str, Any] = raw_update if isinstance(raw_update, dict) else {}
 
             ctx.project.story_outline = dict(outline)
-            ctx.project.visual_bible = visual_bible.strip() or None
+            ctx.project.visual_bible = (visual_bible or "").strip() or None
             ctx.project.outline_approved = False
             updated_fields: dict[str, Any] = {
                 "story_outline": outline,
@@ -99,10 +100,10 @@ class OutlineAgent(BaseAgent):
             await ctx.session.refresh(ctx.project)
 
             await ctx.ws.send_event(
-                ctx.project.id,
+                ctx.project_id,
                 {
                     "type": "project_updated",
-                    "data": {"project": {"id": ctx.project.id, **updated_fields}},
+                    "data": {"project": {"id": ctx.project_id, **updated_fields}},
                 },
             )
 

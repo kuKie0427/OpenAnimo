@@ -27,6 +27,7 @@ interface ChatPanelProps {
 	projectId?: number;
 	onSendFeedback: (content: string) => void;
 	onConfirm: (feedback?: string) => void;
+	onEntityConfirm?: (decisions: import("~/types").EntityDecision[]) => void;
 	onGenerate: () => void;
 	onCancel: () => void;
 	isGenerating: boolean;
@@ -50,6 +51,7 @@ export function ChatPanel({
 	projectId,
 	onSendFeedback,
 	onConfirm,
+	onEntityConfirm,
 	onGenerate,
 	onCancel,
 	isGenerating,
@@ -133,14 +135,7 @@ export function ChatPanel({
 	};
 
 	const handleEntityConfirm = async (decisions: EntityDecision[]) => {
-		const id = projectId;
-		const runId = currentRunId;
-		if (!id || !runId) return;
-		try {
-			await projectsApi.resume(id, runId, { entity_decisions: decisions });
-		} catch (err) {
-			console.error("Failed to resume with entity decisions:", err);
-		}
+		onEntityConfirm?.(decisions);
 	};
 
 	const handleEntityRegenerate = async (decisions: EntityDecision[]) => {

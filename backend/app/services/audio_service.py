@@ -333,6 +333,8 @@ class AudioService:
         # 我们使用 [0:a] 引用视频原始音频，如果不存在则用 anullsrc 填充
 
         audio_input_count = 1  # 下一个可用输入索引
+        tts_idx = 0
+        bgm_idx = 0
 
         if tts_path:
             inputs.extend(["-i", str(tts_path)])

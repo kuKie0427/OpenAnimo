@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
-import { useEditorStore, type RunMode } from "~/stores/editorStore";
+import { useEditorStore, type RunMode, type GateName } from "~/stores/editorStore";
 import { getStaticUrl } from "~/services/api";
 import type {
 	AgentMessage,
@@ -9,6 +9,7 @@ import type {
 	VersionCreatedEventData,
 	VersionRollbackEventData,
 	CritiqueResultEventData,
+	CritiqueReviewEventData,
 	OutlineUpdatedEventData,
 	ProjectUpdatedPayload,
 	RunAwaitingConfirmEventData,
@@ -41,10 +42,27 @@ function generateMessageId(): string {
 
 const globalConnections = new Map<number, WebSocket>();
 
-function shouldAutoConfirm(_agent: string | null, runMode: RunMode): boolean {
+function shouldAutoConfirm(agent: string | null, runMode: RunMode, gateModes: Set<GateName>): boolean {
 	if (runMode === "yolo") return true;
+	// per-gate check: agent name maps to gate name
+	if (agent && gateModes.size > 0) {
+		const gateName = AGENT_TO_GATE[agent];
+		if (gateName && gateModes.has(gateName as GateName)) return true;
+	}
 	return false;
 }
+
+// agent → gate mapping
+const AGENT_TO_GATE: Record<string, string> = {
+	outline: "outline",
+	characters: "characters",
+	shots: "shots",
+	character_images: "character_images",
+	shot_images: "shot_images",
+	compose: "compose",
+	critique_characters: "critique_characters",
+	critique_shots: "critique_shots",
+};
 
 export function useProjectWebSocket(projectId: number | null) {
 	const reconnectAttempts = useRef(0);
@@ -400,7 +418,7 @@ export function applyWsEvent(
 				timestamp: new Date().toISOString(),
 			});
 
-			if (!gate.auto_mode && shouldAutoConfirm(gate.agent, store.runMode)) {
+			if (!gate.auto_mode && shouldAutoConfirm(gate.agent, store.runMode, useEditorStore.getState().gateModes)) {
 				autoConfirm(gate.run_id);
 			}
 			break;
@@ -592,6 +610,21 @@ export function applyWsEvent(
 				agent: "critic",
 				role: "assistant",
 				content: `${entityLabel}审查结果：总分 ${scoreStr}/10\n${dimStr}\n问题: ${issuesStr}\n建议: ${sugStr}\n${statusText}`,
+				timestamp: new Date().toISOString(),
+			});
+			break;
+		}
+
+		case "critique_review": {
+			const reviewData = event.data as unknown as CritiqueReviewEventData;
+			// Store structured data for card rendering (sets awaitingConfirm=true, awaitingAgent="critic")
+			store.setCritiqueReviewCard(reviewData);
+			const entityLabel = reviewData.entity_type === "character" ? "角色" : "分镜";
+			store.addMessage({
+				id: generateMessageId(),
+				agent: "critic",
+				role: "assistant",
+				content: `${entityLabel}审查完成，共 ${reviewData.total} 个${entityLabel}。请确认或覆盖重生成决定。`,
 				timestamp: new Date().toISOString(),
 			});
 			break;

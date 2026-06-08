@@ -150,6 +150,10 @@ const storeState: {
   resetRunState: ReturnType<typeof vi.fn>;
   runMode: string;
   setRunMode: ReturnType<typeof vi.fn>;
+  gateModes: Set<string>;
+  setGateMode: ReturnType<typeof vi.fn>;
+  setGateModes: ReturnType<typeof vi.fn>;
+  resetGateModes: ReturnType<typeof vi.fn>;
   setProjectStoryOutline: ReturnType<typeof vi.fn>;
   setProjectVisualBible: ReturnType<typeof vi.fn>;
   setProjectOutlineApproved: ReturnType<typeof vi.fn>;
@@ -208,6 +212,10 @@ const storeState: {
   resetRunState: vi.fn(),
   runMode: 'manual' as string,
   setRunMode: vi.fn(),
+  gateModes: new Set(),
+  setGateMode: vi.fn(),
+  setGateModes: vi.fn(),
+  resetGateModes: vi.fn(),
   setProjectStoryOutline: vi.fn(),
   setProjectVisualBible: vi.fn(),
   setProjectOutlineApproved: vi.fn(),

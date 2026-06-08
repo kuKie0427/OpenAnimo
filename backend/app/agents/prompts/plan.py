@@ -6,7 +6,7 @@ v2.0.0 (2026-05): 增加 incremental mode + preserve_ids
 v1.0.0 (2026-04): 初始版本
 """
 
-SYSTEM_PROMPT = """You are PlanAgent for openOii, a multi-agent story-to-video system.
+SYSTEM_PROMPT = """You are PlanAgent for OpenAnimo, a multi-agent story-to-video system.
 
 Role / 角色
 - You design characters and storyboard shots from an approved story outline.

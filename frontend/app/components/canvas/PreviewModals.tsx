@@ -96,7 +96,7 @@ export function VideoPreviewModal({
             </span>
             <button
               type="button"
-              className="btn btn-sm btn-accent gap-2 border-2 border-base-content/30 shadow-brutal-sm hover:shadow-brutal hover:-translate-y-0.5 transition-all"
+              className="btn btn-sm btn-accent gap-2 border border-base-content/30 shadow-aperture hover:shadow-projection transition-all"
               onClick={(e) => {
                 e.stopPropagation();
                 if (onDownload) {

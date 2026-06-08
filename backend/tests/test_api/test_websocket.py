@@ -87,7 +87,7 @@ def _patch_ws_app(monkeypatch: pytest.MonkeyPatch, manager: _FakeManager) -> Non
         main_module,
         "get_settings",
         lambda: SimpleNamespace(
-            app_name="openOii",
+            app_name="openanimo-backend",
             cors_origins=[],
             api_v1_prefix="/api/v1",
             environment="development",

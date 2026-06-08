@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportCallIssue=false
 from __future__ import annotations
 
 import asyncio
@@ -83,7 +84,11 @@ STAGE_AGENT_MAP = {
 GRAPH_STAGE_FOR_AGENT = {
     "outline": "plan_outline",
     "plan": "plan_characters",
+    "characters": "plan_characters",
+    "shots": "plan_characters",
     "render": "render_characters",
+    "character_images": "render_characters",
+    "shot_images": "render_characters",
     "compose": "compose_videos",
     "review": "review",
     "critic": "critique_character_images",
@@ -118,11 +123,35 @@ AGENT_COMPLETION_INFO = {
         "next": "接下来将为角色和分镜生成参考图片",
         "question": "创作方案是否符合您的预期？如果需要修改，请告诉我具体的调整意见。",
     },
+    "characters": {
+        "completed": "已完成角色设定",
+        "details": "角色设定已生成",
+        "next": "确认后将进入分镜设计",
+        "question": "角色设定是否满意？",
+    },
+    "shots": {
+        "completed": "已完成分镜脚本",
+        "details": "分镜脚本已生成",
+        "next": "确认后将进入渲染阶段",
+        "question": "分镜脚本是否满意？",
+    },
     "render": {
         "completed": "已完成角色形象和分镜画面渲染",
         "details": "角色形象和分镜画面均已渲染完成",
         "next": "接下来将根据分镜生成视频片段并合成",
         "question": "角色形象和分镜画面是否满意？如果需要重新生成，请告诉我。",
+    },
+    "character_images": {
+        "completed": "已完成角色形象渲染",
+        "details": "角色形象图已渲染完成",
+        "next": "确认后将渲染分镜画面",
+        "question": "角色形象图是否满意？",
+    },
+    "shot_images": {
+        "completed": "已完成分镜画面渲染",
+        "details": "分镜画面均已渲染完成",
+        "next": "确认后将进入视频合成",
+        "question": "分镜画面是否满意？",
     },
     "critic": {
         "completed": "已完成质量审查",
@@ -166,9 +195,15 @@ class GenerationOrchestrator:
         """Return agent instance by name. Raises ValueError if not found."""
         return self.agents[self._agent_index(name)]
 
-    async def cleanup_for_rerun(self, project_id: int, start_agent: str, mode: str = "full") -> None:
+    async def cleanup_for_rerun(
+        self, project_id: int, start_agent: str, mode: str = "full",
+        target_ids: Any = None,
+    ) -> None:
         """Public wrapper for _cleanup_for_rerun."""
-        return await self._cleanup_for_rerun(project_id, start_agent, mode)
+        kwargs: dict[str, Any] = {}
+        if target_ids is not None:
+            kwargs["target_ids"] = target_ids
+        return await self._cleanup_for_rerun(project_id, start_agent, mode, **kwargs)
 
     async def _delete_project_shots(self, project_id: int) -> None:
         await self.session.execute(delete(Shot).where(Shot.project_id == project_id))
@@ -176,43 +211,60 @@ class GenerationOrchestrator:
     async def _delete_project_characters(self, project_id: int) -> None:
         await self.session.execute(delete(Character).where(Character.project_id == project_id))
 
-    async def _clear_character_images(self, project_id: int) -> None:
+    async def _clear_character_images(
+        self, project_id: int, character_ids: list[int] | None = None
+    ) -> None:
         """清空角色图片（先删除文件再清空 URL）"""
-        res = await self.session.execute(
-            select(Character).where(Character.project_id == project_id)
-        )
+        query = select(Character).where(Character.project_id == project_id)
+        if character_ids:
+            query = query.where(Character.id.in_(character_ids))
+        res = await self.session.execute(query)
         chars = res.scalars().all()
-        # 先删除文件
-        delete_files([char.image_url for char in chars])
-        # 再清空 URL
-        for char in chars:
-            char.image_url = None
-            self.session.add(char)
+        if chars:
+            # 先删除文件
+            delete_files([char.image_url for char in chars])
+            # 再清空 URL
+            for char in chars:
+                char.image_url = None
+                self.session.add(char)
 
-    async def _clear_shot_images(self, project_id: int) -> None:
+    async def _clear_shot_images(
+        self, project_id: int, shot_ids: list[int] | None = None
+    ) -> None:
         """清空分镜首帧图片（先删除文件再清空 URL）"""
-        res = await self.session.execute(select(Shot).where(Shot.project_id == project_id))
+        query = select(Shot).where(Shot.project_id == project_id)
+        if shot_ids:
+            query = query.where(Shot.id.in_(shot_ids))
+        res = await self.session.execute(query)
         shots = res.scalars().all()
-        # 先删除文件
-        delete_files([shot.image_url for shot in shots])
-        # 再清空 URL
-        for shot in shots:
-            shot.image_url = None
-            self.session.add(shot)
+        if shots:
+            # 先删除文件
+            delete_files([shot.image_url for shot in shots])
+            # 再清空 URL
+            for shot in shots:
+                shot.image_url = None
+                self.session.add(shot)
 
-    async def _clear_shot_videos(self, project_id: int) -> None:
+    async def _clear_shot_videos(
+        self, project_id: int, shot_ids: list[int] | None = None
+    ) -> None:
         """清空分镜视频（先删除文件再清空 URL）"""
-        res = await self.session.execute(select(Shot).where(Shot.project_id == project_id))
+        query = select(Shot).where(Shot.project_id == project_id)
+        if shot_ids:
+            query = query.where(Shot.id.in_(shot_ids))
+        res = await self.session.execute(query)
         shots = res.scalars().all()
-        # 先删除文件
-        delete_files([shot.video_url for shot in shots])
-        # 再清空 URL
-        for shot in shots:
-            shot.video_url = None
-            self.session.add(shot)
+        if shots:
+            # 先删除文件
+            delete_files([shot.video_url for shot in shots])
+            # 再清空 URL
+            for shot in shots:
+                shot.video_url = None
+                self.session.add(shot)
 
     async def _cleanup_for_rerun(
-        self, project_id: int, start_agent: str, mode: str = "full"
+        self, project_id: int, start_agent: str, mode: str = "full",
+        target_ids: Any = None,
     ) -> None:
         """清理逻辑：根据重新运行的 agent 和模式清理数据
 
@@ -220,28 +272,44 @@ class GenerationOrchestrator:
             project_id: 项目 ID
             start_agent: 从哪个 agent 开始重新运行
             mode: "full" 全量清理，"incremental" 增量清理（只清理下游产物，保留数据）
+            target_ids: 精细化控制的目标 ID（None 表示全量清理）
         """
+        character_ids: list[int] | None = None
+        shot_ids: list[int] | None = None
+        if target_ids is not None:
+            char_ids = getattr(target_ids, "character_ids", None)
+            shot_ids_val = getattr(target_ids, "shot_ids", None)
+            character_ids = char_ids if char_ids else None
+            shot_ids = shot_ids_val if shot_ids_val else None
+
+        char_kwargs: dict[str, Any] = {}
+        shot_kwargs: dict[str, Any] = {}
+        if character_ids is not None:
+            char_kwargs["character_ids"] = character_ids
+        if shot_ids is not None:
+            shot_kwargs["shot_ids"] = shot_ids
+
         cleared_types: list[str] = []
 
         if mode == "incremental":
             if start_agent in {"outline"}:
-                await self._clear_character_images(project_id)
-                await self._clear_shot_images(project_id)
-                await self._clear_shot_videos(project_id)
+                await self._clear_character_images(project_id, **char_kwargs)
+                await self._clear_shot_images(project_id, **shot_kwargs)
+                await self._clear_shot_videos(project_id, **shot_kwargs)
                 project = await self.session.get(Project, project_id)
                 if project is not None:
                     project.outline_approved = False
                     self.session.add(project)
             elif start_agent in {"plan"}:
-                await self._clear_character_images(project_id)
-                await self._clear_shot_images(project_id)
-                await self._clear_shot_videos(project_id)
+                await self._clear_character_images(project_id, **char_kwargs)
+                await self._clear_shot_images(project_id, **shot_kwargs)
+                await self._clear_shot_videos(project_id, **shot_kwargs)
             elif start_agent == "render":
-                await self._clear_character_images(project_id)
-                await self._clear_shot_images(project_id)
-                await self._clear_shot_videos(project_id)
+                await self._clear_character_images(project_id, **char_kwargs)
+                await self._clear_shot_images(project_id, **shot_kwargs)
+                await self._clear_shot_videos(project_id, **shot_kwargs)
             elif start_agent == "compose":
-                await self._clear_shot_videos(project_id)
+                await self._clear_shot_videos(project_id, **shot_kwargs)
             else:
                 raise ValueError(f"Unsupported start_agent for cleanup: {start_agent}")
         else:
@@ -260,11 +328,11 @@ class GenerationOrchestrator:
                 await self._delete_project_characters(project_id)
                 cleared_types = ["characters", "shots"]
             elif start_agent == "render":
-                await self._clear_character_images(project_id)
-                await self._clear_shot_images(project_id)
-                await self._clear_shot_videos(project_id)
+                await self._clear_character_images(project_id, **char_kwargs)
+                await self._clear_shot_images(project_id, **shot_kwargs)
+                await self._clear_shot_videos(project_id, **shot_kwargs)
             elif start_agent == "compose":
-                await self._clear_shot_videos(project_id)
+                await self._clear_shot_videos(project_id, **shot_kwargs)
             else:
                 raise ValueError(f"Unsupported start_agent for cleanup: {start_agent}")
 
@@ -365,7 +433,9 @@ class GenerationOrchestrator:
         await clear_awaiting_payload(run_id)
 
     async def _wait_for_confirm(
-        self, project_id: int, run: AgentRun, agent_name: str, agent_ctx: AgentContext | None = None
+        self, project_id: int, run: AgentRun, agent_name: str,
+        agent_ctx: AgentContext | None = None,
+        interrupt_data: dict[str, Any] | None = None,
     ) -> str | None:
         current_stage = GRAPH_STAGE_FOR_AGENT.get(agent_name, "plan")
         next_stage = _next_phase2_stage(current_stage)
@@ -420,6 +490,12 @@ class GenerationOrchestrator:
             if isinstance(outline, dict):
                 awaiting_payload["story_outline"] = outline
                 awaiting_payload["visual_bible"] = getattr(agent_ctx.project, "visual_bible", None)
+
+        # 传递 entity 上下文（entity_type/entity_ids/entity_summaries）到前端
+        if interrupt_data:
+            for field in ("entity_type", "entity_ids", "entity_summaries"):
+                if field in interrupt_data:
+                    awaiting_payload[field] = interrupt_data[field]
 
         # 缓存 payload 以便 WS 重连补发（事件本身可能在客户端未连接时丢失）
         await store_awaiting_payload(run_pk, awaiting_payload)
@@ -679,14 +755,19 @@ class GenerationOrchestrator:
             )
             feedback = ""
             action = "approve"
-            if not auto_mode:
+            gate_name = gate_agent.strip()
+            gate_modes = getattr(runtime_context, "gate_modes", set())
+            if not auto_mode and gate_name not in gate_modes:
                 feedback = (
-                    await self._wait_for_confirm(project_pk, run, gate_agent.strip(), agent_ctx=ctx)
+                    await self._wait_for_confirm(
+                        project_pk, run, gate_name,
+                        agent_ctx=ctx, interrupt_data=interrupt_value,
+                    )
                     or ""
                 )
             else:
                 await self._send_auto_approval_events(
-                    project_pk, run, gate_agent.strip(), agent_ctx=ctx
+                    project_pk, run, gate_name, agent_ctx=ctx
                 )
             logger.debug(
                 "[graph] run=%s resume with feedback=%r action=%s", run_pk, feedback, action
@@ -725,6 +806,7 @@ class GenerationOrchestrator:
         ctx: AgentContext,
         agent_name: str,
         auto_mode: bool,
+        gate_modes: set[str] | None = None,
     ) -> tuple[bool, str]:
         if agent_name not in GRAPH_STAGE_FOR_AGENT:
             raise ValueError(f"Unsupported agent for graph execution: {agent_name}")
@@ -751,6 +833,7 @@ class GenerationOrchestrator:
             agent_context=ctx,
             start_stage=start_stage,
             auto_mode=auto_mode,
+            gate_modes=gate_modes,
         )
         initial_state = self._build_phase2_state(
             project_id=int(project.id),
@@ -852,7 +935,8 @@ class GenerationOrchestrator:
                     orchestrator=self,
                     agent_context=ctx,
                     start_stage=resume_stage,
-                    auto_mode=auto_mode,
+                    auto_mode=False,
+                    gate_modes=set(),
                 )
                 video_generation_skipped, final_stage = await self._invoke_phase2_graph(
                     project=project,
@@ -862,7 +946,7 @@ class GenerationOrchestrator:
                     graph_config=resume_config,
                     runtime_context=runtime_context,
                     initial_payload=None,
-                    auto_mode=auto_mode,
+                    auto_mode=False,
                 )
 
             await self._complete_run(project_id, run, run_id, final_stage, video_generation_skipped)
@@ -879,6 +963,7 @@ class GenerationOrchestrator:
         request: GenerateRequest,
         agent_name: str,
         auto_mode: bool = False,
+        gate_modes: set[str] | None = None,
         feedback_type: str | None = None,
         entity_type: str | None = None,
         entity_id: int | None = None,
@@ -1002,7 +1087,8 @@ class GenerationOrchestrator:
                 )
 
             await self._cleanup_for_rerun(
-                project_id, agent_name, mode=getattr(ctx, "rerun_mode", "full")
+                project_id, agent_name, mode=getattr(ctx, "rerun_mode", "full"),
+                target_ids=getattr(ctx, "target_ids", None),
             )
 
             # 刷新 project 对象，因为 cleanup 可能修改了它
@@ -1015,6 +1101,7 @@ class GenerationOrchestrator:
                 ctx=ctx,
                 agent_name=agent_name,
                 auto_mode=auto_mode,
+                gate_modes=gate_modes,
             )
 
             await self._complete_run(project_id, run, run_id, final_stage, video_generation_skipped)
@@ -1026,10 +1113,12 @@ class GenerationOrchestrator:
     async def run(
         self, *, project_id: int, run_id: int, request: GenerateRequest, auto_mode: bool = False
     ) -> None:
+        gate_modes = set(request.gate_modes) if request.gate_modes else None
         await self.run_from_agent(
             project_id=project_id,
             run_id=run_id,
             request=request,
             agent_name="outline" if self.settings.outline_enabled else "plan",
             auto_mode=auto_mode,
+            gate_modes=gate_modes,
         )

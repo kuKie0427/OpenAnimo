@@ -10,7 +10,7 @@ async function enableMocking() {
 	}
 
 	const shouldEnableMocking = import.meta.env.VITE_ENABLE_MSW === "true";
-	const reloadKey = "__openoii_msw_disabled_reload__";
+	const reloadKey = "__openanimo_msw_disabled_reload__";
 
 	if (!shouldEnableMocking) {
 		if ("serviceWorker" in navigator) {

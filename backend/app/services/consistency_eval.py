@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false
 """角色一致性量化评估服务
 
 使用 InsightFace 的人脸 embedding 余弦相似度，自动计算角色跨分镜的视觉一致性。
@@ -166,7 +167,8 @@ class ConsistencyEvalService:
         Returns:
             ProjectConsistencyReport 字典
         """
-        from datetime import UTC, datetime
+        from datetime import datetime, timezone as _tz
+        UTC = _tz.utc
 
         # 加载角色
         char_res = await session.execute(

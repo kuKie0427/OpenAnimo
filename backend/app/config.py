@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     # should not implicitly read the repo's .env. Runtime uses get_settings().
     model_config = SettingsConfigDict(extra="ignore")
 
-    app_name: str = "openOii-backend"
+    app_name: str = "openanimo-backend"
     environment: str = Field(default="dev", description="dev|staging|prod")
     log_level: str = Field(default="INFO", description="Uvicorn log level")
 
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     # 数据库（默认使用 PostgreSQL）
     database_url: str = Field(
-        default="postgresql+asyncpg://openoii:openoii_dev@localhost:5432/openoii"
+        default="postgresql+asyncpg://openanimo:openanimo_dev@localhost:5432/openanimo"
     )
     db_echo: bool = False
 
@@ -359,4 +359,4 @@ def apply_settings_overrides(overrides: dict[str, Any]) -> None:
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings(_env_file=".env", _env_file_encoding="utf-8")
+    return Settings(_env_file=".env", _env_file_encoding="utf-8")  # pyright: ignore[reportCallIssue]

@@ -1463,4 +1463,81 @@ describe("useProjectWebSocket", () => {
       })
     );
   });
+
+  it("handles critique_review event", () => {
+    const store = useEditorStore.getState();
+	store.reset();
+	const setCritiqueReviewCardSpy = vi.spyOn(store, "setCritiqueReviewCard");
+	const addMessageSpy = vi.spyOn(store, "addMessage");
+
+	const event: WsEvent = {
+		type: "critique_review",
+		data: {
+			entity_type: "character",
+			total: 2,
+			results: [
+				{
+					entity_id: 1,
+					entity_name: "Alice",
+					score: 8.5,
+					dimensions: {},
+					issues: [],
+					suggestions: [],
+					will_regenerate: false,
+					failed_checks: [],
+					image_url: null,
+				},
+				{
+					entity_id: 2,
+					entity_name: "Bob",
+					score: 4.0,
+					dimensions: {},
+					issues: [],
+					suggestions: [],
+					will_regenerate: true,
+					failed_checks: [],
+					image_url: null,
+				},
+			],
+		},
+	};
+	applyWsEvent(event, store, noopAutoConfirm);
+
+	expect(setCritiqueReviewCardSpy).toHaveBeenCalledWith(event.data);
+	expect(addMessageSpy).toHaveBeenCalled();
+	const lastMessage = useEditorStore.getState().messages.at(-1);
+	expect(lastMessage).toMatchObject({
+		agent: "critic",
+		role: "assistant",
+		content: expect.stringContaining("审查完成"),
+	});
+  });
+
+  it("existing critique_result handler still works (regression)", () => {
+    const store = useEditorStore.getState();
+	store.reset();
+	const addMessageSpy = vi.spyOn(store, "addMessage");
+
+	const event: WsEvent = {
+		type: "critique_result",
+		data: {
+			score: 7.5,
+			dimensions: { quality: 8 },
+			issues: [],
+			suggestions: [],
+			entity_type: "character",
+			entity_id: 1,
+			will_regenerate: false,
+			failed_checks: [],
+		},
+	};
+	applyWsEvent(event, store, noopAutoConfirm);
+
+	expect(addMessageSpy).toHaveBeenCalled();
+	const lastMessage = useEditorStore.getState().messages.at(-1);
+	expect(lastMessage).toMatchObject({
+		agent: "critic",
+		role: "assistant",
+	});
+  });
 });

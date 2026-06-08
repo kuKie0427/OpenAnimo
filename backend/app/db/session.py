@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
@@ -42,7 +43,7 @@ async def _sync_missing_metadata_columns() -> None:
     """
     import logging
 
-    log = logging.getLogger("openOii.init_db")
+    log = logging.getLogger("openanimo.init_db")
 
     async with engine.begin() as conn:
         def _missing_columns(sync_conn):
@@ -63,7 +64,7 @@ async def _sync_missing_metadata_columns() -> None:
                     table_name = preparer.quote(table.name)
                     column_name = preparer.quote(column.name)
                     sql = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {col_type}"
-                    if column.server_default is not None:
+                    if column.server_default is not None and hasattr(column.server_default, "arg"):
                         compiled_default = column.server_default.arg.compile(dialect=dialect)
                         sql += f" DEFAULT {compiled_default}"
                     # Keep backfilled columns nullable to avoid failing on existing rows.
@@ -130,7 +131,7 @@ def _run_alembic_upgrade() -> None:
 async def init_db() -> None:
     """Initialize database tables and cleanup stale runs."""
     import logging
-    log = logging.getLogger("openOii.init_db")
+    log = logging.getLogger("openanimo.init_db")
     settings = get_settings()
     agent_run_table = SQLModel.metadata.tables["agentrun"]
     project_table = SQLModel.metadata.tables["project"]

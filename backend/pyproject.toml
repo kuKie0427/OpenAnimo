@@ -1,7 +1,7 @@
 [project]
-name = "openOii-backend"
+name = "openanimo-backend"
 version = "0.1.0"
-description = "openOii AI 漫剧生成平台后端 (FastAPI + SQLModel)"
+description = "OpenAnimo AI 漫剧生成平台后端 (FastAPI + SQLModel)"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

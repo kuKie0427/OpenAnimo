@@ -47,11 +47,11 @@ frontend/
 │   ├── styles/                 # 全局 CSS
 │   │   ├── tokens.css          # 设计令牌
 │   │   ├── globals.css         # 全局样式
-│   │   └── fonts.css           # 字体加载（Fredoka/Nunito/Caveat/Bangers）
+│   │   └── fonts.css           # 字体加载（Playfair Display/Cormorant Garamond/Source Sans 3/JetBrains Mono）
 │   └── features/               # Feature-sliced 模式
 ├── tests/e2e/                  # Playwright E2E 测试
 ├── vite.config.ts              # Vite 构建 + Vitest 测试配置
-├── tailwind.config.ts          # Tailwind + daisyUI（漫画双主题）
+├── tailwind.config.ts          # Tailwind + daisyUI（projection/rushes 双主题）
 ├── playwright.config.ts        # Playwright E2E 配置
 ├── app.config.ts               # ⚠️ TanStack Start 残留配置（未使用，可删除）
 ├── package.json                # 依赖 + 脚本
@@ -71,7 +71,7 @@ frontend/
 | 了解状态管理 | `app/stores/editorStore.ts` | 编辑器核心状态 |
 | 了解后端地址推导 | `app/utils/runtimeBase.ts` | 开发环境自动推导 localhost:18765 |
 | 了解类型定义 | `app/types/index.ts` | 71 个导出类型（project/character/shot/event） |
-| 了解设计规范 | `../DESIGN.md` | CMYK 漫画风主题，15 条 Don't |
+| 了解设计规范 | `../DESIGN.md` | Projection Room 主题，15 条 Do/Don't |
 | 了解测试 | `app/` 下各 `*.test.tsx` + `tests/e2e/` | 单测同目录，E2E 独立 |
 
 ---

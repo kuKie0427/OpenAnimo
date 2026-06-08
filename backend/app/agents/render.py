@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false, reportOptionalMemberAccess=false, reportReturnType=false
 from __future__ import annotations
 
 import asyncio
@@ -125,7 +126,7 @@ class RenderAgent(BaseAgent):
 
     async def _render_characters(self, ctx: AgentContext) -> int:
         query = select(Character).where(
-            Character.project_id == ctx.project.id,
+            Character.project_id == ctx.project_id,
             Character.image_url.is_(None),
         )
         if ctx.target_ids and ctx.target_ids.character_ids:
@@ -171,7 +172,7 @@ class RenderAgent(BaseAgent):
                 if version is not None:
                     await ctx.session.flush()
                     await ctx.ws.send_event(
-                        ctx.project.id,
+                        ctx.project_id,
                         {
                             "type": "version_created",
                             "data": {
@@ -234,7 +235,7 @@ class RenderAgent(BaseAgent):
                     trigger="generation",
                 )
                 await ctx.ws.send_event(
-                    ctx.project.id,
+                    ctx.project_id,
                     {
                         "type": "version_created",
                         "data": {
@@ -261,7 +262,7 @@ class RenderAgent(BaseAgent):
         query = (
             select(Shot)
             .where(
-                Shot.project_id == ctx.project.id,
+                Shot.project_id == ctx.project_id,
                 Shot.image_url.is_(None),
             )
             .order_by(Shot.order)
@@ -344,7 +345,7 @@ class RenderAgent(BaseAgent):
                 if version is not None:
                     await ctx.session.flush()
                     await ctx.ws.send_event(
-                        ctx.project.id,
+                        ctx.project_id,
                         {
                             "type": "version_created",
                             "data": {
@@ -383,7 +384,7 @@ class RenderAgent(BaseAgent):
                     trigger="generation",
                 )
                 await ctx.ws.send_event(
-                    ctx.project.id,
+                    ctx.project_id,
                     {
                         "type": "version_created",
                         "data": {

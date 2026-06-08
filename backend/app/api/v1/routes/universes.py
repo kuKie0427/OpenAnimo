@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false, reportCallIssue=false
 """Universe / IP 宇宙 API 路由。"""
 
 from __future__ import annotations

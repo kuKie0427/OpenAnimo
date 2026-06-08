@@ -1,7 +1,7 @@
-# openOii
+# OpenAnimo
 
 <div align="center">
-  <img src="./doc/logo.png?v=2" width="180" alt="openOii logo" />
+  <img src="./doc/logo.png?v=2" width="180" alt="OpenAnimo logo" />
 
   <p><strong>故事想法 → 多智能体协作 → 漫剧成片</strong></p>
   <p>一个以 LangGraph 为核心的 AI 漫剧生成学习项目。</p>
@@ -20,7 +20,7 @@
   </p>
 </div>
 
-openOii 把故事创意串成 **规划、角色/分镜生成、视频生成与合成** 的完整链路，并用无限画布展示过程与结果。
+OpenAnimo 把故事创意串成 **规划、角色/分镜生成、视频生成与合成** 的完整链路，并用无限画布展示过程与结果。
 
 > [!WARNING]
 > 这是一个 **LangGraph 学习 / 演示项目**，重点是验证多阶段编排、恢复执行、实时进度与前后端协作。
@@ -39,19 +39,19 @@ openOii 把故事创意串成 **规划、角色/分镜生成、视频生成与�
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="./doc/screenshot-home.png" alt="openOii 首页" />
+      <img src="./doc/screenshot-home.png" alt="OpenAnimo 首页" />
       <br />
       <sub><strong>首页 · 故事输入与风格选择</strong></sub>
     </td>
     <td align="center" width="50%">
-      <img src="./doc/screenshot-canvas.png" alt="openOii 画布与生成流程" />
+      <img src="./doc/screenshot-canvas.png" alt="OpenAnimo 画布与生成流程" />
       <br />
       <sub><strong>画布 · 角色、分镜与生成流程</strong></sub>
     </td>
   </tr>
   <tr>
     <td align="center" colspan="2">
-      <img src="./doc/screenshot-config.png" alt="openOii 配置面板" />
+      <img src="./doc/screenshot-config.png" alt="OpenAnimo 配置面板" />
       <br />
       <sub><strong>配置面板 · 在线管理模型与基础服务</strong></sub>
     </td>
