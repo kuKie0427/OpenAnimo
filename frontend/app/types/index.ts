@@ -293,6 +293,20 @@ export interface RunProgressEventData {
 	recovery_summary?: RecoverySummaryRead | null;
 }
 
+export interface EntitySummary {
+	entity_id: number;
+	entity_name: string;
+	description?: string | null;
+	image_url?: string | null;
+	approval_state: ReviewState;
+}
+
+export interface EntityDecision {
+	entity_id: number;
+	approved: boolean;
+	feedback?: string;
+}
+
 export interface RunAwaitingConfirmEventData {
 	run_id: number;
 	project_id?: number;
@@ -310,6 +324,9 @@ export interface RunAwaitingConfirmEventData {
 	auto_mode?: boolean;
 	story_outline?: StoryOutline | null;
 	visual_bible?: string | null;
+	entity_type?: string | null;   // "character" | "shot" | null
+	entity_ids?: number[] | null;  // 被审批的实体 ID 列表
+	entity_summaries?: EntitySummary[] | null;
 }
 
 export interface RunStartedEventData {
@@ -400,6 +417,7 @@ export type WsEventType =
 	| "project_updated"
 	| "data_cleared"
 	| "critique_result"
+	| "critique_review"
 	| "bible_updated"
 	| "version_created"
 	| "version_rollback"
@@ -428,6 +446,24 @@ export interface CritiqueResultEventData {
 	entity_id: number;
 	will_regenerate: boolean;
 	failed_checks: string[];
+}
+
+export interface CritiqueEntityResult {
+	entity_id: number;
+	entity_name: string;
+	score: number;
+	dimensions: Record<string, number>;
+	issues: string[];
+	suggestions: string[];
+	will_regenerate: boolean;
+	failed_checks: string[];
+	image_url: string | null;
+}
+
+export interface CritiqueReviewEventData {
+	entity_type: "character" | "shot";
+	total: number;
+	results: CritiqueEntityResult[];
 }
 
 export interface BibleUpdatedEventData {
@@ -567,6 +603,10 @@ export type AppConfig = ConfigItem[];
 export const AGENT_NAME_MAP: Record<string, string> = {
 	outline: "大纲",
 	plan: "规划",
+	characters: "角色规划",
+	shots: "分镜规划",
+	character_images: "角色图片",
+	shot_images: "分镜图片",
 	character: "角色",
 	shot: "分镜",
 	compose: "合成",

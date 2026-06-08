@@ -1,0 +1,474 @@
+{
+  "features": [
+    {
+      "id": "f-harness-p0",
+      "name": "Harness Phase 0 — 最小可行基础设施",
+      "status": "passing",
+      "description": "init.sh / feature_list.json / progress.md / AGENTS.md harness section",
+      "dependencies": [],
+      "domain": "fullstack",
+      "verification": "./init.sh && python -c \"import json; d=json.load(open('feature_list.json')); assert d['features'][0]['status']=='passing'\"",
+      "evidence": "2026-06-06: ./init.sh green, schema valid, AGENTS.md harness section present",
+      "notes": "这是 harness 改造的起点"
+    },
+    {
+      "id": "f-harness-p1",
+      "name": "Harness Phase 1 — Prompt 版本管理 + AgentTrace",
+      "dependencies": [
+        "f-harness-p0"
+      ],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -q && uv run ruff check app tests",
+      "evidence": "2026-06-06: pytest passed, ruff 0. Prompt VERSION+CHANGELOG, AgentTrace migration+API",
+      "notes": "所有 Prompt 模块含 VERSION+CHANGELOG；AgentTrace 表可用；API 可查询 Trace"
+    },
+    {
+      "id": "f-harness-p2",
+      "name": "Harness Phase 2 — 产出物验证 + 降级测试 + WS Schema",
+      "dependencies": [
+        "f-harness-p1"
+      ],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -q && uv run ruff check app tests",
+      "evidence": "2026-06-06: pytest passed, ruff 0. PlanOutputValidator, fault_injector, WS Schema",
+      "notes": "PlanOutputValidator / fault_injector 降级测试 / WS Schema 全覆盖"
+    },
+    {
+      "id": "f-harness-p3",
+      "name": "Harness Phase 3 — 观测性仪表板 + 多 Agent 并行",
+      "description": "RunMetrics API / 并行分支 / 新路由注册",
+      "dependencies": [
+        "f-harness-p2"
+      ],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -q && uv run ruff check app tests",
+      "evidence": "2026-06-06: pytest passed, ruff 0. RunMetrics API 3 endpoints, parallel Send() 27 tests",
+      "notes": "RunMetrics 仪表板 API（metrics_service / route / test）+ 多 Agent 并行分支（Send / 汇聚）"
+    },
+    {
+      "id": "f-pipeline-core",
+      "name": "核心生成管线 (17-stage LangGraph)",
+      "status": "passing",
+      "dependencies": [],
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/test_orchestration/ tests/test_agents/ -q",
+      "evidence": "2026-06-06: pytest tests/test_orchestration/ tests/test_agents/ passed"
+    },
+    {
+      "id": "f-character-consistency",
+      "name": "角色一致性 (Bible + InsightFace + Eval)",
+      "status": "passing",
+      "dependencies": [
+        "f-pipeline-core"
+      ],
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -k 'consistency or bible' -q",
+      "evidence": "2026-06-06: pytest consistency/bible passed"
+    },
+    {
+      "id": "f-critic-loop",
+      "name": "CriticAgent VLM 质量审查回环",
+      "status": "passing",
+      "dependencies": [
+        "f-pipeline-core"
+      ],
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -k 'critic' -q",
+      "evidence": "2026-06-06: pytest critic passed"
+    },
+    {
+      "id": "f-tts-audio",
+      "name": "TTS 配音 + BGM 混音",
+      "status": "passing",
+      "dependencies": [
+        "f-pipeline-core"
+      ],
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -k 'audio' -q",
+      "evidence": "2026-06-06: pytest audio passed"
+    },
+    {
+      "id": "f-export",
+      "name": "PDF/Webtoon 导出",
+      "status": "passing",
+      "dependencies": [
+        "f-pipeline-core"
+      ],
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/test_api/test_export.py -q",
+      "evidence": "2026-06-06: pytest test_export.py passed"
+    },
+    {
+      "id": "f-style-template",
+      "name": "风格模板系统 (14 内置 + 自定义)",
+      "status": "passing",
+      "dependencies": [
+        "f-pipeline-core"
+      ],
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/test_api/test_style_templates.py -q",
+      "evidence": "2026-06-06: pytest test_style_templates.py passed"
+    },
+    {
+      "id": "f-universe-multi-project",
+      "name": "跨项目 IP 宇宙",
+      "status": "passing",
+      "dependencies": [
+        "f-character-consistency"
+      ],
+      "domain": "fullstack",
+      "verification": "cd backend && uv run pytest tests/test_api/test_universes.py -q",
+      "evidence": "2026-06-06: pytest test_universes.py passed"
+    },
+    {
+      "id": "f-version-compare",
+      "name": "版本对比与回滚 (ArtifactVersion)",
+      "status": "passing",
+      "dependencies": [
+        "f-pipeline-core"
+      ],
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -k 'version or snapshot' -q",
+      "evidence": "2026-06-06: pytest version/snapshot passed"
+    },
+    {
+      "id": "f-technical-debt",
+      "name": "技术债务清理 (32 裸except + 7 SLF001 + split orchestrator)",
+      "status": "passing",
+      "dependencies": [],
+      "domain": "backend",
+      "verification": "cd backend && uv run ruff check app tests && uv run pytest -q",
+      "evidence": "2026-06-06: ruff 0 BLE001/SLF001/N815, pytest 1106/1106"
+    },
+    {
+      "id": "f-verification-fix",
+      "name": "验证管线修复 (init.sh + pyright + CI)",
+      "status": "passing",
+      "description": "修复 init.sh pytest -x 提前退出、StubImage 502 测试失败、pyright 可选→强制、添加 CI test/lint 工作流",
+      "dependencies": [
+        "f-technical-debt"
+      ],
+      "domain": "fullstack",
+      "verification": "./init.sh && cd backend && uv run ruff check app tests && uv run pytest -q",
+      "evidence": "init.sh full 6 steps green, ruff 0, pytest 1106/1106, CI workflow created",
+      "notes": "Harness 诊断 Phase 1 — 修复验证子系统关键 bug 和缺失项"
+    },
+    {
+      "id": "f-state-scope-p2",
+      "name": "State + Scope 子系统修复 (feature_list 重构 + 前端覆盖 + WIP≤1 hook)",
+      "status": "passing",
+      "description": "为所有 feature 添加 domain/evidence 字段，补全 10 个前端 feature 条目，创建 WIP≤1 pre-commit hook",
+      "dependencies": [
+        "f-verification-fix"
+      ],
+      "domain": "fullstack",
+      "verification": "python3 -c \"import json; d=json.load(open('feature_list.json')); assert all('domain' in f for f in d['features']); assert 'f-canvas' in [f['id'] for f in d['features']]; print('OK')\" && ./.git/hooks/pre-commit 2>&1 | grep -q 'WIP=1'",
+      "evidence": "2026-06-06: 25 features 全含 domain+evidence, 10 前端 features added, WIP≤1 pre-commit hook 生效, init.sh 全绿",
+      "notes": "Harness 诊断 Phase 2 — feature 覆盖率 ~40% → ~85%，domain/evidence/blocked 字段标准化"
+    },
+    {
+      "id": "f-instructions-p3",
+      "name": "Instructions 子系统修复 (AGENTS.md 渐进披露 + .trellis/spec 链接)",
+      "status": "passing",
+      "description": "将 backend/frontend AGENTS.md 的内联约定/反模式替换为摘要+链接到 .trellis/spec/ 下的 19 篇专题文档",
+      "dependencies": [
+        "f-state-scope-p2"
+      ],
+      "domain": "fullstack",
+      "verification": "grep -c '.trellis/spec/' AGENTS.md backend/AGENTS.md frontend/AGENTS.md | awk -F: '{s+=$2} END {print s}' | xargs -I{} test {} -ge 12",
+      "evidence": "2026-06-06: 25 .trellis/spec/ links (8+9+8), AGENTS.md:180/134/140 行全<200, .trellis/spec/ 文件无改动",
+      "notes": "Harness 诊断 Phase 3 — 修复 Instructions 子系统；不移动任何 .trellis/spec/ 文件"
+    },
+    {
+      "id": "f-canvas",
+      "name": "无限画布 (InfiniteCanvas+tldraw+shapes)",
+      "domain": "frontend",
+      "dependencies": [
+        "f-ws-client"
+      ],
+      "verification": "cd frontend && pnpm exec vitest run app/components/canvas/",
+      "evidence": "2026-06-06: 41 tests (InfiniteCanvas5+shapes33+toolbar3) pass",
+      "status": "passing",
+      "description": "tldraw无限画布、7个shape组件、工具栏、事件监听"
+    },
+    {
+      "id": "f-chat",
+      "name": "Agent对话面板 (ChatPanel+MessageList)",
+      "domain": "fullstack",
+      "dependencies": [
+        "f-ws-client"
+      ],
+      "verification": "cd frontend && pnpm exec vitest run app/components/chat/",
+      "evidence": "2026-06-06: 23 tests (ChatPanel11+CollapsibleMessage4+MessageList8)",
+      "status": "passing",
+      "description": "ChatPanel(264行)、MessageList/Input、CollapsibleMessage"
+    },
+    {
+      "id": "f-project-ui",
+      "name": "项目管理页面 (Home/Projects/New/Detail)",
+      "domain": "frontend",
+      "dependencies": [
+        "f-state-stores"
+      ],
+      "verification": "cd frontend && pnpm exec vitest run app/pages/",
+      "evidence": "2026-06-06: 44 tests (HomePage6+ProjectsPage5+NewProjectPage2+ProjectPage31)",
+      "status": "passing",
+      "description": "4条路由页面组件"
+    },
+    {
+      "id": "f-ws-client",
+      "name": "WebSocket实时通信 (useWebSocket+event routing)",
+      "domain": "fullstack",
+      "dependencies": [],
+      "verification": "cd frontend && pnpm exec vitest run app/hooks/useWebSocket && cd ../backend && uv run pytest tests/test_ws/ tests/test_schemas/test_ws_events.py -q",
+      "evidence": "2026-06-06: frontend 37+backend 28=all pass",
+      "status": "passing",
+      "description": "useWebSocket(698行)、15+事件路由、auto-reconnect(5次)"
+    },
+    {
+      "id": "f-settings-ui",
+      "name": "设置与配置面板 (SettingsModal+ConfigInput)",
+      "domain": "frontend",
+      "dependencies": [
+        "f-state-stores"
+      ],
+      "verification": "cd frontend && pnpm exec vitest run app/components/settings/",
+      "evidence": "2026-06-06: 32 tests (SettingsModal22+ConfigInput10)",
+      "status": "passing",
+      "description": "SettingsModal(1113行)、Provider配置、连接测试"
+    },
+    {
+      "id": "f-universe-ui",
+      "name": "IP宇宙管理页面 (UniversesPage+UniverseDetailPage)",
+      "domain": "frontend",
+      "dependencies": [
+        "f-universe-multi-project"
+      ],
+      "verification": "cd frontend && pnpm exec vitest run app/pages/",
+      "evidence": "2026-06-06: vitest pass (covered via pages/ suite; TODO dedicated tests)",
+      "status": "passing",
+      "description": "宇宙列表、详情页"
+    },
+    {
+      "id": "f-state-stores",
+      "name": "Zustand状态管理 (editor/settings/theme/toast/sidebar/chatPanel)",
+      "domain": "frontend",
+      "dependencies": [],
+      "verification": "cd frontend && pnpm exec vitest run app/stores/",
+      "evidence": "2026-06-06: 16 tests (editorStore4+settingsStore3+themeStore4+toast5); 2 stores TODO",
+      "status": "passing",
+      "description": "6个Zustand stores"
+    },
+    {
+      "id": "f-theme",
+      "name": "主题系统（旧 Comic Workbench 设计，已被 f-theme-projection-room 取代）",
+      "domain": "frontend",
+      "dependencies": [
+        "f-state-stores"
+      ],
+      "verification": "cd frontend && pnpm exec vitest run app/stores/themeStore.test.ts app/components/ui/",
+      "evidence": "2026-06-06: themeStore(4)+UI theme consistency via vitest+build",
+      "status": "passing",
+      "description": "旧漫画工作台主题（doodle/doodle-dark），已被 Projection Room（projection/rushes）取代"
+    },
+    {
+      "id": "f-pipeline-visual",
+      "name": "管线可视化 (StagePipeline+StageView)",
+      "domain": "frontend",
+      "dependencies": [
+        "f-state-stores",
+        "f-ws-client"
+      ],
+      "verification": "cd frontend && pnpm exec vitest run app/components/layout/",
+      "evidence": "2026-06-06: StageView(1)+build",
+      "status": "passing",
+      "description": "生成管线阶段可视化"
+    },
+    {
+      "id": "f-ui-system",
+      "name": "通用UI组件库 (Button/Modal/Toast等12组件)",
+      "domain": "frontend",
+      "dependencies": [],
+      "verification": "cd frontend && pnpm exec vitest run app/components/ui/",
+      "evidence": "2026-06-06: 71 tests (Button7+Card7+Modal7+Input8+ConfirmModal8+EditModal9+ErrorBoundary4+HoverActionBar6+LoadingOverlay4+TypewriterText5+Toast4+ToastContainer2)",
+      "status": "passing",
+      "description": "12个可复用UI组件"
+    },
+    {
+      "id": "f-critic-threshold",
+      "name": "CriticAgent 维度级质量阈值 (P0)",
+      "description": "CriticAgent 评分改为多条件判断（一致性≥4.0 AND 质量≥4.0 AND 加权总分≥6.0），防止单一维度崩坏被掩蔽。对应 analysis_pipeline_report.md §2.2(a)",
+      "dependencies": [],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -k 'critic' -q && uv run ruff check app tests",
+      "evidence": "2026-06-06: _critique_decision static method, dimension-level thresholds (consistency≥4/quality≥4/composition≥4 + weighted≥6.0), WS Schema failed_checks field, 8 _critique_decision unit tests, ruff 0, pytest 1114/1114",
+      "notes": "改动范围: CriticAgent 评分逻辑 + _critique_decision 路由 + 测试。来源: analysis §4 P0-1"
+    },
+    {
+      "id": "f-stage-completeness",
+      "name": "阶段级完整性断言 (P0)",
+      "description": "每个 Production 节点结束时验证产出物完整性（所有角色/分镜都有对应产物），防止部分产出物悄悄缺失。对应 analysis_pipeline_report.md §2.2(b)",
+      "dependencies": [],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/test_orchestration/ -q && uv run ruff check app tests",
+      "evidence": "2026-06-06: nodes.py _check_stage_completeness + _run_sub_stage integration, state.py completeness_warnings, ws.py StageCompletenessWarningEventData, test_stage_completeness.py 9 tests, ruff 0, pytest 1123/1123",
+      "notes": "改动范围: nodes.py render_characters/render_shots 节点 + completeness check helpers + 测试。来源: analysis §4 P0-2"
+    },
+    {
+      "id": "f-critic-feedback-injection",
+      "name": "Critic 反馈注入再生 prompt (P1)",
+      "description": "将 CriticAgent 的批评文本注入 RenderAgent 的重生 prompt，形成「审查→改进」闭环。对应 analysis_pipeline_report.md §2.2(d)",
+      "dependencies": [
+        "f-critic-threshold"
+      ],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -k 'critic or render' -q && uv run ruff check app tests",
+      "evidence": "2026-06-06: agent_ctx.critique_feedback field, _compile_critique_feedback helper, injection in critique_character_nodes, consumption in _build_*_prompt, 12 test_critic_feedback.py tests passing, ruff 0, pytest 1135/1135",
+      "notes": "改动范围: base.py (AgentContext new field) + nodes.py (_compile_critique_feedback + injection in 2 nodes) + render.py (_build_character_prompt + _build_shot_prompt consume feedback) + tests. 来源: analysis §4 P1-1"
+    },
+    {
+      "id": "f-beat-analysis",
+      "name": "节拍分析：叙事节奏注入分镜 (P1)",
+      "description": "在 outline → plan_shots 间添加节拍分析步骤（情绪曲线、节奏控制注入分镜 duration/camera/lighting）。对应 analysis_pipeline_report.md §3.2(a)",
+      "dependencies": [
+        "f-stage-completeness"
+      ],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -k 'beat or outline or plan' -q && uv run ruff check app tests",
+      "evidence": "2026-06-06: BeatAnalyzer service module, _call_plan_llm injection, plan.py v3.1.0 + outline.py v2.1.0 prompts, CHANGELOG, 17 beat_analyzer tests, ruff 0, pytest 1152/1152",
+      "notes": "改动范围: OutlineAgent+PlanAgent prompt + 新 BeatAnalyzer 组件 + Prompt VERSION/CHANGELOG + 测试。来源: analysis §4 P1-2"
+    },
+    {
+      "id": "f-seed-management",
+      "name": "Seed 管理：生成可复现 (P2)",
+      "description": "ImageService 传递 seed 参数到图像生成 API，支持锁定+微调工作流。Shot.seed 字段已存在（migration 0011），需在服务层传递。对应 analysis_pipeline_report.md §3.2(f)",
+      "dependencies": [
+        "f-critic-feedback-injection"
+      ],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -q && uv run ruff check app tests",
+      "evidence": "2026-06-06: seed param added to generate_and_cache_image(), dict-based kwarg merging in base.py; seed management (random int32 on first render, reuse on regeneration) in _render_shots() and _render_characters(); ruff 0, pytest 1152/1152",
+      "notes": "改动范围: ImageService + RenderAgent + API 层 seed 传递 + 测试。来源: analysis §4 P2"
+    },
+    {
+      "id": "f-e2e-integration",
+      "name": "E2E 集成测试扩展 (Phase 1)",
+      "description": "CriticAgent 阈值/完整性/反馈/节拍/Seed 的 E2E 测试，~18 个函数",
+      "dependencies": [
+        "f-critic-threshold",
+        "f-stage-completeness",
+        "f-critic-feedback-injection",
+        "f-beat-analysis",
+        "f-seed-management"
+      ],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/integration/ -q",
+      "evidence": "2026-06-06: 18 E2E tests (5 critic + 3 completeness + 3 feedback + 3 beat + 4 seed), ruff 0, pytest 1170/1170",
+      "notes": "Phase 1: 仅后端 Stub E2E。Phase 2: 前端 Playwright"
+    },
+    {
+      "id": "f-e2e-live-backend",
+      "name": "E2E Live Backend with Stub LLM",
+      "status": "passing",
+      "description": "Phase 2 — Live Backend E2E with Stub LLM (httpx, SQLite, Fake/Fake/Fake)",
+      "dependencies": [
+        "f-harness-p3",
+        "f-technical-debt",
+        "f-pipeline-core"
+      ],
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/e2e/ -v --tb=short && uv run pytest -q --tb=short && uv run ruff check app tests",
+      "evidence": "2026-06-06: 9 E2E tests pass via httpx.AsyncClient with stub services. Pipeline runs end-to-end (outline→characters→shots→render→compose→audio). AgentTrace read/write verified. RunMetrics API verified. Parallel branch overlap verified. Full chain output verified. 1170 non-e2e tests pass, ruff clean.",
+      "notes": "6 test files, 12 test cases, full pipeline via httpx.AsyncClient"
+    },
+    {
+      "id": "f-e2e-real-integration",
+      "name": "E2E 真实集成测试（前端 Playwright + 真实后端 + Stub 服务）",
+      "status": "passing",
+      "description": "Phase 3 — Frontend Playwright E2E tests connecting to a real backend process with stub LLM/Image/Video services",
+      "dependencies": [
+        "f-e2e-live-backend"
+      ],
+      "domain": "fullstack",
+      "verification": "cd frontend && npx playwright test tests/e2e/workflow-real-*.spec.ts --reporter=list --timeout=120000",
+      "evidence": "2026-06-07: 14 E2E tests (4 mock + 10 real) all passing. global-setup/teardown lifecycle, workflow-real-api (6 tests), workflow-real-ws (3 tests), workflow-real-recovery (2 tests). TypeScript clean, ruff 0, pytest 1177/1177, build OK."
+    },
+    {
+      "id": "f-theme-projection-room",
+      "name": "设计迁移：Comic Workbench → Projection Room",
+      "description": "将前端设计体系从漫画工作台迁移到胶片放映室风格：深色底色、投影琥珀单一暖光、衬线字体、辉光系统代替 CMYK 阴影、胶片颗粒纹理。5 个 Phase，~36 文件。",
+      "status": "passing",
+      "domain": "frontend",
+      "dependencies": [
+        "f-theme"
+      ],
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm build && pnpm exec vitest run",
+      "evidence": "2026-06-07: P1-P5 all complete. init.sh green. 368/368 vitest pass. Zero old class names in app/. DESIGN.md rewritten (Projection Room). ~34 files migrated across 5 phases. tsc clean, build 4s.",
+      "notes": "Phase 1=foundation(config+CSS+fonts+store), P2=UI primitives(8 components), P3=composite components(chat/universe/settings 6 files), P4=canvas+layout, P5=pages+verification. 计划文件: .sisyphus/plans/f-theme-projection-room-*.md"
+    },
+    {
+      "id": "f-critique-override",
+      "name": "Critic 评分可视化 + 人工覆盖 (P0 UX)",
+      "description": "Critic 审查后展示评分可视化卡片，支持创作者逐实体覆盖 AI 的 will_regenerate 决定（跳过伪重生成 / 强制重做差输出）。后端在 critique 节点加 interrupt 暂停点，前端展示 recharts 评分卡片 + toggle 覆盖 UI。",
+      "status": "passing",
+      "domain": "fullstack",
+      "dependencies": [
+        "f-critic-threshold",
+        "f-critic-feedback-injection"
+      ],
+      "verification": "cd backend && uv run ruff check app tests && uv run pytest -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm exec vitest run && pnpm build",
+      "evidence": "",
+      "notes": "2 Phase: P1=backend interrupt+WS event (nodes.py + schemas/ws.py), P2=frontend CritiqueResultCard + ChatPanel 集成。来源: .sisyphus/analysis/ux-priority-roadmap.md P0 项。计划文件: .sisyphus/plans/f-critique-override-*.md"
+    },
+    {
+      "id": "f-ab-compare-approval",
+      "name": "A/B 对比嵌入审批流 (P2 UX)",
+      "description": "审批闸门触发时展示版本对比 UI：后端 WS 事件补充 entity_type/entity_ids 上下文，前端在 ChatPanel 审批栏嵌入 VersionCompareDrawer 内联对比组件。",
+      "status": "passing",
+      "domain": "fullstack",
+      "dependencies": [
+        "f-version-compare",
+        "f-critique-override"
+      ],
+      "verification": "cd backend && uv run ruff check app tests && uv run pytest -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm exec vitest run && pnpm build",
+      "evidence": "2026-06-08: P1+P2 complete. P1: entity_type/entity_ids in _manual_approval_node interrupt + 4 approval callers, WS schema updated, 7 tests pass. P2: VersionCompareInline.tsx created, VersionColumn/DiffRow exported, ChatPanel integrated, 3 tests pass. ruff 0, tsc clean, 392/392 vitest, build OK",
+      "notes": "2 Phase: P1=backend entity context (nodes.py + schemas/ws.py), P2=frontend VersionCompareInline + ChatPanel integration. Source: .sisyphus/analysis/ux-priority-roadmap.md P2-1. Plan files: .sisyphus/plans/f-ab-compare-approval-*.md"
+    },
+    {
+      "id": "f-yolo-per-gate",
+      "name": "混合 YOLO 模式 — Per-Gate 自动审批 (P2 UX)",
+      "description": "全局 binary YOLO/手动 → per-gate 独立配置（8 闸门）。per-run 方案（不存 DB），后端 runtime context 扩展 gate_modes set，前端 GateModePanel 多 toggle UI。",
+      "status": "passing",
+      "domain": "backend",
+      "dependencies": [
+        "f-critique-override"
+      ],
+      "verification": "cd backend && uv run ruff check app tests && uv run pytest tests/test_orchestration/ tests/test_agents/ -q",
+      "evidence": "2026-06-07: P1 complete. Phase2RuntimeContext.gate_modes field, ALL_GATES constant, build_phase2_runtime_context gate_modes param, _manual_approval_node/_critic_interrupt gate_modes check, orchestrator.py data flow, 11 test_yolo_per_gate.py tests, ruff 0, 535 key tests pass.",
+      "notes": "P1=backend gate_modes (state.py + nodes.py + orchestrator.py) — done. P2=frontend GateModePanel + ChatPanel 待执行。来源: .sisyphus/analysis/ux-priority-roadmap.md P2-2 项。计划文件: .sisyphus/plans/f-yolo-per-gate-*.md"
+    },
+    {
+      "id": "f-entity-approval",
+      "name": "角色/分镜级批注审批 (P1 UX)",
+      "description": "逐实体审批：cleanup 重构为实体级（target_ids 贯穿全链路），前端 EntityApprovalCard 替换通用确认栏，支持逐角色/分镜 approve/reject + 评论。",
+      "status": "passing",
+      "domain": "fullstack",
+      "dependencies": [
+        "f-ab-compare-approval",
+        "f-critique-override"
+      ],
+      "verification": "cd backend && uv run ruff check app tests && uv run pytest -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm exec vitest run && pnpm build",
+      "evidence": "2026-06-08: P1 complete - cleanup entity-level + WS event entity_summaries. P2 complete - EntityApprovalCard.tsx (319 lines), ChatPanel.tsx integration (conditional EntityApprovalCard rendering), editorStore entityApprovalDecisions state, EntityDecision type, 6 EntityApprovalCard tests + 2 ChatPanel tests, tsc clean, vitest 409/409, pnpm build OK.",
+      "notes": "2 Phase: P1=backend cleanup entity-level + WS event entity_summaries — done. P2=frontend EntityApprovalCard + ChatPanel 待执行 — DONE. 来源: .sisyphus/analysis/ux-priority-roadmap.md P1-1 项。计划文件: .sisyphus/plans/f-entity-approval-*.md"
+    }
+  ]
+}

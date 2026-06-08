@@ -3,9 +3,15 @@ import { useEditorStore, useShallow } from "~/stores/editorStore";
 import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
 import { OutlinePreviewCard } from "./OutlinePreviewCard";
+import { CritiqueResultCard } from "./CritiqueResultCard";
+import { EntityApprovalCard } from "./EntityApprovalCard";
+import { VersionCompareInline } from "./VersionCompareInline";
+import { GateModePanel } from "./GateModePanel";
 import { Button } from "~/components/ui/Button";
-import type { WorkflowStage } from "~/types";
+import type { EntityDecision, WorkflowStage, VersionEntityType } from "~/types";
+import { projectsApi } from "~/services/api";
 import { AGENT_NAME_MAP } from "~/types";
+import { ALL_GATES } from "~/stores/editorStore";
 import {
   CheckIcon,
   LightBulbIcon,
@@ -18,11 +24,12 @@ import {
 import { getWorkflowStageInfo } from "~/utils/workflowStage";
 
 interface ChatPanelProps {
-  onSendFeedback: (content: string) => void;
-  onConfirm: (feedback?: string) => void;
-  onGenerate: () => void;
-  onCancel: () => void;
-  isGenerating: boolean;
+	projectId?: number;
+	onSendFeedback: (content: string) => void;
+	onConfirm: (feedback?: string) => void;
+	onGenerate: () => void;
+	onCancel: () => void;
+	isGenerating: boolean;
   generateDisabled?: boolean;
   generateDisabledReason?: string;
   isPaused?: boolean;
@@ -40,11 +47,12 @@ function getStageIcon(stage: WorkflowStage) {
 const agentNameMap = AGENT_NAME_MAP;
 
 export function ChatPanel({
-  onSendFeedback,
-  onConfirm,
-  onGenerate,
-  onCancel,
-  isGenerating,
+	projectId,
+	onSendFeedback,
+	onConfirm,
+	onGenerate,
+	onCancel,
+	isGenerating,
   generateDisabled = false,
   generateDisabledReason,
   isPaused = false,
@@ -52,28 +60,36 @@ export function ChatPanel({
   onResume: _onResume,
 }: ChatPanelProps) {
   const generateDisabledReasonId = generateDisabledReason ? "generate-disabled-reason" : undefined;
-  const {
-    messages,
-    currentAgent,
-    awaitingConfirm,
-    awaitingAgent,
-    currentStage,
-    currentRunId,
-    runMode,
-    recoveryGate,
-  } = useEditorStore(useShallow((s) => ({
-    messages: s.messages,
-    currentAgent: s.currentAgent,
-    awaitingConfirm: s.awaitingConfirm,
-    awaitingAgent: s.awaitingAgent,
-    currentStage: s.currentStage,
-    currentRunId: s.currentRunId,
-    runMode: s.runMode,
-    recoveryGate: s.recoveryGate,
-  })));
+	const {
+		messages,
+		currentAgent,
+		awaitingConfirm,
+		awaitingAgent,
+		currentStage,
+		currentRunId,
+		runMode,
+		recoveryGate,
+		critiqueReviewCard,
+	} = useEditorStore(useShallow((s) => ({
+		messages: s.messages,
+		currentAgent: s.currentAgent,
+		awaitingConfirm: s.awaitingConfirm,
+		awaitingAgent: s.awaitingAgent,
+		currentStage: s.currentStage,
+		currentRunId: s.currentRunId,
+		runMode: s.runMode,
+		recoveryGate: s.recoveryGate,
+		critiqueReviewCard: s.critiqueReviewCard,
+	})));
 
-  const setRunMode = useEditorStore((s) => s.setRunMode);
-  const [input, setInput] = useState("");
+	const setRunMode = useEditorStore((s) => s.setRunMode);
+	const gateModes = useEditorStore((s) => s.gateModes);
+	const setGateMode = useEditorStore((s) => s.setGateMode);
+	const setGateModes = useEditorStore((s) => s.setGateModes);
+	const resetGateModes = useEditorStore((s) => s.resetGateModes);
+	const clearCritiqueReview = useEditorStore((s) => s.clearCritiqueReview);
+	const [input, setInput] = useState("");
+	const [showVersionCompare, setShowVersionCompare] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,11 +112,58 @@ export function ChatPanel({
     setInput("");
   };
 
-  const info = getWorkflowStageInfo(currentStage);
+	const handleCritiqueConfirm = async (overrides: Record<number, boolean>) => {
+		const id = projectId;
+		const runId = currentRunId;
+		if (!id || !runId) return;
+		try {
+			await projectsApi.resume(id, runId, { overrides });
+			clearCritiqueReview();
+		} catch (err) {
+			console.error("Failed to resume with critique overrides:", err);
+		}
+	};
+
+	const handleCritiqueCancel = () => {
+		const id = projectId;
+		const runId = currentRunId;
+		if (!id || !runId) return;
+		projectsApi.resume(id, runId, { overrides: {} });
+		clearCritiqueReview();
+	};
+
+	const handleEntityConfirm = async (decisions: EntityDecision[]) => {
+		const id = projectId;
+		const runId = currentRunId;
+		if (!id || !runId) return;
+		try {
+			await projectsApi.resume(id, runId, { entity_decisions: decisions });
+		} catch (err) {
+			console.error("Failed to resume with entity decisions:", err);
+		}
+	};
+
+	const handleEntityRegenerate = async (decisions: EntityDecision[]) => {
+		const id = projectId;
+		const runId = currentRunId;
+		if (!id || !runId) return;
+		try {
+			const feedback = decisions
+				.map((d) => `[${d.entity_id}] ${d.feedback || "请重新生成"}`)
+				.join("\n");
+			await projectsApi.resume(id, runId, { feedback });
+		} catch (err) {
+			console.error("Failed to resume with entity feedback:", err);
+		}
+	};
+
+	const info = getWorkflowStageInfo(currentStage);
   const StageIcon = getStageIcon(currentStage);
   const hasMessages = messages.length > 0;
   const agentDisplayName = awaitingAgent ? agentNameMap[awaitingAgent] || awaitingAgent : "";
-  const isYolo = runMode === "yolo";
+  const hasCustomGates = gateModes.size > 0;
+  const allGatesAuto = gateModes.size === ALL_GATES.length;
+  const isYolo = runMode === "yolo" || allGatesAuto;
 
   const showManualConfirm = awaitingConfirm && !isYolo;
   const showOutlinePreview =
@@ -114,25 +177,44 @@ export function ChatPanel({
           <span className="text-xs font-heading font-bold">{info.title}</span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setRunMode(isYolo ? "manual" : "yolo")}
-          className={`btn btn-xs gap-0.5 ${isYolo ? "btn-primary btn-sm border-2" : "btn-ghost"} !min-h-0 !h-6 text-xs font-comic`}
-          aria-label={isYolo ? "切换手动模式" : "切换YOLO模式"}
-          title={isYolo ? "YOLO：自动确认" : "手动：逐阶段确认"}
-        >
-          {isYolo ? (
-            <>
-              <BoltIcon className="w-2.5 h-2.5" />
-              YOLO
-            </>
-          ) : (
-            <>
-              <AdjustmentsHorizontalIcon className="w-2.5 h-2.5" />
-              手动
-            </>
+        <div className="flex items-center gap-1.5">
+          {/* 快速 YOLO 开关（无自定义时使用） */}
+          {!hasCustomGates && (
+            <button
+              type="button"
+              onClick={() => {
+                const newVal = isYolo ? "manual" : "yolo";
+                setRunMode(newVal);
+                if (newVal === "yolo") {
+                  setGateModes([...ALL_GATES]);
+                } else {
+                  resetGateModes();
+                }
+              }}
+              className={`btn btn-xs gap-0.5 ${isYolo ? "btn-primary btn-sm border-2" : "btn-ghost"} !min-h-0 !h-6 text-xs`}
+              aria-label={isYolo ? "切换手动模式" : "切换YOLO模式"}
+              title={isYolo ? "YOLO：自动确认" : "手动：逐阶段确认"}
+            >
+              {isYolo ? (
+                <>
+                  <BoltIcon className="w-2.5 h-2.5" />
+                  YOLO
+                </>
+              ) : (
+                <>
+                  <AdjustmentsHorizontalIcon className="w-2.5 h-2.5" />
+                  手动
+                </>
+              )}
+            </button>
           )}
-        </button>
+          {/* Per-gate 自定义面板 */}
+          <GateModePanel
+            gateModes={gateModes}
+            onToggle={setGateMode}
+            onSetAll={(gates) => setGateModes(gates)}
+          />
+        </div>
       </div>
 
       {isGenerating && !awaitingConfirm && (
@@ -158,7 +240,7 @@ export function ChatPanel({
         </div>
       )}
 
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-2.5 py-2 halftone-bg">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-2.5 py-2 grain-subtle">
         {!hasMessages && !isGenerating ? (
           <div className="flex flex-col h-full">
             <div className="flex-1 flex flex-col items-center justify-center text-center px-3">
@@ -175,7 +257,7 @@ export function ChatPanel({
                 size="lg"
                 onClick={onGenerate}
                 disabled={generateDisabled}
-                className="gap-1.5 touch-target btn-comic"
+                className="gap-1.5 touch-target"
                 aria-label="开始生成漫剧"
                 aria-describedby={generateDisabledReasonId}
               >
@@ -194,45 +276,91 @@ export function ChatPanel({
         )}
       </div>
 
-      {showOutlinePreview && recoveryGate?.story_outline && (
-        <div className="px-2.5 py-2 border-t-2 border-primary/30 bg-primary/5">
-          <OutlinePreviewCard
-            outline={recoveryGate.story_outline}
-            visualBible={recoveryGate.visual_bible}
-            onConfirm={() => {
-              onConfirm(undefined);
-              setInput("");
-            }}
-            onRegenerate={(feedback) => {
-              onConfirm(feedback);
-              setInput("");
-            }}
-          />
-        </div>
-      )}
+		{showOutlinePreview && recoveryGate?.story_outline && (
+		<div className="px-2.5 py-2 border-t-2 border-primary/30 bg-primary/5">
+			<OutlinePreviewCard
+			outline={recoveryGate.story_outline}
+			visualBible={recoveryGate.visual_bible}
+			onConfirm={() => {
+				onConfirm(undefined);
+				setInput("");
+			}}
+			onRegenerate={(feedback) => {
+				onConfirm(feedback);
+				setInput("");
+			}}
+			/>
+		</div>
+		)}
 
-      {showManualConfirm && !showOutlinePreview && (
-        <div className="px-2.5 py-1.5 border-t-2 border-primary/30 bg-primary/5">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs text-base-content/60 font-medium">
-              {agentDisplayName} 已完成 — 确认继续？
-            </span>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                const feedback = input.trim();
-                onConfirm(feedback || undefined);
-                setInput("");
-              }}
-              className="gap-0.5 !px-2.5 !py-0.5 !min-h-0 !h-6 text-xs border-2 shadow-brutal-sm"
-            >
-              <CheckIcon className="w-3 h-3" />
-              通过
-            </Button>
-          </div>
-        </div>
-      )}
+		{critiqueReviewCard && (
+		<div className="px-2.5 py-2 border-t-2 border-primary/30 bg-primary/5">
+			<CritiqueResultCard
+			data={critiqueReviewCard}
+			onConfirm={handleCritiqueConfirm}
+			onCancel={handleCritiqueCancel}
+			/>
+		</div>
+		)}
+
+		{showManualConfirm && !showOutlinePreview && (
+			<>
+				{recoveryGate?.entity_summaries && recoveryGate.entity_summaries.length > 0 ? (
+					<div className="px-2.5 py-2 border-t-2 border-primary/30 bg-primary/5">
+						<EntityApprovalCard
+							entityType={recoveryGate.entity_type as "character" | "shot"}
+							entityLabel={recoveryGate.entity_type === "character" ? "角色" : "分镜"}
+							entities={recoveryGate.entity_summaries}
+							onConfirm={handleEntityConfirm}
+							onRegenerate={handleEntityRegenerate}
+						/>
+					</div>
+				) : (
+					<div className="px-2.5 py-1.5 border-t-2 border-primary/30 bg-primary/5">
+						{showVersionCompare && recoveryGate?.entity_type && recoveryGate?.entity_ids?.[0] != null && (
+							<div className="mb-3">
+								<VersionCompareInline
+									projectId={projectId!}
+									entityType={recoveryGate.entity_type as VersionEntityType}
+									entityId={recoveryGate.entity_ids[0]}
+									onClose={() => setShowVersionCompare(false)}
+								/>
+							</div>
+						)}
+						<div className="flex items-center justify-between gap-2">
+							<div className="flex items-center gap-2">
+								<span className="text-xs text-base-content/60 font-medium">
+									{agentDisplayName} 已完成 — 确认继续？
+								</span>
+								{recoveryGate?.entity_ids?.length ? (
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => setShowVersionCompare(!showVersionCompare)}
+										className="gap-0.5 !px-2 !py-0.5 !min-h-0 !h-6 text-xs"
+									>
+										查看版本对比 {showVersionCompare ? "▴" : "▾"}
+									</Button>
+								) : null}
+							</div>
+							<Button
+								variant="primary"
+								size="sm"
+								onClick={() => {
+									const feedback = input.trim();
+									onConfirm(feedback || undefined);
+									setInput("");
+								}}
+								className="gap-0.5 !px-2.5 !py-0.5 !min-h-0 !h-6 text-xs border-2 shadow-aperture"
+							>
+								<CheckIcon className="w-3 h-3" />
+								通过
+							</Button>
+						</div>
+					</div>
+				)}
+			</>
+		)}
 
       {awaitingConfirm && isYolo && isPaused && onPause && (
         <div className="px-2.5 py-1 border-t border-base-content/10 bg-primary/5 flex items-center gap-1.5 text-xs text-base-content/50">

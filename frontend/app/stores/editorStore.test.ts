@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { useEditorStore } from '~/stores/editorStore';
-import type { Character, Shot } from '~/types';
+import type { Character, Shot, CritiqueReviewEventData } from '~/types';
 
 describe('useEditorStore review contract', () => {
   beforeEach(() => {
@@ -123,5 +123,98 @@ describe('useEditorStore review contract', () => {
     expect(s.awaitingAgent).toBeNull();
     expect(s.characters).toHaveLength(1);
     expect(s.currentStage).toBe('plan');
+  });
+
+  it("setCritiqueReviewCard sets card and awaiting states", () => {
+    const data: CritiqueReviewEventData = {
+      entity_type: "character",
+      total: 2,
+      results: [
+        {
+          entity_id: 1,
+          entity_name: "Alice",
+          score: 8.5,
+          dimensions: {},
+          issues: [],
+          suggestions: [],
+          will_regenerate: false,
+          failed_checks: [],
+          image_url: null,
+        },
+        {
+          entity_id: 2,
+          entity_name: "Bob",
+          score: 4.0,
+          dimensions: {},
+          issues: [],
+          suggestions: [],
+          will_regenerate: true,
+          failed_checks: [],
+          image_url: null,
+        },
+      ],
+    };
+    useEditorStore.getState().setCritiqueReviewCard(data);
+    const s = useEditorStore.getState();
+    expect(s.critiqueReviewCard).toEqual(data);
+    expect(s.awaitingConfirm).toBe(true);
+    expect(s.awaitingAgent).toBe("critic");
+  });
+
+  it("setCritiqueOverride adds to overrides map", () => {
+    useEditorStore.getState().setCritiqueOverride(3, true);
+    expect(useEditorStore.getState().critiqueOverrides[3]).toBe(true);
+
+    useEditorStore.getState().setCritiqueOverride(5, false);
+    expect(useEditorStore.getState().critiqueOverrides[5]).toBe(false);
+    // Previous override preserved
+    expect(useEditorStore.getState().critiqueOverrides[3]).toBe(true);
+  });
+
+  it("clearCritiqueReview resets all critic state", () => {
+    useEditorStore.getState().setCritiqueOverride(1, true);
+    useEditorStore.getState().setCritiqueReviewCard({
+      entity_type: "character",
+      total: 1,
+      results: [],
+    });
+    useEditorStore.getState().clearCritiqueReview();
+    const s = useEditorStore.getState();
+    expect(s.critiqueReviewCard).toBeNull();
+    expect(s.critiqueOverrides).toEqual({});
+    expect(s.awaitingConfirm).toBe(false);
+    expect(s.awaitingAgent).toBeNull();
+  });
+
+  it('setGateMode adds gate to set', () => {
+    useEditorStore.getState().reset();
+    useEditorStore.getState().setGateMode('outline', true);
+    expect(useEditorStore.getState().gateModes.has('outline')).toBe(true);
+    expect(useEditorStore.getState().gateModes.size).toBe(1);
+  });
+
+  it('setGateMode removes gate from set', () => {
+    useEditorStore.getState().reset();
+    useEditorStore.getState().setGateMode('outline', true);
+    useEditorStore.getState().setGateMode('outline', false);
+    expect(useEditorStore.getState().gateModes.has('outline')).toBe(false);
+    expect(useEditorStore.getState().gateModes.size).toBe(0);
+  });
+
+  it('setGateModes bulk sets multiple gates', () => {
+    useEditorStore.getState().reset();
+    useEditorStore.getState().setGateModes(['outline', 'shots']);
+    expect(useEditorStore.getState().gateModes.size).toBe(2);
+    expect(useEditorStore.getState().gateModes.has('outline')).toBe(true);
+    expect(useEditorStore.getState().gateModes.has('shots')).toBe(true);
+    expect(useEditorStore.getState().gateModes.has('compose')).toBe(false);
+  });
+
+  it('resetGateModes clears all gates', () => {
+    useEditorStore.getState().reset();
+    useEditorStore.getState().setGateModes(['outline', 'shots', 'compose']);
+    expect(useEditorStore.getState().gateModes.size).toBe(3);
+    useEditorStore.getState().resetGateModes();
+    expect(useEditorStore.getState().gateModes.size).toBe(0);
   });
 });

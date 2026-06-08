@@ -5,6 +5,8 @@ import type {
 	AgentMessage,
 	BlockingClip,
 	Character,
+	CritiqueReviewEventData,
+	EntityDecision,
 	ProjectProviderSettings,
 	RecoveryControlRead,
 	RecoverySummaryRead,
@@ -15,6 +17,24 @@ import type {
 } from "~/types";
 
 export type RunMode = "manual" | "yolo";
+
+export const ALL_GATES = [
+	"outline", "characters", "shots",
+	"character_images", "shot_images", "compose",
+	"critique_characters", "critique_shots",
+] as const;
+export type GateName = typeof ALL_GATES[number];
+
+export const GATE_LABELS: Record<GateName, string> = {
+	outline: "大纲审批",
+	characters: "角色规划审批",
+	shots: "分镜规划审批",
+	character_images: "角色图片审批",
+	shot_images: "分镜图片审批",
+	compose: "视频合成审批",
+	critique_characters: "Critic 角色审查",
+	critique_shots: "Critic 分镜审查",
+};
 
 interface EditorState {
 	selectedShotId: number | null;
@@ -33,6 +53,7 @@ interface EditorState {
 	currentRunId: number | null;
 	currentRunProviderSnapshot: ProjectProviderSettings | null;
 	runMode: RunMode;
+	gateModes: Set<GateName>;
 	characters: Character[];
 	shots: Shot[];
 	projectVideoUrl: string | null;
@@ -55,6 +76,11 @@ interface EditorState {
 	projectChapterNumber: number | null;
 	projectChapterTitle: string | null;
 	blockingClips: BlockingClip[] | null;
+	// Critic override state
+	critiqueReviewCard: CritiqueReviewEventData | null;
+	critiqueOverrides: Record<number, boolean>;
+	// Entity approval state
+	entityApprovalDecisions: EntityDecision[];
 
 	setSelectedShot: (id: number | null) => void;
 	setSelectedCharacter: (id: number | null) => void;
@@ -91,6 +117,11 @@ interface EditorState {
 	setProjectChapterNumber: (chapter: number | null) => void;
 	setProjectChapterTitle: (title: string | null) => void;
 	setBlockingClips: (clips: BlockingClip[] | null) => void;
+	setCritiqueReviewCard: (data: CritiqueReviewEventData | null) => void;
+	setCritiqueOverride: (entityId: number, shouldRegenerate: boolean) => void;
+	clearCritiqueReview: () => void;
+	setEntityApprovalDecisions: (decisions: EntityDecision[]) => void;
+	clearEntityApprovalDecisions: () => void;
 	setAwaitingConfirm: (
 		awaiting: boolean,
 		agent?: string | null,
@@ -101,6 +132,9 @@ interface EditorState {
 		snapshot: ProjectProviderSettings | null,
 	) => void;
 	setRunMode: (mode: RunMode) => void;
+	setGateMode: (gate: GateName, enabled: boolean) => void;
+	setGateModes: (gates: GateName[]) => void;
+	resetGateModes: () => void;
 	updateCharacter: (character: Character) => void;
 	updateShot: (shot: Shot) => void;
 	removeCharacter: (characterId: number) => void;
@@ -118,6 +152,9 @@ const initialRunState = {
 	recoveryGate: null,
 	awaitingConfirm: false,
 	awaitingAgent: null,
+	critiqueReviewCard: null,
+	critiqueOverrides: {},
+	entityApprovalDecisions: [],
 	currentRunId: null,
 	currentRunProviderSnapshot: null,
 };
@@ -128,6 +165,7 @@ const initialState = {
 	highlightedMessageIndex: null,
 	currentStage: "plan" as WorkflowStage,
 	runMode: "manual" as RunMode,
+	gateModes: new Set<GateName>(),
 	messages: [],
 	characters: [],
 	shots: [],
@@ -254,6 +292,42 @@ export const useEditorStore = create<EditorState>()(
 				set({ projectChapterTitle: title }, false, "setProjectChapterTitle"),
 			setBlockingClips: (clips) =>
 				set({ blockingClips: clips }, false, "setBlockingClips"),
+			setCritiqueReviewCard: (data) =>
+				set(
+					{
+						critiqueReviewCard: data,
+						awaitingConfirm: data !== null,
+						awaitingAgent: data !== null ? "critic" : null,
+					},
+					false,
+					"setCritiqueReviewCard",
+				),
+			setCritiqueOverride: (entityId, shouldRegenerate) =>
+				set(
+					(state) => ({
+						critiqueOverrides: {
+							...state.critiqueOverrides,
+							[entityId]: shouldRegenerate,
+						},
+					}),
+					false,
+					"setCritiqueOverride",
+				),
+			clearCritiqueReview: () =>
+				set(
+					{
+						critiqueReviewCard: null,
+						critiqueOverrides: {},
+						awaitingConfirm: false,
+						awaitingAgent: null,
+					},
+					false,
+					"clearCritiqueReview",
+				),
+			setEntityApprovalDecisions: (decisions) =>
+				set({ entityApprovalDecisions: decisions }, false, "setEntityApprovalDecisions"),
+			clearEntityApprovalDecisions: () =>
+				set({ entityApprovalDecisions: [] }, false, "clearEntityApprovalDecisions"),
 			setAwaitingConfirm: (awaiting, agent = null, runId) =>
 				set(
 					(state) => ({
@@ -273,6 +347,17 @@ export const useEditorStore = create<EditorState>()(
 					"setCurrentRunProviderSnapshot",
 				),
 			setRunMode: (mode) => set({ runMode: mode }, false, "setRunMode"),
+			setGateMode: (gate, enabled) =>
+				set((state) => {
+					const next = new Set(state.gateModes);
+					if (enabled) next.add(gate);
+					else next.delete(gate);
+					return { gateModes: next };
+				}, false, "setGateMode"),
+			setGateModes: (gates) =>
+				set({ gateModes: new Set(gates) }, false, "setGateModes"),
+			resetGateModes: () =>
+				set({ gateModes: new Set() }, false, "resetGateModes"),
 			updateCharacter: (character) =>
 				set(
 					(state) => ({
