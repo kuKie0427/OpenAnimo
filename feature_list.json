@@ -497,6 +497,15 @@
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm build"
+    },
+    {
+      "id": "f-ui-layout-fix-p2",
+      "name": "UI 排版修复 P2 — 表格溢出",
+      "description": "修复画布形状表格列硬编码宽度 + 无文本截断处理",
+      "dependencies": ["f-ui-layout-fix-p1"],
+      "status": "passing",
+      "domain": "frontend",
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm build"
     }
   ]
 }

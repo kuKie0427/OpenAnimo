@@ -523,21 +523,21 @@ function PlanSection({
 										key={shot.id}
 										className={i % 2 === 0 ? "bg-base-100" : "bg-base-200/30"}
 									>
-										<td className="px-3 py-2 font-mono text-base-content/60">
-											{shot.order}
-										</td>
-										<td className="px-3 py-2 text-base-content/80">
-											{shot.description}
-										</td>
-										<td className="px-3 py-2 text-base-content/60">
-											{shot.camera || "-"}
-										</td>
-										<td className="px-3 py-2 text-base-content/60">
-											{shot.duration ? `${shot.duration}s` : "-"}
-										</td>
-										<td className="px-3 py-2 text-base-content/60">
-											{characterNames?.length ? characterNames.join("、") : "-"}
-										</td>
+<td className="px-3 py-2 font-mono text-base-content/60 truncate max-w-0">
+  {shot.order}
+</td>
+<td className="px-3 py-2 text-base-content/80 truncate max-w-0">
+  {shot.description}
+</td>
+<td className="px-3 py-2 text-base-content/60 truncate max-w-0">
+  {shot.camera || "-"}
+</td>
+<td className="px-3 py-2 text-base-content/60 truncate max-w-0">
+  {shot.duration ? `${shot.duration}s` : "-"}
+</td>
+<td className="px-3 py-2 text-base-content/60 truncate max-w-0">
+  {characterNames?.length ? characterNames.join("、") : "-"}
+</td>
 									</tr>
 								);
 							})}

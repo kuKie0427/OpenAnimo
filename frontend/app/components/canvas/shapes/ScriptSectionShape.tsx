@@ -100,11 +100,11 @@ export class ScriptSectionShapeUtil extends ShapeUtil<ScriptSectionShape> {
                         .filter(Boolean);
                       return (
                         <tr key={shot.id} className={i % 2 === 0 ? "bg-base-100" : "bg-base-200/30"}>
-                          <td className="px-2 py-1.5 text-base-content/60 font-mono">{shot.order}</td>
-                          <td className="px-2 py-1.5 text-base-content/80">{shot.description}</td>
-                          <td className="px-2 py-1.5 text-base-content/60">{shot.camera || "—"}</td>
-                          <td className="px-2 py-1.5 text-base-content/60">{shot.duration ? `${shot.duration}s` : "—"}</td>
-                          <td className="px-2 py-1.5 text-base-content/60">{charNames?.length ? charNames.join("、") : "—"}</td>
+                          <td className="px-2 py-1.5 text-base-content/60 font-mono truncate max-w-0">{shot.order}</td>
+                          <td className="px-2 py-1.5 text-base-content/80 truncate max-w-0">{shot.description}</td>
+                          <td className="px-2 py-1.5 text-base-content/60 truncate max-w-0">{shot.camera || "—"}</td>
+                          <td className="px-2 py-1.5 text-base-content/60 truncate max-w-0">{shot.duration ? `${shot.duration}s` : "—"}</td>
+                          <td className="px-2 py-1.5 text-base-content/60 truncate max-w-0">{charNames?.length ? charNames.join("、") : "—"}</td>
                         </tr>
                       );
                     })}

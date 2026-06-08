@@ -1,5 +1,17 @@
 # Progress Log
 
+## 2026-06-08 — Session: f-ui-layout-fix-p2 — 表格溢出修复
+- **做了什么**: 修复画布 3 个 Shape 组件表格内容 `<td>` 溢出问题
+  - Task 0: feature_list.json 添加 f-ui-layout-fix-p2 条目 (active→passing)
+  - Task 1: StoryboardBoardShape.tsx — 所有 5 个 `<td>` 添加 `truncate max-w-0`
+  - Task 2: PlanSectionShape.tsx — 所有 5 个 `<td>` 添加 `truncate max-w-0`
+  - Task 3: ScriptSectionShape.tsx — 所有 5 个 `<td>` 添加 `truncate max-w-0`
+- **改了什么文件**: StoryboardBoardShape.tsx (mod), PlanSectionShape.tsx (mod), ScriptSectionShape.tsx (mod), feature_list.json (mod, +entry, active→passing)
+- **当前状态**: Gate 全部通过 ✅ (tsc clean, vitest 412/412, pnpm build OK)
+- **决策**: 所有内容 `<td>` 统一添加 `truncate max-w-0`（包括短文本列，truncate 仅溢出时生效）；表头 `<th>` 和 column widths 保持不变
+- **阻断**: 无
+- **下次**: Phase 3 待开启（新会话）
+
 ## 2026-06-08 — Session: f-ui-layout-fix-p1 — 图片/视频容器修复
 - **做了什么**: 修复画布 Shape 组件中 5 处排版问题
   - Task 1: StoryboardSectionShape.tsx — `<figure>` 添加 `aspect-[4/3]`，`<img>` 添加 `h-full`
