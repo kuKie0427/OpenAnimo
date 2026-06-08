@@ -65,34 +65,43 @@ function EntityRow({
 					)}
 				</div>
 
-				<div className="flex items-center gap-1">
-					<button
-						type="button"
-						onClick={() => onToggleApprove(entity.entity_id, true)}
-						className={`btn btn-xs gap-1 ${
-							decision.approved
-								? "btn-success"
-								: "btn-ghost text-base-content/30"
-						}`}
-						aria-label="通过"
-						aria-pressed={decision.approved}
-					>
+			<div className="flex items-center gap-1">
+				{entity.approval_state === "approved" ? (
+					<span className="badge badge-success badge-sm gap-1">
 						<CheckIcon className="w-3 h-3" />
-					</button>
-					<button
-						type="button"
-						onClick={() => onToggleApprove(entity.entity_id, false)}
-						className={`btn btn-xs gap-1 ${
-							!decision.approved
-								? "btn-error"
-								: "btn-ghost text-base-content/30"
-						}`}
-						aria-label="拒绝"
-						aria-pressed={!decision.approved}
-					>
-						<XMarkIcon className="w-3 h-3" />
-					</button>
-				</div>
+						已确认
+					</span>
+				) : (
+					<>
+						<button
+							type="button"
+							onClick={() => onToggleApprove(entity.entity_id, true)}
+							className={`btn btn-xs gap-1 ${
+								decision.approved
+									? "btn-success"
+									: "btn-ghost text-base-content/30"
+							}`}
+							aria-label="通过"
+							aria-pressed={decision.approved}
+						>
+							<CheckIcon className="w-3 h-3" />
+						</button>
+						<button
+							type="button"
+							onClick={() => onToggleApprove(entity.entity_id, false)}
+							className={`btn btn-xs gap-1 ${
+								!decision.approved
+									? "btn-error"
+									: "btn-ghost text-base-content/30"
+							}`}
+							aria-label="拒绝"
+							aria-pressed={!decision.approved}
+						>
+							<XMarkIcon className="w-3 h-3" />
+						</button>
+					</>
+				)}
+			</div>
 			</div>
 
 			<div className="flex items-center justify-between pt-1">
@@ -185,6 +194,9 @@ export function EntityApprovalCard({
 		setDecisions((prev) => {
 			const next = new Map(prev);
 			for (const [entityId, decision] of next) {
+				// Skip already-approved entities
+				const entity = entities.find((e) => e.entity_id === entityId);
+				if (entity?.approval_state === "approved") continue;
 				next.set(entityId, { ...decision, approved: true });
 			}
 			return next;
@@ -195,6 +207,9 @@ export function EntityApprovalCard({
 		setDecisions((prev) => {
 			const next = new Map(prev);
 			for (const [entityId, decision] of next) {
+				// Skip already-approved entities
+				const entity = entities.find((e) => e.entity_id === entityId);
+				if (entity?.approval_state === "approved") continue;
 				next.set(entityId, { ...decision, approved: false });
 			}
 			return next;

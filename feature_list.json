@@ -467,8 +467,18 @@
         "f-critique-override"
       ],
       "verification": "cd backend && uv run ruff check app tests && uv run pytest -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm exec vitest run && pnpm build",
-      "evidence": "2026-06-08: P1 complete - cleanup entity-level + WS event entity_summaries. P2 complete - EntityApprovalCard.tsx (319 lines), ChatPanel.tsx integration (conditional EntityApprovalCard rendering), editorStore entityApprovalDecisions state, EntityDecision type, 6 EntityApprovalCard tests + 2 ChatPanel tests, tsc clean, vitest 409/409, pnpm build OK.",
-      "notes": "2 Phase: P1=backend cleanup entity-level + WS event entity_summaries — done. P2=frontend EntityApprovalCard + ChatPanel 待执行 — DONE. 来源: .sisyphus/analysis/ux-priority-roadmap.md P1-1 项。计划文件: .sisyphus/plans/f-entity-approval-*.md"
+      "evidence": "2026-06-08: P1 complete - cleanup entity-level (target_ids in _clear_character_images/_shot_images/_shot_videos, _cleanup_for_rerun, review_node, _run_with_context), _build_entity_summaries + WS event entity_summaries, 8 test_entity_cleanup tests. P2 complete - EntityApprovalCard.tsx (319 lines) + ChatPanel/ChatDrawer/ProjectPage integration, editorStore entityApprovalDecisions, EntityDecision type, 6 EntityApprovalCard tests. Closed loop: WS confirm handler applies entity_decisions → freeze_approval(). tsc clean, vitest 409/409, backend 530/530, ruff 0, pnpm build OK.",
+      "notes": "2 Phase: P1+P2 done. Source: .sisyphus/analysis/ux-priority-roadmap.md P1-1. Plans: .sisyphus/plans/f-entity-approval-*.md"
+    },
+    {
+      "id": "f-approval-context-merge",
+      "name": "审批上下文合并：后续关卡展示前置已审批实体",
+      "status": "passing",
+      "evidence": "2026-06-08: shots_approval_node merged char+shot summaries, shot_images_approval_node merged char+shot image summaries, helper _build_merged_entity_summaries extracted. Frontend EntityApprovalCard approved entities show green badge (readonly). 3 backend + 3 frontend new tests. ruff 0, 49 approval tests pass, tsc clean, vitest 9/9, build OK.",
+      "domain": "fullstack",
+      "dependencies": ["f-entity-approval"],
+      "verification": "cd backend && uv run pytest tests/test_orchestration/ -k 'approval or entity' -q && cd ../frontend && pnpm exec vitest run app/components/chat/EntityApprovalCard",
+      "description": "shots_approval 展示角色+分镜混合实体列表，shot_images_approval 展示角色图片+分镜图片混合列表。已审批实体以只读态展示（绿色 badge，禁用 toggle）。零图拓扑变更。"
     }
   ]
 }

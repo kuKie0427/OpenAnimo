@@ -492,3 +492,27 @@
 - **决策**: handleEntityConfirm 使用 projectsApi.resume() 传递 entity_decisions 字段；handleEntityRegenerate 构造 feedback 字符串。EntityApprovalCard 组件内管理 decisions state（Map），store 仅存持久化字段。
 - **阻断**: 无
 
+## 2026-06-08 — Session: f-approval-context-merge-p1 审批上下文合并（轻量方案）
+- **做了什么**: 实现审批上下文合并 Phase 1（单 Phase 项目），4 任务全完成
+  - Task 0: feature_list.json 初始化 f-approval-context-merge 条目
+  - Task 1: shots_approval_node 内联 _manual_approval_node 逻辑，合并角色+分镜 summaries
+  - Task 2: 提取 _build_merged_entity_summaries helper，shot_images_approval_node 同样合并角色图片+分镜图片 summaries
+  - Task 3: EntityApprovalCard EntityRow 已审批实体显示绿色 badge（只读态），批量操作跳过已审批实体
+  - Task 4: 3 后端测试（shots_approval 合并/shot_images_approval 合并/auto_mode） + 3 前端测试（已审批 badge/无toggle/混合列表）
+- **改了什么文件**:
+  - `backend/app/orchestration/nodes.py` (mod, +365/-16) — _build_merged_entity_summaries helper + shots_approval_node 和 shot_images_approval_node 内联+合并
+  - `frontend/app/components/chat/EntityApprovalCard.tsx` (mod, +42/-27) — EntityRow 已审批绿色 badge + 批量跳过
+  - `backend/tests/test_orchestration/test_compare_approval_entity.py` (mod, +27 行) — test #3 改为 interrupt spy 以匹配新实现
+  - `backend/tests/test_orchestration/test_entity_cleanup.py` (mod, +209 行) — 3 新测试 (Tests 9-11)
+  - `frontend/app/components/chat/EntityApprovalCard.test.tsx` (mod, +91 行) — 3 新测试
+  - `feature_list.json` (status: active → passing)
+  - `progress.md` (mod, 本条目)
+- **当前状态**: f-approval-context-merge → passing ✅
+- **决策**: 
+  1. shots_approval_node 和 shot_images_approval_node 内联 _manual_approval_node 逻辑（从原 ~17 行 → ~70 行），保持 gate_modes/auto_mode 检查不丢失
+  2. _build_merged_entity_summaries helper 优先 secondary（已审批）在前，primary（待审批）在后
+  3. EntityApprovalCard 用 `entities.find()` 跨 decisions Map 映射检查 approval_state
+  4. 前端测试中 `getAllByText("全部通过")[0]` 因也出现在状态摘要行
+- **阻断**: 无
+- **下次**: 本 feature 无后续 Phase
+

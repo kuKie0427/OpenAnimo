@@ -64,6 +64,13 @@ def set_parallel_mode(enabled: bool) -> None:
     _parallel_mode = enabled
 
 
+# Gate name mapping from critique node names to gate_modes gate names
+CRITIC_GATE_MAP: dict[str, str] = {
+    "critique_character_images": "critique_characters",
+    "critique_shot_images": "critique_shots",
+}
+
+
 def _agent_name_for_stage(stage: str) -> str:
     return _STAGE_TO_AGENT.get(stage, stage.split("_")[0])
 
@@ -329,6 +336,75 @@ def _auto_approval_result(
     }
 
 
+def _build_entity_summaries(
+    runtime: Runtime[Phase2RuntimeContext],
+    entity_type: str,
+    entity_ids: list[int],
+) -> list[dict[str, Any]]:
+    """Build per-entity summaries for approval UI.
+
+    Args:
+        runtime: Runtime context with access to project/agent context
+        entity_type: "character" or "shot"
+        entity_ids: List of entity IDs to include
+
+    Returns:
+        List of dicts with entity_id, entity_name, description, image_url, approval_state
+    """
+    agent_ctx = runtime.context.agent_context
+    summaries: list[dict[str, Any]] = []
+    if entity_type == "character":
+        for char in getattr(agent_ctx.project, "characters", []) or []:
+            if char.id in entity_ids:
+                summaries.append(
+                    {
+                        "entity_id": char.id,
+                        "entity_name": getattr(char, "name", f"角色 #{char.id}"),
+                        "description": getattr(char, "description", None),
+                        "image_url": getattr(char, "image_url", None),
+                        "approval_state": getattr(char, "approval_state", "draft"),
+                    }
+                )
+    elif entity_type == "shot":
+        for shot in getattr(agent_ctx.project, "shots", []) or []:
+            if shot.id in entity_ids:
+                summaries.append(
+                    {
+                        "entity_id": shot.id,
+                        "entity_name": getattr(shot, "description", f"分镜 #{shot.id}"),
+                        "description": getattr(shot, "dialogue", None),
+                        "image_url": getattr(shot, "image_url", None),
+                        "approval_state": getattr(shot, "approval_state", "draft"),
+                    }
+                )
+    return summaries
+
+
+def _build_merged_entity_summaries(
+    runtime: Runtime[Phase2RuntimeContext],
+    primary_type: str,
+    primary_ids: list[int] | None,
+    secondary_type: str,
+    secondary_ids: list[int] | None,
+) -> list[dict[str, Any]]:
+    """Build entity summaries merging two entity types.
+
+    Secondary (already-approved) summaries are placed first,
+    primary (pending approval) summaries come after.
+    """
+    secondary_summaries = (
+        _build_entity_summaries(runtime, secondary_type, secondary_ids)
+        if secondary_ids
+        else []
+    )
+    primary_summaries = (
+        _build_entity_summaries(runtime, primary_type, primary_ids)
+        if primary_ids
+        else []
+    )
+    return secondary_summaries + primary_summaries
+
+
 async def _manual_approval_node(
     runtime: Runtime[Phase2RuntimeContext],
     *,
@@ -337,6 +413,8 @@ async def _manual_approval_node(
     gate: str,
     message: str,
     next_stage: str,
+    entity_type: str | None = None,
+    entity_ids: list[int] | None = None,
 ) -> dict[str, Any]:
     agent_ctx = runtime.context.agent_context
     orchestrator = runtime.context.orchestrator
@@ -363,14 +441,26 @@ async def _manual_approval_node(
         },
     )
 
-    if runtime.context.auto_mode:
+    if runtime.context.auto_mode or gate in runtime.context.gate_modes:
         return _auto_approval_result(
             approval_stage=approval_stage,
             history_key=history_key,
             next_stage=next_stage,
         )
 
-    resume_value = interrupt({"gate": gate, "message": message})
+    entity_summaries = None
+    if entity_type and entity_ids:
+        entity_summaries = _build_entity_summaries(runtime, entity_type, entity_ids)
+
+    resume_value = interrupt(
+        {
+            "gate": gate,
+            "message": message,
+            "entity_type": entity_type,
+            "entity_ids": entity_ids,
+            "entity_summaries": entity_summaries,
+        }
+    )
     feedback = _normalize_resume_value(resume_value)
     return _approval_result(
         approval_stage=approval_stage,
@@ -498,14 +588,18 @@ async def characters_approval_node(
     state: Phase2State, runtime: Runtime[Phase2RuntimeContext]
 ) -> dict[str, Any]:
     agent_ctx = runtime.context.agent_context
+    characters = getattr(agent_ctx.project, "characters", None)
+    entity_ids = [c.id for c in characters] if characters else None
     message = _build_approval_message(agent_ctx, "角色设定已生成，请确认是否继续创建分镜。")
     return await _manual_approval_node(
         runtime,
         approval_stage="characters_approval",
         history_key="plan_characters",
-        gate="plan",
+        gate="characters",
         message=message,
         next_stage="plan_shots",
+        entity_type="character",
+        entity_ids=entity_ids,
     )
 
 
@@ -513,14 +607,69 @@ async def shots_approval_node(
     state: Phase2State, runtime: Runtime[Phase2RuntimeContext]
 ) -> dict[str, Any]:
     agent_ctx = runtime.context.agent_context
+    orchestrator = runtime.context.orchestrator
+
+    shots = getattr(agent_ctx.project, "shots", None)
+    entity_ids = [s.id for s in shots] if shots else None
     message = _build_approval_message(agent_ctx, "分镜脚本已生成，请确认是否继续进入渲染阶段。")
-    return await _manual_approval_node(
+
+    # ---- Inline _manual_approval_node up to gate_modes check ----
+    approval_stage = "shots_approval"
+    history_key = "plan_shots"
+    gate = "shots"
+    next_stage = "render_characters"
+    approval_progress = workflow_progress_for_stage(approval_stage)
+
+    await orchestrator.set_run_state(
+        agent_ctx.run,
+        current_agent=gate,
+        progress=approval_progress,
+    )
+    await orchestrator.ws.send_event(
+        agent_ctx.project.id,
+        {
+            "type": "run_progress",
+            "data": {
+                "run_id": agent_ctx.run.id,
+                "current_agent": gate,
+                "current_stage": approval_stage,
+                "stage": approval_stage,
+                "next_stage": next_stage,
+                "progress": approval_progress,
+            },
+        },
+    )
+
+    if runtime.context.auto_mode or gate in runtime.context.gate_modes:
+        return _auto_approval_result(
+            approval_stage=approval_stage,
+            history_key=history_key,
+            next_stage=next_stage,
+        )
+
+    # ---- Build merged entity summaries ----
+    characters = getattr(agent_ctx.project, "characters", None)
+    char_ids = [c.id for c in characters] if characters else None
+    all_summaries = _build_merged_entity_summaries(
         runtime,
-        approval_stage="shots_approval",
-        history_key="plan_shots",
-        gate="plan",
-        message=message,
-        next_stage="render_characters",
+        primary_type="shot", primary_ids=entity_ids,
+        secondary_type="character", secondary_ids=char_ids,
+    )
+
+    # ---- Interrupt with merged payload ----
+    resume_value = interrupt({
+        "gate": gate,
+        "message": message,
+        "entity_type": "shot",
+        "entity_ids": entity_ids,
+        "entity_summaries": all_summaries,
+    })
+    feedback = _normalize_resume_value(resume_value)
+    return _approval_result(
+        approval_stage=approval_stage,
+        history_key=history_key,
+        next_stage=next_stage,
+        feedback=feedback,
     )
 
 
@@ -528,6 +677,8 @@ async def character_images_approval_node(
     state: Phase2State, runtime: Runtime[Phase2RuntimeContext]
 ) -> dict[str, Any]:
     agent_ctx = runtime.context.agent_context
+    characters = getattr(agent_ctx.project, "characters", None)
+    entity_ids = [c.id for c in characters] if characters else None
     message = _build_approval_message(
         agent_ctx, "角色形象图已渲染完成，请确认是否继续渲染分镜画面。"
     )
@@ -535,9 +686,11 @@ async def character_images_approval_node(
         runtime,
         approval_stage="character_images_approval",
         history_key="render_characters",
-        gate="render",
+        gate="character_images",
         message=message,
         next_stage="critique_character_images",
+        entity_type="character",
+        entity_ids=entity_ids,
     )
 
 
@@ -552,16 +705,70 @@ async def shot_images_approval_node(
             next_stage="critique_shot_images",
         )
 
+    orchestrator = runtime.context.orchestrator
+    shots = getattr(agent_ctx.project, "shots", None)
+    entity_ids = [s.id for s in shots] if shots else None
     message = _build_approval_message(
         agent_ctx, "分镜画面已渲染完成，请确认是否继续进入视频合成阶段。"
     )
-    return await _manual_approval_node(
+
+    # ---- Inline _manual_approval_node up to gate_modes check ----
+    approval_stage = "shot_images_approval"
+    history_key = "render_shots"
+    gate = "shot_images"
+    next_stage = "critique_shot_images"
+    approval_progress = workflow_progress_for_stage(approval_stage)
+
+    await orchestrator.set_run_state(
+        agent_ctx.run,
+        current_agent=gate,
+        progress=approval_progress,
+    )
+    await orchestrator.ws.send_event(
+        agent_ctx.project.id,
+        {
+            "type": "run_progress",
+            "data": {
+                "run_id": agent_ctx.run.id,
+                "current_agent": gate,
+                "current_stage": approval_stage,
+                "stage": approval_stage,
+                "next_stage": next_stage,
+                "progress": approval_progress,
+            },
+        },
+    )
+
+    if runtime.context.auto_mode or gate in runtime.context.gate_modes:
+        return _auto_approval_result(
+            approval_stage=approval_stage,
+            history_key=history_key,
+            next_stage=next_stage,
+        )
+
+    # ---- Build merged entity summaries ----
+    characters = getattr(agent_ctx.project, "characters", None)
+    char_ids = [c.id for c in characters] if characters else None
+    all_summaries = _build_merged_entity_summaries(
         runtime,
-        approval_stage="shot_images_approval",
-        history_key="render_shots",
-        gate="render",
-        message=message,
-        next_stage="critique_shot_images",
+        primary_type="shot", primary_ids=entity_ids,
+        secondary_type="character", secondary_ids=char_ids,
+    )
+
+    # ---- Interrupt with merged payload ----
+    resume_value = interrupt({
+        "gate": gate,
+        "message": message,
+        "entity_type": "shot",
+        "entity_ids": entity_ids,
+        "entity_summaries": all_summaries,
+    })
+    feedback = _normalize_resume_value(resume_value)
+    return _approval_result(
+        approval_stage=approval_stage,
+        history_key=history_key,
+        next_stage=next_stage,
+        feedback=feedback,
     )
 
 
@@ -637,6 +844,18 @@ async def critique_character_images_node(
 
     critic = CriticAgent()
     result = await critic.run_character_review(agent_ctx)
+
+    # --- Human override gate ---
+    critique_review_data = {
+        "entity_type": "character",
+        "total": len(result.get("scores", {})),
+        "results": _build_critique_review_results(result, agent_ctx, "character"),
+    }
+    human_overrides = await _critic_interrupt(
+        runtime, agent_ctx, "critique_character_images", critique_review_data
+    )
+    _apply_critique_overrides(result, human_overrides)
+    # --- End human override gate ---
 
     should_regenerate = result.get("should_regenerate", False)
 
@@ -715,6 +934,18 @@ async def critique_shot_images_node(
 
     critic = CriticAgent()
     result = await critic.run_shot_review(agent_ctx)
+
+    # --- Human override gate ---
+    critique_review_data = {
+        "entity_type": "shot",
+        "total": len(result.get("scores", {})),
+        "results": _build_critique_review_results(result, agent_ctx, "shot"),
+    }
+    human_overrides = await _critic_interrupt(
+        runtime, agent_ctx, "critique_shot_images", critique_review_data
+    )
+    _apply_critique_overrides(result, human_overrides)
+    # --- End human override gate ---
 
     should_regenerate = result.get("should_regenerate", False)
 
@@ -807,6 +1038,7 @@ async def review_node(state: Phase2State, runtime: Runtime[Phase2RuntimeContext]
         agent_ctx.project.id,
         start_agent,
         mode=mode,
+        target_ids=agent_ctx.target_ids if hasattr(agent_ctx, 'target_ids') else None,
     )
     await orchestrator.session.refresh(agent_ctx.project)
 
@@ -907,3 +1139,120 @@ def _normalize_resume_value(value: Any) -> str:
         if isinstance(maybe_text, str):
             return maybe_text.strip()
     return str(value).strip()
+
+
+# ---------------------------------------------------------------------------
+# Critique override helpers (Task 2: human override interrupt gate)
+# ---------------------------------------------------------------------------
+
+
+def _resolve_entity_name(ctx: Any, entity_type: str, entity_id: int) -> str:
+    """Resolve entity name from project context."""
+    if entity_type == "character":
+        for char in ctx.project.characters:
+            if char.id == entity_id:
+                return char.name
+    elif entity_type == "shot":
+        for shot in ctx.project.shots:
+            if shot.id == entity_id:
+                return shot.scene or (
+                    shot.description[:50] if shot.description else None
+                ) or f"镜头 {shot.order}"
+    return "unknown"
+
+
+def _resolve_entity_image_url(ctx: Any, entity_type: str, entity_id: int) -> str | None:
+    """Resolve entity image URL from project context for thumbnail display."""
+    if entity_type == "character":
+        for char in ctx.project.characters:
+            if char.id == entity_id:
+                return char.image_url
+    elif entity_type == "shot":
+        for shot in ctx.project.shots:
+            if shot.id == entity_id:
+                return shot.image_url
+    return None
+
+
+def _build_critique_review_results(result: dict, ctx: Any, entity_type: str) -> list[dict]:
+    """Build per-entity review data from CriticAgent result for frontend card."""
+    results: list[dict] = []
+    scores_dict = result.get("scores", {})
+    for entity_id_str, review in scores_dict.items():
+        entity_id = int(entity_id_str)
+        results.append({
+            "entity_id": entity_id,
+            "entity_name": _resolve_entity_name(ctx, entity_type, entity_id),
+            "score": review.get("score", 5.0),
+            "dimensions": review.get("dimensions", {}),
+            "issues": review.get("issues", []),
+            "suggestions": review.get("suggestions", []),
+            "will_regenerate": review.get("will_regenerate", False),
+            "failed_checks": review.get("failed_checks", []),
+            "image_url": _resolve_entity_image_url(ctx, entity_type, entity_id),
+        })
+    return results
+
+
+def _apply_critique_overrides(result: dict, overrides: dict[int, bool]) -> None:
+    """Merge human override decisions into review scores dict.
+
+    overrides: {entity_id: True} means force-regenerate.
+               {entity_id: False} means force-skip (override auto will_regenerate).
+    """
+    if not overrides:
+        return
+    scores = result.get("scores", {})
+    for entity_id_str, review in scores.items():
+        eid = int(entity_id_str)
+        if eid in overrides:
+            review["will_regenerate"] = overrides[eid]
+            review["_human_overridden"] = True
+    # Recompute should_regenerate from (potentially overridden) scores
+    any_regenerate = any(r.get("will_regenerate", False) for r in scores.values())
+    result["should_regenerate"] = any_regenerate
+
+
+async def _critic_interrupt(
+    runtime: Runtime[Phase2RuntimeContext],
+    agent_ctx: Any,
+    gate: str,
+    review_data: dict,
+) -> dict[int, bool]:
+    """Pause for human critique override. Returns {entity_id: override_regenerate_bool}."""
+    settings = agent_ctx.settings
+
+    # Skip if critique disabled (defense)
+    if not settings.critique_enabled:
+        return {}
+
+    # Skip if auto_mode or gate in gate_modes
+    if runtime.context.auto_mode or CRITIC_GATE_MAP.get(gate, gate) in runtime.context.gate_modes:
+        return {}
+
+    # Emit WS event for frontend card (send BEFORE interrupt so frontend has data)
+    await agent_ctx.ws.send_event(
+        agent_ctx.project.id,
+        {
+            "type": "critique_review",
+            "data": review_data,
+        },
+    )
+
+    # Interrupt — graph pauses, waits for human resume
+    resume_value = interrupt({
+        "gate": gate,
+        "message": f"审查完成，共 {review_data['total']} 个{review_data['entity_type']}。请确认或覆盖重生成决定。",
+        "results": review_data["results"],
+    })
+
+    # Parse resume: expect {"overrides": {entity_id: bool, ...}, "feedback": "..."}
+    if isinstance(resume_value, dict):
+        overrides = resume_value.get("overrides", {})
+        # Store feedback for future regeneration prompt injection
+        if "feedback" in resume_value and resume_value["feedback"]:
+            agent_ctx.critique_feedback = {
+                "human_feedback": resume_value["feedback"]
+            }
+        return overrides
+    return {}

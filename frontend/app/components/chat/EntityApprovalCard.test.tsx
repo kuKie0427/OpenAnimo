@@ -132,4 +132,95 @@ describe("EntityApprovalCard", () => {
 
 		expect(screen.queryByPlaceholderText("对此实体的修改意见...")).not.toBeInTheDocument();
 	});
+
+	it("approved entity shows green badge instead of toggle", () => {
+		const approvedEntity: EntitySummary = {
+			entity_id: 1,
+			entity_name: "亚瑟",
+			description: "战士",
+			image_url: "/arthur.jpg",
+			approval_state: "approved",
+		};
+		render(
+			<EntityApprovalCard
+				entityType="character"
+				entityLabel="角色"
+				entities={[approvedEntity]}
+				onConfirm={vi.fn()}
+				onRegenerate={vi.fn()}
+			/>
+		);
+
+		// Should show "已确认" badge
+		expect(screen.getByText("已确认")).toBeInTheDocument();
+		// Should NOT render approve/reject toggle buttons
+		expect(screen.queryByLabelText("通过")).not.toBeInTheDocument();
+		expect(screen.queryByLabelText("拒绝")).not.toBeInTheDocument();
+	});
+
+	it("all approved entities show no toggle buttons", () => {
+		const approvedEntities: EntitySummary[] = [
+			{ entity_id: 1, entity_name: "亚瑟", description: "战士", image_url: "/arthur.jpg", approval_state: "approved" },
+			{ entity_id: 2, entity_name: "梅林", description: "法师", image_url: null, approval_state: "approved" },
+		];
+		render(
+			<EntityApprovalCard
+				entityType="character"
+				entityLabel="角色"
+				entities={approvedEntities}
+				onConfirm={vi.fn()}
+				onRegenerate={vi.fn()}
+			/>
+		);
+
+		// No toggle buttons anywhere
+		expect(screen.queryByLabelText("通过")).not.toBeInTheDocument();
+		expect(screen.queryByLabelText("拒绝")).not.toBeInTheDocument();
+
+		// But both names and "已确认" badges are visible
+		expect(screen.getByText("亚瑟")).toBeInTheDocument();
+		expect(screen.getByText("梅林")).toBeInTheDocument();
+		expect(screen.getAllByText("已确认")).toHaveLength(2);
+
+		// Feedback toggle is still expandable
+		const addFeedbackButtons = screen.getAllByText("添加反馈");
+		expect(addFeedbackButtons).toHaveLength(2);
+	});
+
+	it("handles mixed draft and approved entities correctly", () => {
+		const mixedEntities: EntitySummary[] = [
+			{ entity_id: 1, entity_name: "已批角色", description: "已通过", image_url: null, approval_state: "approved" },
+			{ entity_id: 2, entity_name: "待批角色", description: "待审批", image_url: null, approval_state: "draft" },
+		];
+		const onConfirm = vi.fn();
+		render(
+			<EntityApprovalCard
+				entityType="character"
+				entityLabel="角色"
+				entities={mixedEntities}
+				onConfirm={onConfirm}
+				onRegenerate={vi.fn()}
+			/>
+		);
+
+		// Approved entity shows badge
+		expect(screen.getByText("已确认")).toBeInTheDocument();
+		// Draft entity shows toggle buttons
+		expect(screen.getAllByLabelText("通过")).toHaveLength(1);
+		expect(screen.getAllByLabelText("拒绝")).toHaveLength(1);
+
+		// "全部通过" should skip approved entity — approve button for draft entity works
+		const allPassButton = screen.getAllByText("全部通过")[0];
+		fireEvent.click(allPassButton);
+
+		// Click confirm and check decisions
+		fireEvent.click(screen.getByText("确认并继续 →"));
+
+		const decisions = onConfirm.mock.calls[0][0] as EntityDecision[];
+		expect(decisions).toHaveLength(2);
+		// Approved entity: approved=true (unchanged)
+		expect(decisions[0]).toMatchObject({ entity_id: 1, approved: true });
+		// Draft entity: approved=true (set by "全部通过")
+		expect(decisions[1]).toMatchObject({ entity_id: 2, approved: true });
+	});
 });
