@@ -915,7 +915,7 @@ export function SettingsModal() {
 
 						{/* 底部操作栏 */}
 						<div className="border-t border-base-content/10 bg-base-200 px-6 py-4 flex items-center gap-4 shrink-0">
-							<div className="flex items-center gap-2 text-info text-sm flex-1">
+							<div className="flex items-center gap-2 text-info text-sm flex-1 min-w-0">
 								<InformationCircleIcon className="w-5 h-5 shrink-0" />
 								<span>大部分配置保存后立即生效，数据库/Redis 配置需重启</span>
 							</div>
