@@ -735,7 +735,7 @@ export class StoryboardBoardShapeUtil extends ShapeUtil<StoryboardBoardShape> {
 											{videoUrl ? (
 												<div className="space-y-3">
 													<video
-														className="w-full rounded-xl bg-base-300"
+														className="w-full aspect-video rounded-xl bg-base-300"
 														src={videoUrl}
 														controls
 														onPointerDown={stopCanvasDrag}

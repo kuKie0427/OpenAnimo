@@ -1,5 +1,18 @@
 # Progress Log
 
+## 2026-06-08 — Session: f-ui-layout-fix-p1 — 图片/视频容器修复
+- **做了什么**: 修复画布 Shape 组件中 5 处排版问题
+  - Task 1: StoryboardSectionShape.tsx — `<figure>` 添加 `aspect-[4/3]`，`<img>` 添加 `h-full`
+  - Task 2: CharacterSectionShape.tsx — `<figure>` 添加 `aspect-[4/3]`，`<img>` 添加 `h-full`
+  - Task 3: StoryboardBoardShape.tsx — `<video>` 添加 `aspect-video`
+  - Task 4a: ComposeSectionShape.tsx — `<video>` 添加 `aspect-video`
+  - Task 4b: VideoSectionShape.tsx — `<video>` 添加 `aspect-video`
+- **改了什么文件**: StoryboardSectionShape.tsx (mod), CharacterSectionShape.tsx (mod), StoryboardBoardShape.tsx (mod), ComposeSectionShape.tsx (mod), VideoSectionShape.tsx (mod), feature_list.json (mod, +entry + passing)
+- **当前状态**: Gate 全部通过 ✅
+- **决策**: 图片容器使用 `aspect-[4/3]` 保持响应式（非固定像素高度）；视频统一 `aspect-video` (16:9)；`object-cover` 在所有图片上保留
+- **阻断**: 无
+- **下次**: Phase 2 待开启
+
 <!--
 
 ## YYYY-MM-DD — Session: <description>

@@ -76,11 +76,11 @@ function ShotCard({ shot }: { shot: ReviewedShot }) {
 			}`}
 		>
 			{imageUrl ? (
-				<figure className="relative">
+				<figure className="relative aspect-[4/3]">
 					<img
 						src={imageUrl}
 						alt={`Shot ${shot.order}`}
-						className="w-full object-cover"
+						className="w-full h-full object-cover"
 					/>
 					<span className="badge badge-xs absolute top-1 right-1 bg-base-100/80">
 						{shot.duration ? `${shot.duration}s` : "—"}

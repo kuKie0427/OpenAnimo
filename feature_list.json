@@ -488,6 +488,15 @@
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm build"
+    },
+    {
+      "id": "f-ui-layout-fix-p1",
+      "name": "UI 排版修复 P1 — 图片/视频容器",
+      "description": "修复画布形状图片容器无高度 + 视频元素无 aspect-ratio",
+      "dependencies": ["f-ui-layout-fix-p0"],
+      "status": "passing",
+      "domain": "frontend",
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm build"
     }
   ]
 }

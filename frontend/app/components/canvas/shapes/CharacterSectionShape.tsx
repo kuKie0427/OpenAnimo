@@ -53,11 +53,11 @@ function CharacterCard({ char }: { char: ReviewedCharacter }) {
 			}`}
 		>
 			{displayImage && (
-				<figure className="relative">
+				<figure className="relative aspect-[4/3]">
 					<img
 						src={displayImage}
 						alt={char.name}
-						className="w-full object-cover"
+						className="w-full h-full object-cover"
 					/>
 					<div className="absolute inset-0 bg-base-content/0 group-hover:bg-base-content/20 transition-colors flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100">
 						<button

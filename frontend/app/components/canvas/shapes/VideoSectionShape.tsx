@@ -104,7 +104,7 @@ export class VideoSectionShapeUtil extends ShapeUtil<VideoSectionShape> {
           {videoUrl ? (
             <div className="space-y-2">
               <video
-                className="w-full rounded-lg bg-neutral"
+                className="w-full aspect-video rounded-lg bg-neutral"
                 src={videoUrl}
                 controls
                 onPointerDown={(e) => e.stopPropagation()}
