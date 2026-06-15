@@ -23,6 +23,7 @@ interface TopBarProps {
 	assetsOpen?: boolean;
 	historyOpen?: boolean;
 	projectId?: number;
+	variant?: 'default' | 'workbench';
 }
 
 function ProjectDropdown({ currentId }: { currentId?: number }) {
@@ -110,71 +111,125 @@ export function TopBar({
 	assetsOpen,
 	historyOpen,
 	projectId,
+	variant = 'workbench',
 }: TopBarProps) {
 	const { theme, toggleTheme } = useThemeStore();
 	const isDark = theme.endsWith("dark");
 	const { openModal: openSettingsModal } = useSettingsStore();
 
-		const btnCls = "flex items-center whitespace-nowrap !px-1.5 !min-h-0 !h-6 gap-1 text-base-content/70 hover:text-base-content";
-		const iconCls = "w-3.5 h-3.5";
+	const btnCls = "flex items-center whitespace-nowrap !px-1.5 !min-h-0 !h-6 gap-1 text-base-content/70 hover:text-base-content";
+	const iconCls = "w-3.5 h-3.5";
 
-		return (
-			<header className="flex-shrink-0 flex items-center h-10 px-3 bg-base-100 border-b-2 border-base-content/15 z-30 gap-3">
-				<div className="flex items-center gap-2">
-					{projectId ? (
-						<ProjectDropdown currentId={projectId} />
-					) : (
+	return (
+		<header className="flex-shrink-0 flex items-center h-10 px-3 bg-base-100 border-b-2 border-base-content/15 z-30 gap-3">
+			{variant === 'default' ? (
+				<>
+					<div className="flex items-center gap-2">
 						<Link to="/" className="font-heading text-lg text-primary font-bold tracking-wider">
 							OpenAnimo
 						</Link>
-					)}
-				</div>
+					</div>
 
-				<div className="flex-1" />
+					<div className="flex items-center gap-4">
+						<Link
+							to="/projects"
+							className="text-xs font-medium text-base-content/70 hover:text-base-content transition-colors"
+						>
+							Projects
+						</Link>
+						<Link
+							to="/universes"
+							className="text-xs font-medium text-base-content/70 hover:text-base-content transition-colors"
+						>
+							Universes
+						</Link>
+					</div>
 
-				<div className="flex items-center gap-1">
-					<Button
-						variant={assetsOpen ? "primary" : "ghost"}
-						size="sm"
-						className={btnCls}
-						onClick={onToggleAssets}
-						title="资产库"
-					>
-						<SvgIcon name="archive" size={14} />
-						<span className="text-xs hidden sm:inline">资产</span>
-					</Button>
-					<Button
-						variant={historyOpen ? "primary" : "ghost"}
-						size="sm"
-						className={btnCls}
-						onClick={onToggleHistory}
-						title="对话历史"
-					>
-						<SvgIcon name="clock-3" size={14} />
-						<span className="text-xs hidden sm:inline">历史</span>
-					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						className={btnCls}
-						onClick={toggleTheme}
-						aria-label={isDark ? "切换亮色" : "切换暗色"}
-						title={isDark ? "切换亮色" : "切换暗色"}
-					>
-						{isDark ? <SunIcon className={iconCls} /> : <MoonIcon className={iconCls} />}
-						<span className="text-xs hidden sm:inline">主题</span>
-					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						className={btnCls}
-						onClick={openSettingsModal}
-						title="设置"
-					>
-						<Cog6ToothIcon className={iconCls} />
-						<span className="text-xs hidden sm:inline">设置</span>
-					</Button>
-				</div>
-			</header>
-		);
+					<div className="flex-1" />
+
+					<div className="flex items-center gap-1">
+						<Button
+							variant="ghost"
+							size="sm"
+							className={btnCls}
+							onClick={toggleTheme}
+							aria-label={isDark ? "切换亮色" : "切换暗色"}
+							title={isDark ? "切换亮色" : "切换暗色"}
+						>
+							{isDark ? <SunIcon className={iconCls} /> : <MoonIcon className={iconCls} />}
+							<span className="text-xs hidden sm:inline">主题</span>
+						</Button>
+						<Button
+							variant="ghost"
+							size="sm"
+							className={btnCls}
+							onClick={openSettingsModal}
+							title="设置"
+						>
+							<Cog6ToothIcon className={iconCls} />
+							<span className="text-xs hidden sm:inline">设置</span>
+						</Button>
+					</div>
+				</>
+			) : (
+				<>
+					<div className="flex items-center gap-2">
+						{projectId ? (
+							<ProjectDropdown currentId={projectId} />
+						) : (
+							<Link to="/" className="font-heading text-lg text-primary font-bold tracking-wider">
+								OpenAnimo
+							</Link>
+							)}
+					</div>
+
+					<div className="flex-1" />
+
+					<div className="flex items-center gap-1">
+						<Button
+							variant={assetsOpen ? "primary" : "ghost"}
+							size="sm"
+							className={btnCls}
+							onClick={onToggleAssets}
+							title="资产库"
+						>
+							<SvgIcon name="archive" size={14} />
+							<span className="text-xs hidden sm:inline">资产</span>
+						</Button>
+						<Button
+							variant={historyOpen ? "primary" : "ghost"}
+							size="sm"
+							className={btnCls}
+							onClick={onToggleHistory}
+							title="对话历史"
+						>
+							<SvgIcon name="clock-3" size={14} />
+							<span className="text-xs hidden sm:inline">历史</span>
+						</Button>
+						<Button
+							variant="ghost"
+							size="sm"
+							className={btnCls}
+							onClick={toggleTheme}
+							aria-label={isDark ? "切换亮色" : "切换暗色"}
+							title={isDark ? "切换亮色" : "切换暗色"}
+						>
+							{isDark ? <SunIcon className={iconCls} /> : <MoonIcon className={iconCls} />}
+							<span className="text-xs hidden sm:inline">主题</span>
+						</Button>
+						<Button
+							variant="ghost"
+							size="sm"
+							className={btnCls}
+							onClick={openSettingsModal}
+							title="设置"
+						>
+							<Cog6ToothIcon className={iconCls} />
+							<span className="text-xs hidden sm:inline">设置</span>
+						</Button>
+					</div>
+				</>
+			)}
+		</header>
+	);
 }

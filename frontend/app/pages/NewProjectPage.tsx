@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { projectsApi } from "~/services/api";
@@ -9,6 +9,7 @@ import { UniverseSelector } from "~/components/universe/UniverseSelector";
 import { Button } from "~/components/ui/Button";
 import { Input } from "~/components/ui/Input";
 import { Card } from "~/components/ui/Card";
+import { AppShell } from "~/components/layout/AppShell";
 import {
   CheckCircleIcon,
   DocumentTextIcon,
@@ -64,17 +65,22 @@ export function NewProjectPage() {
   };
 
   return (
-    <div className="min-h-screen bg-base-100">
-      {/* Header */}
-      <header className="navbar bg-base-200 border-b border-base-300">
-        <div className="flex-1">
-          <Link to="/" className="btn btn-ghost">
-            ← 返回
-          </Link>
-        </div>
-      </header>
-
-      {/* Main content */}
+    <AppShell
+      variant="default"
+      onToggleAssets={() => {}}
+      onToggleHistory={() => {}}
+      onAssetsClose={() => {}}
+      onHistoryClose={() => {}}
+      chatIsGenerating={false}
+      onChatSendFeedback={() => {}}
+      onChatConfirm={() => {}}
+      onChatEntityConfirm={() => {}}
+      onChatGenerate={() => {}}
+      onChatCancel={() => {}}
+      versionCompareOpen={false}
+      versionCompareProjectId={0}
+      onVersionCompareClose={() => {}}
+    >
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Progress steps */}
         <ul className="steps steps-horizontal w-full mb-8">
@@ -268,6 +274,6 @@ export function NewProjectPage() {
           setShowCreateStyle(false);
         }}
       />
-    </div>
+    </AppShell>
   );
 }

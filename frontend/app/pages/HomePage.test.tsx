@@ -27,6 +27,10 @@ vi.mock("~/stores/themeStore", () => ({
   useThemeStore: vi.fn(() => ({ theme: "light", toggleTheme: vi.fn() })),
 }));
 
+vi.mock("~/components/layout/DrawerPortal", () => ({
+  DrawerPortal: () => null,
+}));
+
 vi.mock("~/stores/settingsStore", () => ({
   useSettingsStore: vi.fn(() => ({ openModal: vi.fn() })),
 }));

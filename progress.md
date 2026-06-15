@@ -1,5 +1,27 @@
 # Progress Log
 
+## 2026-06-15 — DAW UI P1 布局架构重构
+
+### 完成内容
+- 创建 AppShell 组件（统一布局壳：TopBar + StagePipeline + content + DrawerPortal）
+- 创建 DrawerPortal 组件（统一 Drawer 挂载点：AssetDrawer/HistoryDrawer/ChatDrawer/VersionCompareDrawer）
+- 重构 ChatDrawer 为 fixed 定位（z-drawer，滑入动画，背景遮罩）
+- 统一 AssetDrawer/HistoryDrawer 样式（z-drawer/z-drawer-backdrop，w-80 lg:w-96）
+- TopBar 添加 variant prop（default 显示 Logo+导航，workbench 显示 ProjectDropdown+操作按钮）
+- 所有 6 个页面改用 AppShell（ProjectPage/HomePage/ProjectsPage/NewProjectPage/UniversesPage/UniverseDetailPage）
+- z-index 系统使用 CSS 变量（新增 z-base/z-drawer-backdrop/z-drawer，原有值下移）
+
+### 关键决策
+- ChatDrawer 始终渲染（通过 transform 控制显隐），但 ChatPanel 在 isOpen=false 时不挂载（避免 scrollTo 错误）
+- DrawerPortal 使用 Fragment 渲染所有 drawer（无额外 wrapper）
+- TopBar variant 默认为 workbench（向后兼容）
+
+### 未解决
+- 无
+
+### 下一步
+- Phase 2: StagePipeline/TopBar 整合，响应式优化
+
 ## 2026-06-15 — Session: daw-ui-redesign-p0 — DAW UI P0 设计系统修复
 - **做了什么**: 执行 Phase 0 — 设计系统修复，覆盖 6 个任务域
   - Task 1: Button.tsx 硬编码 hex→daisyUI theme tokens + glow hover + custom CSS spinner

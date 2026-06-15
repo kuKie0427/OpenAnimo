@@ -17,6 +17,10 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+vi.mock('~/components/layout/DrawerPortal', () => ({
+  DrawerPortal: () => null,
+}));
+
 vi.mock('~/services/api', () => ({
   projectsApi: {
     create: vi.fn(),

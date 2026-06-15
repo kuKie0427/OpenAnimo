@@ -22,13 +22,15 @@
     --duration-slow: 300ms;
 
     /* Z-Index Scale */
+    --z-base: 0;
     --z-dropdown: 10;
     --z-sticky: 20;
-    --z-fixed: 30;
-    --z-modal-backdrop: 40;
-    --z-modal: 50;
-    --z-popover: 60;
-    --z-tooltip: 70;
+    --z-drawer-backdrop: 30;
+    --z-drawer: 40;
+    --z-modal-backdrop: 50;
+    --z-modal: 60;
+    --z-popover: 70;
+    --z-tooltip: 80;
   }
 }
 

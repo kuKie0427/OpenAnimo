@@ -10,9 +10,7 @@ import {
 	GlobeAltIcon,
 	PaperAirplaneIcon,
 } from "@heroicons/react/24/outline";
-import { TopBar } from "~/components/layout/TopBar";
-import { AssetDrawer } from "~/components/panels/AssetDrawer";
-import { HistoryDrawer } from "~/components/panels/HistoryDrawer";
+import { AppShell } from "~/components/layout/AppShell";
 import { SvgIcon } from "~/components/ui/SvgIcon";
 
 const STYLE_CATEGORIES = [
@@ -188,24 +186,30 @@ export function HomePage() {
 	};
 
 	return (
-		<div
-			className="min-h-screen bg-base-100 font-sans"
-			onDrop={handleDrop}
-			onDragOver={(e) => e.preventDefault()}
+		<AppShell
+			variant="default"
+			onToggleAssets={() => setAssetsOpen((v) => !v)}
+			onToggleHistory={() => setHistoryOpen((v) => !v)}
+			assetsOpen={assetsOpen}
+			historyOpen={historyOpen}
+			onAssetsClose={() => setAssetsOpen(false)}
+			onHistoryClose={() => setHistoryOpen(false)}
+			onHistoryNavigate={(id) => navigate(`/project/${id}`)}
+			chatIsGenerating={false}
+			onChatSendFeedback={() => {}}
+			onChatConfirm={() => {}}
+			onChatEntityConfirm={() => {}}
+			onChatGenerate={() => {}}
+			onChatCancel={() => {}}
+			versionCompareOpen={false}
+			versionCompareProjectId={0}
+			onVersionCompareClose={() => {}}
 		>
-			<TopBar
-				onToggleAssets={() => setAssetsOpen((v) => !v)}
-				onToggleHistory={() => setHistoryOpen((v) => !v)}
-				assetsOpen={assetsOpen}
-				historyOpen={historyOpen}
-			/>
-			<AssetDrawer open={assetsOpen} onClose={() => setAssetsOpen(false)} />
-			<HistoryDrawer
-				open={historyOpen}
-				onClose={() => setHistoryOpen(false)}
-				onNavigate={(id) => navigate(`/project/${id}`)}
-			/>
-			<div className="flex flex-col items-center justify-center p-4 sm:p-6 grain-hero min-h-[calc(100vh-40px)]">
+			<div
+				className="flex flex-col items-center justify-center p-4 sm:p-6 grain-hero min-h-[calc(100vh-40px)]"
+				onDrop={handleDrop}
+				onDragOver={(e) => e.preventDefault()}
+			>
 				<main className="w-full max-w-2xl mx-auto">
 					<div className="text-center mb-8 animate-fade-in">
 						<h1 className="text-6xl sm:text-8xl font-heading tracking-wider text-base-content leading-none">
@@ -436,6 +440,6 @@ className="text-xs text-base-content/40 mb-0.5 block font-heading tracking-wide"
 					</Card>
 				</main>
 			</div>
-		</div>
+		</AppShell>
 	);
 }

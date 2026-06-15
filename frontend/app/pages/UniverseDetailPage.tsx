@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { universesApi, projectsApi } from "~/services/api";
 import { SharedCharacterCard } from "~/components/universe/SharedCharacterCard";
+import { AppShell } from "~/components/layout/AppShell";
 import { Button } from "~/components/ui/Button";
 import { Card } from "~/components/ui/Card";
 import { Modal } from "~/components/ui/Modal";
@@ -24,6 +25,13 @@ export function UniverseDetailPage() {
 	const id = Number(universeId);
 
 	const [showAddProject, setShowAddProject] = useState(false);
+	const [importTarget, setImportTarget] = useState<{
+		sharedCharacterId: number;
+		characterName: string;
+	} | null>(null);
+	const [selectedImportProjectId, setSelectedImportProjectId] = useState<
+		number | null
+	>(null);
 
 	const { data: universe, isLoading } = useQuery({
 		queryKey: ["universe", id],
@@ -68,6 +76,27 @@ export function UniverseDetailPage() {
 		},
 	});
 
+	const importCharacterMutation = useMutation({
+		mutationFn: ({
+			projectId,
+			sharedCharacterId,
+		}: {
+			projectId: number;
+			sharedCharacterId: number;
+		}) => universesApi.importCharacter(projectId, sharedCharacterId),
+		onSuccess: (_data, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["project", variables.projectId],
+			});
+			setImportTarget(null);
+			setSelectedImportProjectId(null);
+			toast.success({ title: "已导入", message: "共享角色已导入到项目" });
+		},
+		onError: (error: Error) => {
+			toast.error({ title: "导入失败", message: error.message });
+		},
+	});
+
 	if (isLoading) {
 		return (
 			<div className="min-h-screen bg-base-100 flex items-center justify-center">
@@ -92,16 +121,22 @@ export function UniverseDetailPage() {
 	);
 
 	return (
-		<div className="min-h-screen bg-base-100 font-sans">
-			<header className="navbar bg-base-200 border-b border-base-300">
-				<div className="flex-1">
-					<Link to="/universes" className="btn btn-ghost btn-sm">
-						← 返回宇宙列表
-					</Link>
-				</div>
-				<div className="flex-1" />
-			</header>
-
+		<AppShell
+			variant="default"
+			onToggleAssets={() => {}}
+			onToggleHistory={() => {}}
+			onAssetsClose={() => {}}
+			onHistoryClose={() => {}}
+			chatIsGenerating={false}
+			onChatSendFeedback={() => {}}
+			onChatConfirm={() => {}}
+			onChatEntityConfirm={() => {}}
+			onChatGenerate={() => {}}
+			onChatCancel={() => {}}
+			versionCompareOpen={false}
+			versionCompareProjectId={0}
+			onVersionCompareClose={() => {}}
+		>
 			<main className="container mx-auto px-4 py-8 max-w-6xl">
 				{/* Back */}
 				<Link
@@ -217,7 +252,18 @@ export function UniverseDetailPage() {
 					) : (
 						<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
 							{u.shared_characters.map((sc) => (
-								<SharedCharacterCard key={sc.id} character={sc} />
+								<SharedCharacterCard
+									key={sc.id}
+									character={sc}
+									showImport
+									onImport={(character) => {
+										setImportTarget({
+											sharedCharacterId: character.id,
+											characterName: character.name,
+										});
+										setSelectedImportProjectId(null);
+									}}
+								/>
 							))}
 						</div>
 					)}
@@ -275,6 +321,82 @@ export function UniverseDetailPage() {
 					</div>
 				</Modal>
 			)}
-		</div>
+
+			{/* Import Character Modal */}
+			{importTarget && (
+				<Modal
+					isOpen
+					onClose={() => {
+						setImportTarget(null);
+						setSelectedImportProjectId(null);
+					}}
+					title={`导入 "${importTarget.characterName}" 到项目`}
+				>
+					<p className="text-sm text-base-content/60 mb-4">
+						选择要导入共享角色的目标项目
+					</p>
+					{allProjects.length === 0 ? (
+						<p className="text-sm text-base-content/50 text-center py-6">
+							暂无可用项目
+						</p>
+					) : (
+						<div className="space-y-2 max-h-80 overflow-y-auto">
+							{allProjects.map((p: Project) => (
+								<button
+									key={p.id}
+									type="button"
+									className={`w-full text-left p-3 rounded-lg transition-colors flex items-center justify-between ${
+										selectedImportProjectId === p.id
+											? "bg-primary/10 border border-primary/30"
+											: "bg-base-200/50 hover:bg-base-200"
+									}`}
+									onClick={() => setSelectedImportProjectId(p.id)}
+								>
+									<div>
+										<span className="font-heading font-bold text-sm">
+											{p.title}
+										</span>
+										<span className="text-xs text-base-content/40 ml-2">
+											{p.status}
+										</span>
+									</div>
+								</button>
+							))}
+						</div>
+					)}
+
+					<div className="flex justify-end gap-2 pt-4">
+						<Button
+							variant="ghost"
+							onClick={() => {
+								setImportTarget(null);
+								setSelectedImportProjectId(null);
+							}}
+						>
+							取消
+						</Button>
+						<Button
+							disabled={
+								!selectedImportProjectId ||
+								importCharacterMutation.isPending
+							}
+							onClick={() => {
+								if (selectedImportProjectId) {
+									importCharacterMutation.mutate({
+										projectId: selectedImportProjectId,
+										sharedCharacterId:
+											importTarget.sharedCharacterId,
+									});
+								}
+							}}
+						>
+							{importCharacterMutation.isPending
+								? "导入中..."
+								: "确认导入"}
+						</Button>
+					</div>
+				</Modal>
+			)}
+		</AppShell>
 	);
 }

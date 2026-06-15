@@ -7,13 +7,8 @@ import {
 	useParams,
 	useSearchParams,
 } from "react-router-dom";
-import { ChatDrawer } from "~/components/chat/ChatDrawer";
-import { TopBar } from "~/components/layout/TopBar";
-import { StagePipeline } from "~/components/layout/StagePipeline";
+import { AppShell } from "~/components/layout/AppShell";
 import { StageView } from "~/components/layout/StageView";
-import { AssetDrawer } from "~/components/panels/AssetDrawer";
-import { HistoryDrawer } from "~/components/panels/HistoryDrawer";
-import { VersionCompareDrawer } from "~/components/panels/VersionCompareDrawer";
 import { Button } from "~/components/ui/Button";
 import { Card } from "~/components/ui/Card";
 import { useProjectWebSocket } from "~/hooks/useWebSocket";
@@ -467,58 +462,39 @@ export function ProjectPage() {
 	}
 
 	return (
-		<div className="h-screen flex flex-col bg-base-100 font-sans overflow-hidden">
-			<TopBar
-				onToggleAssets={() => setAssetsOpen((v) => !v)}
-				onToggleHistory={() => setHistoryOpen((v) => !v)}
-				assetsOpen={assetsOpen}
-				historyOpen={historyOpen}
-				projectId={projectId}
-			/>
-			<StagePipeline
-				currentStage={storeCurrentStage}
-				isGenerating={storeIsGenerating}
-				awaitingConfirm={storeAwaitingConfirm}
-				hasRecovery={hasRecovery}
-				onResume={handleResume}
-				onCancel={handleCancel}
-			/>
-
-			<div className="flex-1 flex overflow-hidden">
-				<div className="flex-1 relative overflow-hidden">
-					<StageView projectId={projectId} />
-				</div>
-
-			<ChatDrawer
-				projectId={projectId}
-				onSendFeedback={handleFeedback}
-				onConfirm={handleConfirm}
-				onEntityConfirm={handleEntityConfirm}
-				onGenerate={handleGenerate}
-				onCancel={handleCancel}
-				isGenerating={hasActiveRun}
-				generateDisabled={false}
-				generateDisabledReason={undefined}
-			/>
+		<AppShell
+			variant="workbench"
+			showStagePipeline={true}
+			onToggleAssets={() => setAssetsOpen((v) => !v)}
+			onToggleHistory={() => setHistoryOpen((v) => !v)}
+			assetsOpen={assetsOpen}
+			historyOpen={historyOpen}
+			projectId={project.id}
+			currentStage={storeCurrentStage}
+			isGenerating={storeIsGenerating}
+			awaitingConfirm={storeAwaitingConfirm}
+			hasRecovery={hasRecovery}
+			onResume={handleResume}
+			onCancelPipeline={handleCancel}
+			onAssetsClose={() => setAssetsOpen(false)}
+			onHistoryClose={() => setHistoryOpen(false)}
+			onHistoryNavigate={(id) => navigate(`/project/${id}`)}
+			chatIsGenerating={hasActiveRun}
+			onChatSendFeedback={handleFeedback}
+			onChatConfirm={handleConfirm}
+			onChatEntityConfirm={handleEntityConfirm}
+			onChatGenerate={handleGenerate}
+			onChatCancel={handleCancel}
+			chatGenerateDisabled={false}
+			versionCompareOpen={versionOpen}
+			versionCompareProjectId={project.id}
+			versionCompareEntityType={versionTarget?.entityType}
+			versionCompareEntityId={versionTarget?.entityId ?? null}
+			onVersionCompareClose={() => setVersionOpen(false)}
+		>
+			<div className="flex-1 relative overflow-hidden">
+				<StageView projectId={projectId} />
 			</div>
-
-			<AssetDrawer
-				open={assetsOpen}
-				onClose={() => setAssetsOpen(false)}
-				projectId={project.id}
-			/>
-			<HistoryDrawer
-				open={historyOpen}
-				onClose={() => setHistoryOpen(false)}
-				onNavigate={(id) => navigate(`/project/${id}`)}
-			/>
-			<VersionCompareDrawer
-				open={versionOpen}
-				projectId={project.id}
-				initialEntityType={versionTarget?.entityType}
-				initialEntityId={versionTarget?.entityId ?? null}
-				onClose={() => setVersionOpen(false)}
-			/>
-		</div>
+		</AppShell>
 	);
 }

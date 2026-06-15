@@ -6,10 +6,10 @@ import { Button } from "~/components/ui/Button";
 import { Card } from "~/components/ui/Card";
 import { Input } from "~/components/ui/Input";
 import { Modal } from "~/components/ui/Modal";
+import { AppShell } from "~/components/layout/AppShell";
 import { GlobeAltIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { toast } from "~/utils/toast";
 import type { Universe } from "~/types";
-import { Link } from "react-router-dom";
 
 export function UniversesPage() {
 	const queryClient = useQueryClient();
@@ -56,22 +56,22 @@ export function UniversesPage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-base-100 font-sans">
-			<header className="navbar bg-base-200 border-b border-base-300">
-				<div className="flex-1">
-					<Link to="/" className="btn btn-ghost">
-						← 返回首页
-					</Link>
-				</div>
-				<div className="font-heading text-lg text-primary font-bold tracking-wider">
-					<span className="inline-flex items-center gap-2">
-						<GlobeAltIcon className="w-5 h-5" aria-hidden="true" />
-						IP 宇宙
-					</span>
-				</div>
-				<div className="flex-1" />
-			</header>
-
+		<AppShell
+			variant="default"
+			onToggleAssets={() => {}}
+			onToggleHistory={() => {}}
+			onAssetsClose={() => {}}
+			onHistoryClose={() => {}}
+			chatIsGenerating={false}
+			onChatSendFeedback={() => {}}
+			onChatConfirm={() => {}}
+			onChatEntityConfirm={() => {}}
+			onChatGenerate={() => {}}
+			onChatCancel={() => {}}
+			versionCompareOpen={false}
+			versionCompareProjectId={0}
+			onVersionCompareClose={() => {}}
+		>
 			<main className="container mx-auto px-4 py-8 max-w-6xl">
 				{/* Header */}
 				<div className="flex items-center justify-between mb-8">
@@ -191,9 +191,9 @@ export function UniversesPage() {
 								创建
 							</Button>
 						</div>
-					</div>
-				</Modal>
-			)}
-		</div>
+			</div>
+			</Modal>
+		)}
+	</AppShell>
 	);
 }

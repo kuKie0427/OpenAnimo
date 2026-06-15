@@ -536,6 +536,16 @@
       "verification": "cd backend && uv run pytest tests/test_orchestration/ -q && uv run ruff check app tests",
       "evidence": "2026-06-08: 编排测试 180 passed，ruff 0 errors",
       "notes": "并行模式下分镜渲染会降级为纯文本生成，角色一致性无法保证。Critique 只检查场景一致性，不检查角色一致性。"
+    },
+    {
+      "id": "f-daw-ui-p1",
+      "name": "DAW UI P1 — 布局架构重构",
+      "description": "创建 AppShell 组件，统一 Drawer 系统",
+      "dependencies": ["f-daw-ui-p0"],
+      "status": "passing",
+      "domain": "frontend",
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/layout/ && pnpm build",
+      "evidence": "2026-06-15: AppShell+DrawerPortal created, TopBar variant, ChatDrawer fixed, Asset/History z-index unified, all 6 pages use AppShell, z-index CSS vars, 50 layout/page tests pass, tsc+build green"
     }
   ]
 }

@@ -4,28 +4,21 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { projectsApi } from "~/services/api";
 import { Card } from "~/components/ui/Card";
 import { ConfirmModal } from "~/components/ui/ConfirmModal";
+import { AppShell } from "~/components/layout/AppShell";
 import {
 	DocumentTextIcon,
 	FaceFrownIcon,
 	PencilIcon,
 	TrashIcon,
-	Cog6ToothIcon,
-	MoonIcon,
-	SunIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "~/utils/toast";
 import { ApiError } from "~/types/errors";
 import { cleanupDeletedProjectCaches } from "~/features/projects/deleteProject";
-import { useThemeStore } from "~/stores/themeStore";
-import { useSettingsStore } from "~/stores/settingsStore";
 
 export function ProjectsPage() {
   const queryClient = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<number[] | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const { theme, toggleTheme } = useThemeStore();
-  const isDark = theme.endsWith("dark");
-  const { openModal: openSettingsModal } = useSettingsStore();
 
   const {
     data: projects,
@@ -107,29 +100,22 @@ export function ProjectsPage() {
   };
 
   return (
-    <div className="overflow-x-hidden min-h-screen bg-base-100 font-sans">
-      <header className="flex items-center justify-between px-4 h-10 border-b border-base-content/10">
-        <Link to="/" className="font-heading text-lg text-primary font-bold tracking-wider">OpenAnimo</Link>
-        <div className="flex items-center gap-1">
-          <Link to="/" className="btn btn-ghost btn-xs !px-1 !min-h-0 !h-6 text-xs">新建</Link>
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="btn btn-ghost btn-xs !px-1 !min-h-0 !h-6"
-            aria-label={isDark ? "切换亮色" : "切换暗色"}
-          >
-            {isDark ? <SunIcon className="w-3.5 h-3.5" /> : <MoonIcon className="w-3.5 h-3.5" />}
-          </button>
-          <button
-            type="button"
-            onClick={openSettingsModal}
-            className="btn btn-ghost btn-xs !px-1 !min-h-0 !h-6"
-            aria-label="设置"
-          >
-            <Cog6ToothIcon className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </header>
+    <AppShell
+      variant="default"
+      onToggleAssets={() => {}}
+      onToggleHistory={() => {}}
+      onAssetsClose={() => {}}
+      onHistoryClose={() => {}}
+      chatIsGenerating={false}
+      onChatSendFeedback={() => {}}
+      onChatConfirm={() => {}}
+      onChatEntityConfirm={() => {}}
+      onChatGenerate={() => {}}
+      onChatCancel={() => {}}
+      versionCompareOpen={false}
+      versionCompareProjectId={0}
+      onVersionCompareClose={() => {}}
+    >
       <div className="flex flex-col min-h-[calc(100vh-40px)]">
         <header className="bg-base-100 border-b-3 border-base-content/30 px-6 py-4">
           <h1 className="text-2xl font-heading font-bold">
@@ -252,6 +238,6 @@ export function ProjectsPage() {
         variant="danger"
         isLoading={deleteMutation.isPending}
       />
-    </div>
+    </AppShell>
   );
 }

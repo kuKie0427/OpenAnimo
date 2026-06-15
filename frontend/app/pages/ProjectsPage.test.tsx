@@ -67,6 +67,10 @@ vi.mock("~/stores/settingsStore", () => ({
   useSettingsStore: vi.fn(() => ({ openModal: vi.fn() })),
 }));
 
+vi.mock('~/components/layout/DrawerPortal', () => ({
+  DrawerPortal: () => null,
+}));
+
 vi.mock('~/components/ui/Card', () => ({
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div className={className}>{children}</div>

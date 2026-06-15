@@ -136,10 +136,10 @@ export function AssetDrawer({ open, onClose, projectId }: AssetDrawerProps) {
 	return (
 		<>
 			{open && (
-				<div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
+				<div className="fixed inset-0 bg-black/30 z-drawer-backdrop" onClick={onClose} />
 			)}
 			<div
-				className={`fixed right-0 top-0 h-full w-72 lg:w-80 bg-base-100 border-l-2 border-base-content/15 z-50 transform transition-transform duration-200 ${open ? "translate-x-0" : "translate-x-full"}`}
+				className={`fixed right-0 top-0 h-full w-80 lg:w-96 bg-base-100 border-l-2 border-base-content/15 z-drawer transform transition-transform duration-200 ${open ? "translate-x-0" : "translate-x-full"}`}
 			>
 				{/* Header */}
 				<div className="flex items-center justify-between p-3 border-b-2 border-base-content/10">

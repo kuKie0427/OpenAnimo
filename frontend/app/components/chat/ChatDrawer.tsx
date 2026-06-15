@@ -36,33 +36,43 @@ export function ChatDrawer({
 		}
 	}, [awaitingConfirm, runMode]);
 
-	if (!isOpen) return null;
-
 	return (
-		<div className="flex-shrink-0 w-[280px] lg:w-[360px] flex flex-col bg-base-100 border-l border-base-300 h-full">
-			<div className="flex items-center justify-end px-2 py-1.5 border-b border-base-300">
-				<button
-					className="btn btn-xs btn-circle btn-ghost"
+		<>
+			{isOpen && (
+				<div
+					className="fixed inset-0 bg-black/30 z-drawer-backdrop"
 					onClick={close}
-					aria-label="关闭对话面板"
-				>
-					<XMarkIcon className="w-4 h-4" />
-				</button>
-			</div>
+				/>
+			)}
+			<div
+				className={`fixed right-0 top-0 h-full w-[320px] lg:w-[400px] bg-base-100 border-l border-base-300 z-drawer transform transition-transform duration-200 ease-out ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+			>
+				<div className="flex items-center justify-end px-2 py-1.5 border-b border-base-300">
+					<button
+						className="btn btn-xs btn-circle btn-ghost"
+						onClick={close}
+						aria-label="关闭对话面板"
+					>
+						<XMarkIcon className="w-4 h-4" />
+					</button>
+				</div>
 
-			<div className="flex-1 overflow-hidden">
-			<ChatPanel
-				projectId={projectId}
-				onSendFeedback={onSendFeedback}
-				onConfirm={onConfirm}
-				onEntityConfirm={onEntityConfirm}
-				onGenerate={onGenerate}
-				onCancel={onCancel}
-				isGenerating={isGenerating}
-				generateDisabled={generateDisabled}
-				generateDisabledReason={generateDisabledReason}
-			/>
+				{isOpen && (
+					<div className="flex-1 overflow-hidden h-[calc(100%-40px)]">
+						<ChatPanel
+							projectId={projectId}
+							onSendFeedback={onSendFeedback}
+							onConfirm={onConfirm}
+							onEntityConfirm={onEntityConfirm}
+							onGenerate={onGenerate}
+							onCancel={onCancel}
+							isGenerating={isGenerating}
+							generateDisabled={generateDisabled}
+							generateDisabledReason={generateDisabledReason}
+						/>
+					</div>
+				)}
 			</div>
-		</div>
+		</>
 	);
 }

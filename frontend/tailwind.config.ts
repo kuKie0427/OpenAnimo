@@ -27,9 +27,11 @@ export default {
         '2xl': 'var(--space-2xl)',
       },
       zIndex: {
+        'base': 'var(--z-base)',
         'dropdown': 'var(--z-dropdown)',
         'sticky': 'var(--z-sticky)',
-        'fixed': 'var(--z-fixed)',
+        'drawer-backdrop': 'var(--z-drawer-backdrop)',
+        'drawer': 'var(--z-drawer)',
         'modal-backdrop': 'var(--z-modal-backdrop)',
         'modal': 'var(--z-modal)',
         'popover': 'var(--z-popover)',
