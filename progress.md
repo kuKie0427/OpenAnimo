@@ -837,3 +837,38 @@
 
 ### 下次
 - 下一 Phase 待新会话启动
+
+## 2026-06-15 — Canvas Hybrid P4 — Timeline 视图
+
+### 完成内容
+- **Phase 4: Timeline 视图** — 全部 Gate 通过 ✅
+- Task 0: feature_list.json 添加 `f-canvas-hybrid-p4` (active → passing)
+- Task 1-6: 创建 6 个 Timeline 组件 — TimelineView（主视图，从 shapes 派生 tracks）、TimelineTrack（轨道标签+时间项+播放头）、TimelineItem（百分比定位+缩略图+激活态）、TimelinePlayhead（垂直线+圆点指示器）、TimelineControls（播放/暂停+mm:ss+滑块）、index.ts（barrel 导出）
+- Task 7: ViewStore 添加 Timeline 状态（currentTime/isPlaying/totalDuration + setters）
+- Task 8: ProjectPage 集成 — 导入 TimelineView，从 characters/shots 派生 shapes，替换占位组件
+- 创建 TimelineView.test.tsx（6 个测试：空渲染、轨道标签、播放按钮、时间显示、storyboard 点击、角色点击）
+
+### 改动文件
+- `frontend/app/components/timeline/` — 7 个新文件（6 组件 + 1 test）
+- `frontend/app/stores/viewStore.ts` — 添加 timeline 状态（+6 fields）
+- `frontend/app/pages/ProjectPage.tsx` — TimelineView 集成（+useMemo + 替换占位符）
+- `feature_list.json` — 添加 f-canvas-hybrid-p4 (active → passing)
+- `progress.md` — 本条目
+
+### 验证结果
+- tsc --noEmit: 0 errors ✅
+- vitest: 62 files, 527 passed (6 new timeline tests) ✅
+- pnpm build: 5.74s ✅
+- feature_list.json: f-canvas-hybrid-p4 → passing ✅
+
+### 决策
+- Timeline 使用 useState (local) 管理播放状态，而非 viewStore（避免 persist 污染）
+- shapes 从 characters/shots API 数据派生（projectId + content 用于 TimelineViewProps）
+- TimelineControls 播放/暂停按钮使用 aria-label 支持可访问性
+- totalDuration 在 TimelineTrack 中 fallback 为 Math.max(..., 1) 避免除零
+
+### 阻断
+- 无
+
+### 下次
+- 下一 Phase 待新会话启动（执行 /handoff 后等待用户指示）

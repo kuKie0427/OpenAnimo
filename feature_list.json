@@ -566,6 +566,16 @@
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/canvas/ && pnpm build",
       "evidence": "2026-06-15: CanvasBreadcrumb/Search/Minimap/QuickActions 4 components, ViewStore, InfiniteCanvas integration+keyboard shortcuts, ProjectPage ViewSwitcher, 123 vitest tests+tsc+build all green"
+    },
+    {
+      "id": "f-canvas-hybrid-p4",
+      "name": "Canvas Hybrid P4 — Timeline 视图",
+      "description": "从画布数据派生 Timeline 视图，支持动画预览",
+      "dependencies": ["f-canvas-hybrid-p3"],
+      "status": "passing",
+      "domain": "frontend",
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/timeline/ && pnpm build",
+      "evidence": "2026-06-15: TimelineView/Track/Item/Playhead/Controls 6 components, ViewStore timeline state, ProjectPage integration, tsc clean, 527 vitest (6 timeline specific) pass"
     }
   ]
 }
