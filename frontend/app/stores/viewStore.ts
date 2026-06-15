@@ -21,6 +21,13 @@ interface ViewState {
   setSearchResults: (results: string[]) => void;
   currentSearchIndex: number;
   setCurrentSearchIndex: (index: number) => void;
+
+  currentTime: number;
+  setCurrentTime: (time: number) => void;
+  isPlaying: boolean;
+  setIsPlaying: (playing: boolean) => void;
+  totalDuration: number;
+  setTotalDuration: (duration: number) => void;
 }
 
 export const useViewStore = create<ViewState>()(
@@ -43,6 +50,13 @@ export const useViewStore = create<ViewState>()(
       setSearchResults: (results) => set({ searchResults: results }),
       currentSearchIndex: 0,
       setCurrentSearchIndex: (index) => set({ currentSearchIndex: index }),
+
+      currentTime: 0,
+      setCurrentTime: (time) => set({ currentTime: time }),
+      isPlaying: false,
+      setIsPlaying: (playing) => set({ isPlaying: playing }),
+      totalDuration: 0,
+      setTotalDuration: (duration) => set({ totalDuration: duration }),
     }),
     {
       name: "openanimo-view",
