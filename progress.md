@@ -755,3 +755,37 @@
   - `overflow-x-hidden` 加在 ProjectsPage 根容器（最外层 div），最小改动
 - **阻断**: 无
 - **下次**: Phase 0 全部完成 → 执行 `/handoff` 后等待新会话加载 Phase 1
+
+## 2026-06-15 — DAW UI Redesign Phase 2 — DAW 核心组件
+
+### 完成内容
+- **Phase 2: DAW 核心组件** — 全部 11 Gate 通过 ✅
+- Task 0: feature_list.json 添加 `f-daw-ui-p2` (active → passing)
+- Task 1: 创建 `frontend/app/components/daw/` 目录
+- Task 2-7: 创建 6 个 DAW 组件 — StageTabs（4 状态+键盘导航）、TrackList（选择+键盘+拖拽排序）、TrackItem（缩略图+状态指示）、DetailPanel（空状态+图片/视频预览）、TimelineBar（进度条+阶段跳转）、ViewSwitcher（3 视图切换）
+- Task 8: barrel 导出 `index.ts`
+- Task 9: 6 个测试文件，66 个测试，全部通过
+- `feature_list.json`: f-daw-ui-p2 → passing
+
+### 改动文件
+- `frontend/app/components/daw/` — 7 个新文件 (6 组件 + 1 barrel)
+- `frontend/app/components/daw/*.test.tsx` — 6 个测试文件
+- `feature_list.json` — 添加 f-daw-ui-p2 (active → passing)
+- `progress.md` — 本条目
+
+### 验证结果
+- tsc --noEmit: 0 errors ✅
+- vitest: 56 files, 483 passed (66 new DAW tests) ✅
+- pnpm build: 12.09s ✅
+- Projection Room 规范: 无 border-2、无 hover translate、uppercase 仅限 font-mono
+
+### 决策
+- HTML5 拖拽 API 实现 TrackList 重新排序（零额外依赖）
+- 各组件直接导入（`./ComponentName`），barrel 导出由 `index.ts` 统一对外
+- ViewMode type 通过 ViewSwitcher.tsx 导出并由 index.ts 重导出
+
+### 阻断
+- 无
+
+### 下次
+- 需要新会话加载下一 Phase（daw-ui-redesign-p3），执行 `/handoff` 后等待用户指示

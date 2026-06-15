@@ -546,6 +546,16 @@
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/layout/ && pnpm build",
       "evidence": "2026-06-15: AppShell+DrawerPortal created, TopBar variant, ChatDrawer fixed, Asset/History z-index unified, all 6 pages use AppShell, z-index CSS vars, 50 layout/page tests pass, tsc+build green"
+    },
+    {
+      "id": "f-daw-ui-p2",
+      "name": "DAW UI P2 — DAW 核心组件",
+      "description": "创建 StageTabs/TrackList/DetailPanel/TimelineBar/ViewSwitcher 组件",
+      "dependencies": ["f-daw-ui-p1"],
+      "status": "passing",
+      "domain": "frontend",
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/daw/ && pnpm build",
+      "evidence": "2026-06-15: StageTabs/TrackList/TrackItem/DetailPanel/TimelineBar/ViewSwitcher created, barrel exports, 66 vitest+tsc+build all green"
     }
   ]
 }
