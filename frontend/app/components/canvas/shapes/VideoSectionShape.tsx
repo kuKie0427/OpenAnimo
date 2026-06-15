@@ -119,7 +119,7 @@ export class VideoSectionShapeUtil extends ShapeUtil<VideoSectionShape> {
                 <a
                   href={getStaticUrl(videoUrl) ?? undefined}
                   download
-                  className="btn btn-sm btn-ghost border-2 border-base-content/15 text-xs gap-1 hover:border-primary/40 hover:-translate-y-0.5 transition-all"
+                  className="btn btn-sm btn-ghost border border-base-content/15 text-xs gap-1 hover:border-primary/40 hover:shadow-projection transition-shadow duration-200"
                   onPointerDown={(e) => e.stopPropagation()}
                 >
                   <SvgIcon name="download" size={12} />

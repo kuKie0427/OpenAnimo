@@ -288,7 +288,7 @@ export function SettingsModal() {
 	const renderConfigItem = (item: ConfigItem) => (
 		<div
 			key={item.key}
-			className="bg-base-200 p-4 rounded-lg border-2 border-base-content/30"
+			className="bg-base-200 p-4 rounded-lg border border-base-content/30"
 		>
 			<div className="flex items-center gap-2 mb-2">
 				<span className="font-mono font-bold text-sm">
@@ -341,7 +341,7 @@ export function SettingsModal() {
 
 				{/* 服务提供商选择 */}
 				{providerItem && (
-					<div className="bg-base-200 p-4 rounded-lg border-2 border-base-content/30">
+					<div className="bg-base-200 p-4 rounded-lg border border-base-content/30">
 						<div className="flex items-center gap-2 mb-3">
 							<span className="font-mono font-bold text-sm">TEXT_PROVIDER</span>
 							<span className="badge badge-primary badge-xs">必选</span>
@@ -349,7 +349,7 @@ export function SettingsModal() {
 						<div className="flex gap-4">
 							<label
 								className={`
-                flex-1 flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                flex-1 flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all
                 ${
 									textProvider === "anthropic"
 										? "border-accent bg-accent/10"
@@ -374,7 +374,7 @@ export function SettingsModal() {
 							</label>
 							<label
 								className={`
-                flex-1 flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                flex-1 flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all
                 ${
 									textProvider === "openai"
 										? "border-accent bg-accent/10"
@@ -399,7 +399,7 @@ export function SettingsModal() {
 							</label>
 							<label
 								className={`
-                flex-1 flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                flex-1 flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all
                 ${
 									textProvider === "fake"
 										? "border-accent bg-accent/10"
@@ -501,7 +501,7 @@ export function SettingsModal() {
 				</div>
 
 				{providerItem && (
-					<div className="bg-base-200 p-4 rounded-lg border-2 border-base-content/30">
+					<div className="bg-base-200 p-4 rounded-lg border border-base-content/30">
 						<div className="flex items-center gap-2 mb-3">
 							<span className="font-mono font-bold text-sm">IMAGE_PROVIDER</span>
 							<span className="badge badge-primary badge-xs">必选</span>
@@ -509,7 +509,7 @@ export function SettingsModal() {
 						<div className="flex gap-4">
 							<label
 								className={`
-                flex-1 flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                flex-1 flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all
                 ${
 									imageProvider === "openai"
 										? "border-accent bg-accent/10"
@@ -534,7 +534,7 @@ export function SettingsModal() {
 							</label>
 							<label
 								className={`
-                flex-1 flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                flex-1 flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all
                 ${
 									imageProvider === "fake"
 										? "border-accent bg-accent/10"
@@ -647,7 +647,7 @@ export function SettingsModal() {
 
 				{/* 服务提供商选择 */}
 				{providerItem && (
-					<div className="bg-base-200 p-4 rounded-lg border-2 border-base-content/30">
+					<div className="bg-base-200 p-4 rounded-lg border border-base-content/30">
 						<div className="flex items-center gap-2 mb-3">
 							<span className="font-mono font-bold text-sm">
 								VIDEO_PROVIDER
@@ -657,7 +657,7 @@ export function SettingsModal() {
 						<div className="flex gap-4">
 							<label
 								className={`
-                flex-1 flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                flex-1 flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all
                 ${
 									videoProvider === "doubao"
 										? "border-accent bg-accent/10"
@@ -682,7 +682,7 @@ export function SettingsModal() {
 							</label>
 							<label
 								className={`
-                flex-1 flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                flex-1 flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all
                 ${
 									videoProvider === "openai"
 										? "border-accent bg-accent/10"
@@ -707,7 +707,7 @@ export function SettingsModal() {
 							</label>
 							<label
 								className={`
-                flex-1 flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                flex-1 flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all
                 ${
 									videoProvider === "fake"
 										? "border-accent bg-accent/10"
@@ -850,7 +850,7 @@ export function SettingsModal() {
 					<div className="p-6">
 						<div
 							role="alert"
-							className="alert alert-error border-2 border-base-content/30"
+							className="alert alert-error border border-base-content/30"
 						>
 							<ExclamationCircleIcon className="w-6 h-6" />
 							<span>加载配置失败，请检查后端服务是否正常运行。</span>
@@ -878,7 +878,7 @@ export function SettingsModal() {
 											onClick={() => handleTabChange(section.key)}
 											className={`
                         flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-                        border-2 border-base-content/30 transition-all
+                        border border-base-content/30 transition-all
                         ${
 													isActive
 														? "bg-accent text-accent-content shadow-aperture"
@@ -923,24 +923,24 @@ export function SettingsModal() {
 							<button
 								type="button"
 								onClick={handleCancel}
-								className="btn border-2 border-base-content/30"
+								className="btn border border-base-content/30"
 							>
 								取消
 							</button>
 
 							<button
 								type="submit"
-								className="btn btn-primary border-2 border-base-content/30"
+className="btn btn-primary border border-base-content/30"
 								disabled={updateMutation.isPending}
-							>
-								{updateMutation.isPending && (
-									<span className="loading loading-spinner loading-sm"></span>
-								)}
-								保存配置
-							</button>
+								>
+									{updateMutation.isPending && (
+										<span className="loading loading-spinner loading-sm"></span>
+									)}
+									保存配置
+								</button>
 							<button
 								type="button"
-								className="btn btn-outline border-2 border-base-content/30"
+								className="btn btn-outline border border-base-content/30"
 								onClick={handleTestConnection}
 								disabled={
 									updateMutation.isPending ||
@@ -985,7 +985,7 @@ export function SettingsModal() {
 								<h3 className="font-bold text-lg mb-2">{alertState.title}</h3>
 								<p className="text-base-content/80">{alertState.message}</p>
 								{alertState.details && (
-									<div className="mt-3 p-3 bg-base-200 rounded-lg border-2 border-base-content/30">
+									<div className="mt-3 p-3 bg-base-200 rounded-lg border border-base-content/30">
 										<p className="text-sm whitespace-pre-line">
 											{alertState.details}
 										</p>
@@ -1001,7 +1001,7 @@ export function SettingsModal() {
 									setAlertState({ ...alertState, show: false });
 									closeModal(); // 关闭设置模态框
 								}}
-								className="btn btn-primary border-2 border-base-content/30"
+								className="btn btn-primary border border-base-content/30"
 							>
 								确定
 							</button>

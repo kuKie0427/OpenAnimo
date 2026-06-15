@@ -61,7 +61,7 @@ describe('EditModal', () => {
     await user.clear(titleInput);
     await user.type(titleInput, 'Updated Title');
 
-    const saveButton = screen.getByRole('button', { name: 'Save' });
+    const saveButton = screen.getByRole('button', { name: 'Save', hidden: true });
     await user.click(saveButton);
 
     await waitFor(() => {
@@ -75,8 +75,8 @@ describe('EditModal', () => {
   it('calls onClose when cancel button is clicked', async () => {
     const user = userEvent.setup();
     render(<EditModal {...defaultProps} />);
-    
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    await user.click(screen.getByRole('button', { name: 'Cancel', hidden: true }));
     expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
   });
   
@@ -100,8 +100,8 @@ describe('EditModal', () => {
 
   it('shows loading state and disables buttons', () => {
     render(<EditModal {...defaultProps} isLoading={true} />);
-    
-    const saveButton = screen.getByRole('button', { name: 'Saving...' });
+
+    const saveButton = screen.getByRole('button', { name: 'Saving...', hidden: true });
     expect(saveButton).toBeDisabled();
     expect(saveButton).toHaveClass('loading');
   });

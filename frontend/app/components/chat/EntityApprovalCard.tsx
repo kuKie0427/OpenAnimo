@@ -9,7 +9,6 @@ interface EntityApprovalCardProps {
 	entities: EntitySummary[];
 	onConfirm: (decisions: EntityDecision[]) => void;
 	onRegenerate: (decisions: EntityDecision[]) => void;
-	onSingleRegenerate?: (entityId: number, feedback: string) => void;
 }
 
 interface EntityRowProps {
@@ -135,7 +134,6 @@ export function EntityApprovalCard({
 	entities,
 	onConfirm,
 	onRegenerate,
-	onSingleRegenerate: _onSingleRegenerate,
 }: EntityApprovalCardProps) {
 	const [decisions, setDecisions] = useState<Map<number, EntityDecision>>(
 		new Map(
@@ -230,7 +228,7 @@ export function EntityApprovalCard({
 		return (
 			<div className="card-feature bg-base-100 p-4 space-y-3 text-sm">
 				<div>
-					<p className="text-[10px] uppercase tracking-widest text-base-content/40 font-bold">
+					<p className="text-[10px] tracking-widest text-base-content/40 font-bold">
 						{entityLabel}审批
 					</p>
 					<h3 className="font-heading font-bold text-base">
@@ -247,7 +245,7 @@ export function EntityApprovalCard({
 	return (
 		<div className="card-feature bg-base-100 p-3 space-y-3 text-sm">
 			<div>
-				<p className="text-[10px] uppercase tracking-widest text-base-content/40 font-bold">
+				<p className="text-[10px] tracking-widest text-base-content/40 font-bold">
 					{entityLabel}审批
 				</p>
 				<div className="flex items-center justify-between">
@@ -322,7 +320,7 @@ export function EntityApprovalCard({
 						variant="primary"
 						onClick={handleConfirm}
 						disabled={!hasApproved}
-						className="flex-1 gap-0.5 !px-2.5 !py-0.5 !min-h-0 !h-6 text-xs border-2 shadow-aperture"
+						className="flex-1 gap-0.5 !px-2.5 !py-0.5 !min-h-0 !h-6 text-xs border shadow-aperture"
 					>
 						<CheckIcon className="w-3 h-3" />
 						确认并继续 →

@@ -36,7 +36,7 @@ function AssetCard({
 	isUsing: boolean;
 }) {
 	return (
-		<div className="card card-compact bg-base-200 border-2 border-base-content/10 hover:border-primary/40 transition-colors">
+		<div className="card card-compact bg-base-200 border border-base-content/10 hover:border-primary/40 transition-colors">
 			<figure className="h-32 bg-base-300 overflow-hidden">
 				{asset.image_url ? (
 					<img

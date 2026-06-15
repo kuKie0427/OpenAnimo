@@ -287,7 +287,7 @@ export function CritiqueResultCard({
 		return (
 			<div className="card-feature bg-base-100 p-4 space-y-3 text-sm">
 				<div>
-					<p className="text-[10px] uppercase tracking-widest text-base-content/40 font-bold">
+					<p className="text-[10px] tracking-widest text-base-content/40 font-bold">
 						Critique Review
 					</p>
 					<h3 className="font-heading font-bold text-base">审查完成</h3>
@@ -303,7 +303,7 @@ export function CritiqueResultCard({
 	return (
 		<div className="card-feature bg-base-100 p-3 space-y-3 text-sm">
 			<div>
-				<p className="text-[10px] uppercase tracking-widest text-base-content/40 font-bold">
+				<p className="text-[10px] tracking-widest text-base-content/40 font-bold">
 					Critique Review
 				</p>
 				<div className="flex items-center justify-between">

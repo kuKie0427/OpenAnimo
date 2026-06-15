@@ -64,12 +64,12 @@ export function StagePipeline({
 							<div key={stage.key} className="flex items-center">
 								<div
 									className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md transition-colors duration-150 ${
-										isCurrent ? "bg-primary/10 border-2 border-primary/25" : "border-2 border-transparent"
+										isCurrent ? "bg-primary/10 border border-primary/25" : "border border-transparent"
 									}`}
 								>
-									<div className={`w-3 h-3 rounded-full border-2 ${dotClass}`} />
+									<div className={`w-3 h-3 rounded-full border ${dotClass}`} />
 									<IconComponent className={`w-3.5 h-3.5 ${isPast ? "text-success" : isCurrent ? "text-primary" : "text-base-content/25"}`} />
-									<span className={`text-xs font-heading font-bold uppercase tracking-wide ${isPast ? "text-success" : isCurrent ? "text-primary" : "text-base-content/25"}`}>
+									<span className={`text-xs font-heading font-bold tracking-wide ${isPast ? "text-success" : isCurrent ? "text-primary" : "text-base-content/25"}`}>
 										{stage.label}
 									</span>
 									{isPast && <CheckIcon className="w-2.5 h-2.5 text-success" />}
@@ -87,7 +87,7 @@ export function StagePipeline({
 
 				{hasRecovery && !isGenerating && (
 					<div className="flex items-center gap-1">
-						<Button variant="primary" size="sm" className="!px-2 !py-0 !min-h-0 !h-6 text-xs gap-0.5 border-2 shadow-aperture" onClick={onResume}>
+						<Button variant="primary" size="sm" className="!px-2 !py-0 !min-h-0 !h-6 text-xs gap-0.5 border shadow-aperture" onClick={onResume}>
 							<ArrowPathIcon className="w-2.5 h-2.5" />
 							恢复
 						</Button>

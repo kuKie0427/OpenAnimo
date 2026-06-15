@@ -1,6 +1,16 @@
 {
   "features": [
     {
+      "id": "f-daw-ui-p0",
+      "name": "DAW UI P0 — 设计系统修复",
+      "description": "修复 Button/Modal/border 违规，统一设计系统",
+      "dependencies": [],
+      "status": "passing",
+      "domain": "frontend",
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/ui/ && pnpm build",
+      "evidence": "2026-06-15: Button daisyUI tokens, border-2→border (46 fix), hover:translate→opacity/glow, Modal <dialog>+aria, uppercase restricted to font-mono, tokens.css activated, 412 vitest/tsc/build green"
+    },
+    {
       "id": "f-harness-p0",
       "name": "Harness Phase 0 — 最小可行基础设施",
       "status": "passing",
@@ -515,6 +525,17 @@
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm build"
+    },
+    {
+      "id": "f-remove-parallel-mode",
+      "name": "移除并行模式",
+      "description": "移除 LangGraph 编排中的并行模式（parallel_enabled），确保角色渲染完成后再生成分镜",
+      "dependencies": [],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/test_orchestration/ -q && uv run ruff check app tests",
+      "evidence": "2026-06-08: 编排测试 180 passed，ruff 0 errors",
+      "notes": "并行模式下分镜渲染会降级为纯文本生成，角色一致性无法保证。Critique 只检查场景一致性，不检查角色一致性。"
     }
   ]
 }

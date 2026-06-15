@@ -668,7 +668,7 @@ export class StoryboardBoardShapeUtil extends ShapeUtil<StoryboardBoardShape> {
 													strokeLinecap="round"
 												/>
 											</svg>
-											<span className="absolute rounded-full border-2 border-base-content/20 bg-base-100 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-base-content/60 shadow-aperture">
+											<span className="absolute rounded-full border border-base-content/20 bg-base-100 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-base-content/60 shadow-aperture">
 												{SECTION_FLOW_COPY[section] ?? "流程推进"}
 											</span>
 										</div>

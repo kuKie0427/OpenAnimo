@@ -59,7 +59,7 @@ export function ConfigInput({ item, value, onChange }: ConfigInputProps) {
 						type="text"
 						value={displayValue}
 						onChange={onChange}
-						className="input input-bordered w-full border-2 border-base-content/30 font-mono pr-12"
+						className="input input-bordered w-full border border-base-content/30 font-mono pr-12"
 						autoComplete="off"
 						placeholder={isRevealed ? "输入新值..." : ""}
 					/>
@@ -102,7 +102,7 @@ export function ConfigInput({ item, value, onChange }: ConfigInputProps) {
 			type="text"
 			value={value}
 			onChange={onChange}
-			className="input input-bordered w-full border-2 border-base-content/30 font-mono"
+			className="input input-bordered w-full border border-base-content/30 font-mono"
 			autoComplete="off"
 		/>
 	);

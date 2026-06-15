@@ -49,9 +49,9 @@ export function EditModal({
   if (!isOpen) return null;
 
   return (
-    <div className={`modal ${isOpen ? "modal-open" : ""}`}>
+    <dialog className="modal modal-open" aria-modal="true" aria-labelledby="edit-modal-heading">
       <div className="modal-box card-screen">
-        <h3 className="font-bold text-lg mb-4">{title}</h3>
+        <h3 id="edit-modal-heading" className="font-bold text-lg mb-4">{title}</h3>
         <button
           className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
           onClick={onClose}
@@ -104,7 +104,7 @@ export function EditModal({
           </button>
         </div>
       </div>
-       <div className="modal-backdrop" onClick={onClose}></div>
-    </div>
+      <div className="modal-backdrop" onClick={onClose}></div>
+    </dialog>
   );
 }

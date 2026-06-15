@@ -11,10 +11,10 @@ describe('Button', () => {
 
   it('applies variant styles', () => {
     const { rerender } = render(<Button variant="primary">Primary</Button>);
-    expect(screen.getByRole('button')).toHaveClass('!bg-[#F5A623]');
+    expect(screen.getByRole('button')).toHaveClass('bg-primary');
 
     rerender(<Button variant="secondary">Secondary</Button>);
-    expect(screen.getByRole('button')).toHaveClass('!bg-[#CC3333]');
+    expect(screen.getByRole('button')).toHaveClass('bg-secondary');
   });
 
   it('applies size styles', () => {
@@ -50,10 +50,10 @@ describe('Button', () => {
 
   it('shows a loading spinner when loading prop is true', () => {
     render(<Button loading>Loading</Button>);
-    
+
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
-    expect(button.querySelector('.loading-spinner')).toBeInTheDocument();
+    expect(button.querySelector('.animate-spin')).toBeInTheDocument();
     expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
   });
 

@@ -58,8 +58,8 @@ export function ChatPanel({
   generateDisabled = false,
   generateDisabledReason,
   isPaused = false,
-  onPause,
-  onResume: _onResume,
+  onPause: _onPause,
+  onResume,
 }: ChatPanelProps) {
   const generateDisabledReasonId = generateDisabledReason ? "generate-disabled-reason" : undefined;
 	const {
@@ -186,7 +186,7 @@ export function ChatPanel({
                   resetGateModes();
                 }
               }}
-              className={`btn btn-xs gap-0.5 ${isYolo ? "btn-primary btn-sm border-2" : "btn-ghost"} !min-h-0 !h-6 text-xs`}
+              className={`btn btn-xs gap-0.5 ${isYolo ? "btn-primary btn-sm border" : "btn-ghost"} !min-h-0 !h-6 text-xs`}
               aria-label={isYolo ? "切换手动模式" : "切换YOLO模式"}
               title={isYolo ? "YOLO：自动确认" : "手动：逐阶段确认"}
             >
@@ -218,7 +218,7 @@ export function ChatPanel({
             <span className="loading loading-dots loading-xs text-primary" />
             {agentNameMap[currentAgent || ""] || currentAgent || "处理中"}...
             {isYolo && (
-              <span className="badge badge-primary badge-outline badge-xs gap-0.5 border-2">
+              <span className="badge badge-primary badge-outline badge-xs gap-0.5 border">
                 <BoltIcon className="w-2 h-2" /> AUTO
               </span>
             )}
@@ -239,7 +239,7 @@ export function ChatPanel({
         {!hasMessages && !isGenerating ? (
           <div className="flex flex-col h-full">
             <div className="flex-1 flex flex-col items-center justify-center text-center px-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center mb-2">
+              <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mb-2">
                 <StageIcon className="w-4 h-4 text-primary" aria-hidden="true" />
               </div>
               <p className="text-xs text-base-content/50 mb-3 max-w-xs">
@@ -346,7 +346,7 @@ export function ChatPanel({
 									onConfirm(feedback || undefined);
 									setInput("");
 								}}
-								className="gap-0.5 !px-2.5 !py-0.5 !min-h-0 !h-6 text-xs border-2 shadow-aperture"
+								className="gap-0.5 !px-2.5 !py-0.5 !min-h-0 !h-6 text-xs border shadow-aperture"
 							>
 								<CheckIcon className="w-3 h-3" />
 								通过
@@ -357,11 +357,11 @@ export function ChatPanel({
 			</>
 		)}
 
-      {awaitingConfirm && isYolo && isPaused && onPause && (
+      {awaitingConfirm && isYolo && isPaused && onResume && (
         <div className="px-2.5 py-1 border-t border-base-content/10 bg-primary/5 flex items-center gap-1.5 text-xs text-base-content/50">
           <BoltIcon className="w-2.5 h-2.5" />
           YOLO 已暂停
-          <Button size="sm" variant="ghost" onClick={onPause} className="ml-auto !px-1.5 !py-0 !min-h-0 !h-auto text-xs">
+          <Button size="sm" variant="ghost" onClick={onResume} className="ml-auto !px-1.5 !py-0 !min-h-0 !h-auto text-xs">
             继续
           </Button>
         </div>

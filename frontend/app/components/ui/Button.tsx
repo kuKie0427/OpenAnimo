@@ -22,11 +22,11 @@ export function Button({
   const baseStyles = "btn-projection font-heading cursor-pointer inline-flex items-center justify-center gap-2 no-underline";
 
   const variantStyles = {
-    primary: "!bg-[#F5A623] !text-[#1A1A12] hover:brightness-110",
-    secondary: "!bg-[#CC3333] !text-white hover:brightness-110",
-    accent: "!bg-[#4A90D9] !text-white hover:brightness-110",
+    primary: "bg-primary text-primary-content hover:shadow-projection",
+    secondary: "bg-secondary text-secondary-content hover:shadow-signal",
+    accent: "bg-accent text-accent-content hover:shadow-beam",
     ghost: "!bg-transparent border-transparent shadow-none hover:!bg-base-200 hover:shadow-aperture",
-    error: "!bg-[#D94848] !text-white hover:brightness-110",
+    error: "bg-error text-error-content hover:shadow-signal",
   };
 
   const sizeStyles = {
@@ -49,7 +49,6 @@ export function Button({
         variantStyles[variant],
         sizeStyles[size],
         "touch-target", // 确保触摸目标尺寸
-        loading && "loading",
         isDisabled && "opacity-50 cursor-not-allowed",
         className
       )}
@@ -58,7 +57,11 @@ export function Button({
       type={type}
       {...props}
     >
-      {loading ? <span className="loading loading-spinner loading-sm" /> : children}
+      {loading ? (
+        <span className="w-5 h-5 rounded-full border-2 border-base-content/15 border-t-primary animate-spin" />
+      ) : (
+        children
+      )}
     </button>
   );
 }

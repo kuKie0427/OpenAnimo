@@ -46,7 +46,7 @@ export function ConfirmModal({
   const styles = variantStyles[variant];
 
   return (
-    <dialog className="modal modal-open" open>
+    <dialog className="modal" open aria-modal="true" aria-labelledby="confirm-modal-title">
       <div className="modal-box bg-base-100 border border-base-content/30 shadow-aperture">
         <div className="flex items-start gap-4">
           {/* 图标 */}
@@ -56,7 +56,7 @@ export function ConfirmModal({
 
           {/* 内容 */}
           <div className="flex-1">
-            <h3 className="font-heading font-bold text-lg">{title}</h3>
+            <h3 id="confirm-modal-title" className="font-heading font-bold text-lg">{title}</h3>
             <p className="text-base-content/70 mt-2">{message}</p>
           </div>
         </div>
@@ -64,14 +64,14 @@ export function ConfirmModal({
         {/* 操作按钮 */}
         <div className="modal-action">
           <button
-            className="btn btn-ghost border-2 border-base-content/30 cursor-pointer"
+            className="btn btn-ghost border border-base-content/30 cursor-pointer"
             onClick={onClose}
             disabled={isLoading}
           >
             {cancelText}
           </button>
           <button
-            className={`btn ${styles.button} border-2 border-base-content/30 cursor-pointer`}
+            className={`btn ${styles.button} border border-base-content/30 cursor-pointer`}
             onClick={onConfirm}
             disabled={isLoading}
           >

@@ -37,8 +37,8 @@ export function HoverActionBar({
       <div
         className={`absolute top-2 right-2 z-10 flex items-center gap-1 rounded-lg bg-base-100/90 p-1 transition-all duration-200 ${
           isHovered
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 -translate-y-2 pointer-events-none"
+            ? "opacity-100"
+            : "opacity-0 pointer-events-none"
         }`}
       >
         {actions.map((action, index) => {

@@ -36,7 +36,7 @@ export function OutlinePreviewCard({
 	return (
 		<div className="card-feature bg-base-100 p-3 space-y-2 text-sm">
 			<div>
-				<p className="text-[10px] uppercase tracking-widest text-base-content/40 font-bold">
+				<p className="text-[10px] tracking-widest text-base-content/40 font-bold">
 					Story Outline
 				</p>
 				<h3 className="font-heading font-bold text-base">故事大纲待确认</h3>

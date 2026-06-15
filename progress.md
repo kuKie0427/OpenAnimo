@@ -1,5 +1,37 @@
 # Progress Log
 
+## 2026-06-15 — Session: daw-ui-redesign-p0 — DAW UI P0 设计系统修复
+- **做了什么**: 执行 Phase 0 — 设计系统修复，覆盖 6 个任务域
+  - Task 1: Button.tsx 硬编码 hex→daisyUI theme tokens + glow hover + custom CSS spinner
+  - Task 2: 46 处 border-2→border (1px)，仅保留 Button.tsx spinner 2px (intentional)
+  - Task 3: 修复 HoverActionBar.tsx translate-y→opacity + VideoSectionShape.tsx hover:-translate-y→shadow-projection
+  - Task 4: Modal 统一为 `<dialog>` + aria-modal + aria-labelledby (EditModal + ConfirmModal)
+  - Task 5: 移除 12 处非 font-mono 元素上的 uppercase（保留 StoryboardBoardShape.tsx font-mono 1 处）
+  - Task 6: tokens.css CSS 变量接入 tailwind.config.ts (spacing/zIndex/transitionDuration)
+- **改了什么文件**: Button.tsx, Button.test.tsx, EditModal.tsx, ConfirmModal.tsx, HoverActionBar.tsx, VideoSectionShape.tsx, tailwind.config.ts, SettingsModal.tsx, ConfigInput.tsx, ChatPanel.tsx, EntityApprovalCard.tsx, VersionCompareInline.tsx, StagePipeline.tsx, StoryboardBoardShape.tsx, StoryboardSectionShape.tsx, CharacterSectionShape.tsx, Toast.tsx, AssetDrawer.tsx, VersionCompareDrawer.tsx, CritqueResultCard.tsx, OutlinePreviewCard.tsx, MessageList.tsx, HomePage.tsx, feature_list.json (+entry→passing), progress.md (mod)
+- **当前状态**: Gate 全部通过 ✅ (tsc 0, vitest 412/412, pnpm build OK, border-2=0, hover:translate=0, uppercase restricted to font-mono)
+- **决策**: Button.tsx spinner 的 border-2 保留（2px ring 为 spinner 视觉所需，非 UI border 违规）
+- **阻断**: 无
+- **下次**: Phase 1 待开启（新会话）
+
+## 2026-06-08 — Session: remove-parallel-mode — 移除并行模式
+- **做了什么**: 移除 LangGraph 编排中的并行模式（parallel_enabled）
+  - 分析发现：并行模式下分镜渲染会降级为纯文本生成，角色一致性无法保证
+  - Critique 只检查场景一致性，不检查角色一致性
+  - 角色一致性评估（consistency_eval）只是报告，不会触发重渲染
+  - 结论：并行模式与角色一致性需求矛盾，决定移除
+- **改了什么文件**:
+  - `backend/app/orchestration/graph.py` (mod) — 移除 parallel_enabled 参数和条件分支
+  - `backend/app/orchestration/nodes.py` (mod) — 移除 _parallel_mode、set_parallel_mode、route_shots_approval_parallel
+  - `backend/app/config.py` (mod) — 移除 parallel_enabled 配置项
+  - `backend/tests/test_orchestration/test_parallel.py` (del) — 删除并行模式测试
+  - `backend/tests/e2e/test_parallel_e2e.py` (del) — 删除并行模式 E2E 测试
+  - `backend/tests/test_orchestration/test_critique_override.py` (mod) — 移除 set_parallel_mode 导入和 fixture
+- **当前状态**: 编排测试 180 passed，ruff 0 errors
+- **决策**: 移除并行模式，确保角色渲染完成后再生成分镜，保证角色一致性
+- **阻断**: 无
+- **下次**: 无
+
 ## 2026-06-08 — Session: f-ui-layout-fix-p3 — 响应式布局修复
 - **做了什么**: 修复 4 个组件的响应式布局问题
   - Task 0: feature_list.json 添加 f-ui-layout-fix-p3 条目 (active→passing)

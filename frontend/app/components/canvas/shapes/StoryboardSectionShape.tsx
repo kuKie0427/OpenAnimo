@@ -71,7 +71,7 @@ function ShotCard({ shot }: { shot: ReviewedShot }) {
 
 	return (
 		<div
-			className={`card card-compact bg-base-200 border-2 border-base-content/15 min-w-0 group relative ${
+			className={`card card-compact bg-base-200 border border-base-content/15 min-w-0 group relative ${
 				isApproved ? "ring-1 ring-success/20" : ""
 			}`}
 		>

@@ -59,7 +59,7 @@ function versionLabel(version: ArtifactVersion): string {
 export function VersionColumn({ title, version }: { title: string; version?: ArtifactVersion }) {
 	const imageUrl = getStaticUrl(version?.snapshot.image_url as string | null | undefined);
 	return (
-		<section className="min-w-0 rounded-box border-2 border-base-content/15 bg-base-200/60 p-3">
+		<section className="min-w-0 rounded-box border border-base-content/15 bg-base-200/60 p-3">
 			<h3 className="font-heading text-sm font-bold">{title}</h3>
 			<div className="mt-2 aspect-video overflow-hidden rounded border border-base-content/10 bg-base-300">
 				{imageUrl ? (
@@ -250,7 +250,7 @@ export function VersionCompareDrawer({
 							<VersionColumn title={`新版本 v${effectiveRight ?? "—"}`} version={effectiveRight ? versionByNumber.get(effectiveRight) : undefined} />
 						</div>
 
-						<section className="rounded-box border-2 border-base-content/10 bg-base-200/40 p-3">
+						<section className="rounded-box border border-base-content/10 bg-base-200/40 p-3">
 							<h3 className="mb-2 font-heading text-sm font-bold">差异</h3>
 							{compareQuery.isLoading && <div className="text-xs text-base-content/60">计算差异中...</div>}
 							{!compareQuery.isLoading && (compareQuery.data?.diffs.length ?? 0) === 0 && (

@@ -30,7 +30,7 @@ export function Toast({ toast }: ToastProps) {
     <div
       className={`
         relative min-w-[320px] max-w-[480px] p-4 bg-base-100
-        border-2 ${typeStyles[toast.type]}
+        border ${typeStyles[toast.type]}
         shadow-aperture
         transform -rotate-[0.5deg]
         animate-fade-in
@@ -61,7 +61,7 @@ export function Toast({ toast }: ToastProps) {
                 action.onClick();
                 removeToast(toast.id);
               }}
-              className={`btn btn-xs border-2 border-base-content/50 ${
+              className={`btn btn-xs border border-base-content/50 ${
                 action.variant === "primary"
                   ? "btn-primary"
                   : "btn-ghost hover:bg-base-200"

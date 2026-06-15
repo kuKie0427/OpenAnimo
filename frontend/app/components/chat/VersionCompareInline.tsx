@@ -51,7 +51,7 @@ export function VersionCompareInline({
 
 	if (versionsQuery.isLoading) {
 		return (
-			<div className="rounded-box border-2 border-base-content/10 bg-base-200/40 p-4">
+			<div className="rounded-box border border-base-content/10 bg-base-200/40 p-4">
 				<div className="flex items-center gap-2 text-sm text-base-content/60">
 					<span className="loading loading-spinner loading-xs" />
 					加载版本中...
@@ -62,7 +62,7 @@ export function VersionCompareInline({
 
 	if (versionsQuery.isError) {
 		return (
-			<div className="rounded-box border-2 border-base-content/10 bg-base-200/40 p-4">
+			<div className="rounded-box border border-base-content/10 bg-base-200/40 p-4">
 				<div className="text-sm text-error">
 					加载失败: {versionsQuery.error instanceof Error ? versionsQuery.error.message : "未知错误"}
 				</div>
@@ -72,14 +72,14 @@ export function VersionCompareInline({
 
 	if (versions.length <= 1) {
 		return (
-			<div className="rounded-box border-2 border-base-content/10 bg-base-200/40 p-4">
+			<div className="rounded-box border border-base-content/10 bg-base-200/40 p-4">
 				<div className="text-sm text-base-content/60">暂无历史版本</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="rounded-box border-2 border-base-content/10 bg-base-200/40 p-3">
+		<div className="rounded-box border border-base-content/10 bg-base-200/40 p-3">
 			<div className="mb-3 flex items-center justify-between">
 				<div className="flex items-center gap-2">
 					<SvgIcon name="clock-3" size={16} className="text-base-content/60" />

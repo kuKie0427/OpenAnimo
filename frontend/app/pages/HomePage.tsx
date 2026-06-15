@@ -270,7 +270,7 @@ export function HomePage() {
 									{referenceImages.map((img, i) => (
 										<div
 											key={i}
-											className="relative group w-12 h-12 rounded-lg overflow-hidden border-2 border-base-content/10"
+											className="relative group w-12 h-12 rounded-lg overflow-hidden border border-base-content/10"
 										>
 											<img
 												src={img}
@@ -290,7 +290,7 @@ export function HomePage() {
 									{referenceImages.length < 7 && (
 										<button
 											type="button"
-											className="w-12 h-12 rounded-lg border-2 border-dashed border-base-content/15 flex items-center justify-center text-base-content/25 hover:border-primary/40 hover:text-primary/50 transition-colors"
+											className="w-12 h-12 rounded-lg border border-dashed border-base-content/15 flex items-center justify-center text-base-content/25 hover:border-primary/40 hover:text-primary/50 transition-colors"
 											onClick={() => fileInputRef.current?.click()}
 											aria-label="添加参考图"
 										>
@@ -332,7 +332,7 @@ export function HomePage() {
 										key={category.group}
 										className="flex items-center gap-1.5 flex-wrap"
 									>
-										<span className="text-[10px] text-base-content/30 font-bold uppercase tracking-wider w-14 flex-shrink-0">
+										<span className="text-[10px] text-base-content/30 font-bold tracking-wider w-14 flex-shrink-0">
 											{category.group}
 										</span>
 										<div className="flex gap-1 flex-wrap items-center">
@@ -340,7 +340,7 @@ export function HomePage() {
 												<button
 													key={opt.value}
 													type="button"
-													className={`px-2 py-0.5 rounded-full border-2 text-[11px] font-bold transition-all duration-150 ${
+													className={`px-2 py-0.5 rounded-full border text-[11px] font-bold transition-all duration-150 ${
 														style === opt.value
 															? "border-primary bg-primary/10 text-primary shadow-gate-glow"
 															: "border-base-content/10 bg-base-200/50 text-base-content/50 hover:border-primary/30 hover:-translate-y-0.5"
@@ -378,7 +378,7 @@ export function HomePage() {
 									<div>
 										<label
 											htmlFor="shot-count"
-											className="text-xs text-base-content/40 mb-0.5 block font-heading uppercase tracking-wide"
+className="text-xs text-base-content/40 mb-0.5 block font-heading tracking-wide"
 										>
 											镜头数 {shotCount ?? "自动"}
 										</label>
@@ -394,14 +394,14 @@ export function HomePage() {
 									</div>
 
 									<div>
-										<label className="text-xs text-base-content/40 mb-0.5 block font-heading uppercase tracking-wide">
+										<label className="text-xs text-base-content/40 mb-0.5 block font-heading tracking-wide">
 											角色提示
 										</label>
 										{characterHints.map((hint, i) => (
 											<div key={i} className="flex gap-1 mb-1">
 												<input
 													type="text"
-													className="input input-bordered input-sm bg-base-200/60 flex-1 text-xs border-2"
+													className="input input-bordered input-sm bg-base-200/60 flex-1 text-xs border"
 													placeholder={`角色 ${i + 1}`}
 													value={hint}
 													onChange={(e) =>
