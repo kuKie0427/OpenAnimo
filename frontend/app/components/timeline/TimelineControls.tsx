@@ -15,6 +15,7 @@ export function TimelineControls({ currentTime, isPlaying, onPlay, onPause, onTi
         onClick={isPlaying ? onPause : onPlay}
         className="btn btn-ghost btn-sm btn-circle"
         aria-label={isPlaying ? "暂停" : "播放"}
+        data-testid={isPlaying ? "timeline-pause" : "timeline-play"}
       >
         {isPlaying ? (
           <PauseIcon className="w-4 h-4" />

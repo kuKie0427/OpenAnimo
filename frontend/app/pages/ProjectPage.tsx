@@ -8,7 +8,9 @@ import {
 	useSearchParams,
 } from "react-router-dom";
 import { ViewSwitcher } from "~/components/daw/ViewSwitcher";
+import { StageTabs } from "~/components/daw/StageTabs";
 import { TimelineView } from "~/components/timeline";
+import { ListView } from "~/components/list";
 import { AppShell } from "~/components/layout/AppShell";
 import { StageView } from "~/components/layout/StageView";
 import { Button } from "~/components/ui/Button";
@@ -18,7 +20,7 @@ import { useProjectWebSocket } from "~/hooks/useWebSocket";
 import { canvasEvents } from "~/components/canvas/canvasEvents";
 import { projectsApi } from "~/services/api";
 import { useEditorStore, useShallow } from "~/stores/editorStore";
-import type { ProjectProviderSettings, RecoveryControlRead, VersionEntityType } from "~/types";
+import type { ProjectProviderSettings, RecoveryControlRead, VersionEntityType, WorkflowStage } from "~/types";
 import { ApiError } from "~/types/errors";
 import { toast } from "~/utils/toast";
 import { isWorkflowStage } from "~/utils/workflowStage";
@@ -478,6 +480,30 @@ export function ProjectPage() {
 		return shapes;
 	}, [characters, shots]);
 
+	const workflowStages = useMemo(() => {
+		const stageDefs: Array<{
+			key: WorkflowStage;
+			label: string;
+			icon: React.ComponentType<{ className?: string }>;
+			status: "completed" | "active" | "pending" | "error";
+		}> = [
+			{ key: "plan", label: "规划", icon: ArrowPathIcon, status: "pending" },
+			{ key: "render", label: "生成", icon: ArrowPathIcon, status: "pending" },
+			{ key: "compose", label: "合成", icon: ArrowPathIcon, status: "pending" },
+			{ key: "review", label: "审阅", icon: ArrowPathIcon, status: "pending" },
+		];
+
+		const stageOrder: WorkflowStage[] = ["plan", "render", "compose", "review"];
+		const currentIdx = stageOrder.indexOf(storeCurrentStage);
+
+		return stageDefs.map((s, i) => ({
+			...s,
+			status: i < currentIdx ? "completed" as const
+				: i === currentIdx ? "active" as const
+				: "pending" as const,
+		}));
+	}, [storeCurrentStage]);
+
 	if (projectLoading) {
 		return (
 			<div className="min-h-screen flex items-center justify-center flex-col gap-4 bg-base-100">
@@ -533,33 +559,47 @@ export function ProjectPage() {
 			versionCompareEntityId={versionTarget?.entityId ?? null}
 			onVersionCompareClose={() => setVersionOpen(false)}
 		>
-			<div className="flex-1 relative overflow-hidden">
-				<div className="absolute top-3 right-4 z-20">
-					<ViewSwitcher
-						currentView={viewMode === "timeline" ? "detail" : viewMode}
-						onViewChange={(v) => setViewMode(v === "detail" ? "timeline" : v)}
+			<div className="flex-1 flex flex-col overflow-hidden">
+				<div className="flex items-center justify-between">
+					<StageTabs
+						currentStage={storeCurrentStage}
+						stages={workflowStages}
+						onStageChange={(stage) => useEditorStore.getState().setCurrentStage(stage)}
 					/>
+					<div className="pr-4">
+						<ViewSwitcher currentView={viewMode} onViewChange={setViewMode} />
+					</div>
 				</div>
-				{viewMode === "canvas" && <StageView projectId={projectId} />}
-				{viewMode === "timeline" && (
-					<TimelineView
-						projectId={projectId}
-						shapes={timelineShapes}
-						onShapeSelect={(id) => setSelectedShapeId(id)}
-						onTimeChange={(_time) => {}}
-					/>
-				)}
-				{viewMode === "list" && <ListView projectId={projectId} />}
+
+				<div className="flex-1 relative overflow-hidden">
+					{viewMode === "canvas" && (
+						<div data-testid="infinite-canvas" className="w-full h-full">
+							<StageView projectId={projectId} />
+						</div>
+					)}
+					{viewMode === "timeline" && (
+						<div data-testid="timeline-view" className="w-full h-full">
+							<TimelineView
+								projectId={projectId}
+								shapes={timelineShapes}
+								onShapeSelect={(id) => setSelectedShapeId(id)}
+								onTimeChange={(_time) => {}}
+							/>
+						</div>
+					)}
+					{viewMode === "list" && (
+						<div data-testid="list-view" className="w-full h-full">
+							<ListView
+								projectId={projectId}
+								shapes={timelineShapes}
+								onShapeSelect={(id) => setSelectedShapeId(id)}
+								onShapeEdit={(id) => setSelectedShapeId(id)}
+								onShapeDelete={() => {}}
+							/>
+						</div>
+					)}
+				</div>
 			</div>
 		</AppShell>
-	);
-}
-
-function ListView({ projectId: _projectId }: { projectId: number }) {
-	return (
-		<div className="flex h-full w-full items-center justify-center bg-base-100 flex-col gap-4">
-			<p className="text-base-content/40 text-sm">列表视图</p>
-			<p className="text-base-content/30 text-xs">功能开发中...</p>
-		</div>
 	);
 }

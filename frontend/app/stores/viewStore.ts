@@ -15,6 +15,13 @@ interface ViewState {
   selectedShapeIds: string[];
   setSelectedShapeIds: (ids: string[]) => void;
 
+  typeFilter: string;
+  setTypeFilter: (filter: string) => void;
+  sortBy: "name" | "type" | "position";
+  setSortBy: (sort: "name" | "type" | "position") => void;
+  listSelectedIds: string[];
+  setListSelectedIds: (ids: string[]) => void;
+
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   searchResults: string[];
@@ -44,6 +51,13 @@ export const useViewStore = create<ViewState>()(
       selectedShapeIds: [],
       setSelectedShapeIds: (ids) => set({ selectedShapeIds: ids }),
 
+      typeFilter: "all",
+      setTypeFilter: (filter) => set({ typeFilter: filter }),
+      sortBy: "position",
+      setSortBy: (sort) => set({ sortBy: sort }),
+      listSelectedIds: [],
+      setListSelectedIds: (ids) => set({ listSelectedIds: ids }),
+
       searchQuery: "",
       setSearchQuery: (query) => set({ searchQuery: query }),
       searchResults: [],
@@ -63,6 +77,8 @@ export const useViewStore = create<ViewState>()(
       partialize: (state) => ({
         viewMode: state.viewMode,
         isMinimapVisible: state.isMinimapVisible,
+        typeFilter: state.typeFilter,
+        sortBy: state.sortBy,
       }),
     },
   ),

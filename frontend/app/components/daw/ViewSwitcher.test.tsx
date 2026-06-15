@@ -10,17 +10,17 @@ describe("ViewSwitcher", () => {
 		);
 
 		expect(screen.getByRole("button", { name: /列表/i })).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: /详情/i })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: /时间线/i })).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: /画布/i })).toBeInTheDocument();
 	});
 
 	it("applies selected styles to the current view", () => {
 		render(
-			<ViewSwitcher currentView="detail" onViewChange={vi.fn()} />,
+			<ViewSwitcher currentView="timeline" onViewChange={vi.fn()} />,
 		);
 
-		const detailButton = screen.getByRole("button", { name: /详情/i });
-		expect(detailButton).toHaveClass("bg-primary");
+		const timelineButton = screen.getByRole("button", { name: /时间线/i });
+		expect(timelineButton).toHaveClass("bg-primary");
 
 		const listButton = screen.getByRole("button", { name: /列表/i });
 		expect(listButton).not.toHaveClass("bg-primary");
@@ -31,8 +31,8 @@ describe("ViewSwitcher", () => {
 			<ViewSwitcher currentView="list" onViewChange={vi.fn()} />,
 		);
 
-		const detailButton = screen.getByRole("button", { name: /详情/i });
-		expect(detailButton).toHaveClass("text-base-content/60");
+		const timelineButton = screen.getByRole("button", { name: /时间线/i });
+		expect(timelineButton).toHaveClass("text-base-content/60");
 
 		const canvasButton = screen.getByRole("button", { name: /画布/i });
 		expect(canvasButton).toHaveClass("text-base-content/60");
@@ -59,8 +59,8 @@ describe("ViewSwitcher", () => {
 		await user.click(screen.getByRole("button", { name: /列表/i }));
 		expect(onViewChange).toHaveBeenCalledWith("list");
 
-		await user.click(screen.getByRole("button", { name: /详情/i }));
-		expect(onViewChange).toHaveBeenCalledWith("detail");
+		await user.click(screen.getByRole("button", { name: /时间线/i }));
+		expect(onViewChange).toHaveBeenCalledWith("timeline");
 
 		await user.click(screen.getByRole("button", { name: /画布/i }));
 		expect(onViewChange).toHaveBeenCalledWith("canvas");
@@ -72,7 +72,7 @@ describe("ViewSwitcher", () => {
 		);
 
 		expect(screen.getByTitle("列表")).toBeInTheDocument();
-		expect(screen.getByTitle("详情")).toBeInTheDocument();
+		expect(screen.getByTitle("时间线")).toBeInTheDocument();
 		expect(screen.getByTitle("画布")).toBeInTheDocument();
 	});
 

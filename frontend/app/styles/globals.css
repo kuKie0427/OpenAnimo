@@ -195,11 +195,28 @@
   .touch-target {
     @apply min-w-[44px] min-h-[44px];
   }
+
+  /* 视图切换动画 */
+  .view-enter {
+    animation: view-enter 200ms ease-out;
+  }
+
+  @keyframes view-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
  /* 减少动画偏好 */
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-in {
+  .animate-fade-in,
+  .view-enter {
     animation: none;
   }
 

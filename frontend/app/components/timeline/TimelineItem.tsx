@@ -20,7 +20,7 @@ export function TimelineItem({ item, totalDuration, isActive, onClick }: Timelin
       onClick={onClick}
       className={`absolute top-1 bottom-1 rounded transition-all duration-200 ${
         isActive
-          ? 'bg-primary/20 border border-primary/40 shadow-lg'
+          ? 'bg-primary/20 border border-primary/40 shadow-aperture'
           : 'bg-base-300 border border-base-content/10 hover:border-primary/30'
       }`}
       style={{ left: `${left}%`, width: `${width}%` }}

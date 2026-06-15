@@ -1,11 +1,11 @@
 import { clsx } from "clsx";
 import {
-  ListBulletIcon,
-  Squares2X2Icon,
   ArrowsPointingOutIcon,
+  ClockIcon,
+  ListBulletIcon,
 } from "@heroicons/react/24/outline";
 
-export type ViewMode = "list" | "detail" | "canvas";
+export type ViewMode = "canvas" | "timeline" | "list";
 
 interface ViewSwitcherProps {
   currentView: ViewMode;
@@ -17,9 +17,9 @@ const views: Array<{
   icon: typeof ListBulletIcon;
   label: string;
 }> = [
-  { key: "list", icon: ListBulletIcon, label: "列表" },
-  { key: "detail", icon: Squares2X2Icon, label: "详情" },
   { key: "canvas", icon: ArrowsPointingOutIcon, label: "画布" },
+  { key: "timeline", icon: ClockIcon, label: "时间线" },
+  { key: "list", icon: ListBulletIcon, label: "列表" },
 ];
 
 export function ViewSwitcher({ currentView, onViewChange }: ViewSwitcherProps) {
@@ -35,6 +35,7 @@ export function ViewSwitcher({ currentView, onViewChange }: ViewSwitcherProps) {
             type="button"
             onClick={() => onViewChange(view.key)}
             title={view.label}
+            data-testid={`view-${view.key}`}
             className={clsx(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-all duration-200",
               isSelected

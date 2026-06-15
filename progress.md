@@ -872,3 +872,70 @@
 
 ### 下次
 - 下一 Phase 待新会话启动（执行 /handoff 后等待用户指示）
+
+## 2026-06-15 — Canvas Hybrid P5 — List 视图
+
+### 完成内容
+- List 组件目录创建（5 文件：ListView/ListHeader/ListItem/ListEmpty/index.ts）
+- ListView 主视图（搜索/类型筛选/排序/多选/全选/批量删除）
+- ListHeader 头部（搜索框/类型下拉/排序下拉/选中计数/删除按钮/全选）
+- ListItem 列表项（复选框/彩色类型标签/标题+描述/缩略图/编辑按钮）
+- ListEmpty 空状态（无内容/无搜索结果 不同文案）
+- ViewStore 更新（typeFilter/sortBy/listSelectedIds 三个新字段）
+- ProjectPage 集成（真实 ListView 替代内联 stub，使用 timelineShapes 数据）
+- 33 个单元测试（ListEmpty 3 + ListHeader 8 + ListItem 11 + ListView 11）
+
+### 改了什么文件
+- `frontend/app/components/list/ListView.tsx` (new, 118行)
+- `frontend/app/components/list/ListHeader.tsx` (new, 81行)
+- `frontend/app/components/list/ListItem.tsx` (new, 87行)
+- `frontend/app/components/list/ListEmpty.tsx` (new, 24行)
+- `frontend/app/components/list/index.ts` (new, 4行)
+- `frontend/app/stores/viewStore.ts` (mod, +16行) — typeFilter/sortBy/listSelectedIds
+- `frontend/app/pages/ProjectPage.tsx` (mod, −9/+10行) — 导入真实 ListView 替代内联 stub
+- `frontend/app/components/list/ListEmpty.test.tsx` (new, 28行, 3 tests)
+- `frontend/app/components/list/ListHeader.test.tsx` (new, 97行, 8 tests)
+- `frontend/app/components/list/ListItem.test.tsx` (new, 137行, 11 tests)
+- `frontend/app/components/list/ListView.test.tsx` (new, 159行, 11 tests)
+- `frontend/app/components/timeline/TimelineItem.tsx` (mod, shadow-lg→shadow-aperture)
+- `feature_list.json` (mod, +f-canvas-hybrid-p5, active→passing)
+- `.sisyphus/plans/canvas-hybrid-p5.md` (mod, 8 gate checkboxes→x)
+
+### 当前状态
+- tsc: 0 errors ✅
+- vitest: 66 files, 560 passed (33 new list tests) ✅
+- pnpm build: 6.58s ✅
+- feature_list.json: f-canvas-hybrid-p5 → passing ✅
+
+### 决策
+- ListView 使用 useState (local) 管理搜索/排序/选择状态，ViewStore 存独立副本供跨视图同步
+- `onShapeDelete` 为空函数（shapes 为 characters/shots 派生只读数据）
+- `typeFilter`/`sortBy` 持久化到 localStorage（partialize），`listSelectedIds` 不持久化（transient）
+- 33 个测试覆盖搜索/筛选/排序/多选/全选/批量删除/空状态全路径
+
+### 阻断
+- 无
+
+### 下次
+- 下一 Phase 待新会话启动（执行 /handoff 后等待用户指示）
+
+## Canvas 混合视图方案（2026-06-15）
+
+### 完成内容
+- P0: 设计系统修复（Button/Modal/border）
+- P1: 布局架构重构（AppShell/DrawerPortal）
+- P2: DAW 核心组件（ViewSwitcher/StageTabs/TimelineBar）
+- P3: 画布优化（导航/搜索/筛选/快捷键）
+- P4: Timeline 视图（从画布数据派生）
+- P5: List 视图（批量管理/搜索筛选）
+- P6: 视图集成与测试
+
+### 关键决策
+- 画布为核心，Timeline/List 为可选视图
+- Canvas 是数据源，Timeline/List 从 canvas 派生
+- 保留 P0/P1/P2 成果，优化而非替换
+
+### 后续优化
+- Timeline 支持音频同步
+- List 支持拖拽排序
+- Canvas 支持节点式连线（类似 LibTV）

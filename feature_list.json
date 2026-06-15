@@ -558,6 +558,16 @@
       "evidence": "2026-06-15: StageTabs/TrackList/TrackItem/DetailPanel/TimelineBar/ViewSwitcher created, barrel exports, 66 vitest+tsc+build all green"
     },
     {
+      "id": "f-canvas-hybrid-p5",
+      "name": "Canvas Hybrid P5 — List 视图",
+      "description": "列表式管理视图，支持批量操作和搜索筛选",
+      "dependencies": ["f-canvas-hybrid-p3"],
+      "status": "passing",
+      "domain": "frontend",
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/list/ && pnpm build",
+      "evidence": "2026-06-15: 4 List components (ListView/ListHeader/ListItem/ListEmpty) + ViewStore list state + ProjectPage integration + 33 vitest tests, tsc/built green"
+    },
+    {
       "id": "f-canvas-hybrid-p3",
       "name": "Canvas Hybrid P3 — 画布优化",
       "description": "优化画布体验：导航、搜索、筛选、快捷键",
@@ -576,6 +586,16 @@
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/timeline/ && pnpm build",
       "evidence": "2026-06-15: TimelineView/Track/Item/Playhead/Controls 6 components, ViewStore timeline state, ProjectPage integration, tsc clean, 527 vitest (6 timeline specific) pass"
+    },
+    {
+      "id": "f-canvas-hybrid-p6",
+      "name": "Canvas Hybrid P6 — 视图集成与测试",
+      "description": "三种视图无缝切换，E2E 测试通过",
+      "dependencies": ["f-canvas-hybrid-p4", "f-canvas-hybrid-p5"],
+      "status": "passing",
+      "domain": "frontend",
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run && pnpm exec playwright test tests/e2e/canvas-hybrid.spec.ts && pnpm build",
+      "evidence": "2026-06-15: ViewSwitcher canvas/timeline/list, ProjectPage clean integration, StageTabs header bar, view animation CSS, E2E test file, data-testid on controls, tsc clean, 560 vitest pass, pnpm build OK"
     }
   ]
 }
