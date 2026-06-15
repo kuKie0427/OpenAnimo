@@ -1,6 +1,6 @@
 import { ArrowPathIcon, StopIcon } from "@heroicons/react/24/outline";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
 	Link,
 	useNavigate,
@@ -8,6 +8,7 @@ import {
 	useSearchParams,
 } from "react-router-dom";
 import { ViewSwitcher } from "~/components/daw/ViewSwitcher";
+import { TimelineView } from "~/components/timeline";
 import { AppShell } from "~/components/layout/AppShell";
 import { StageView } from "~/components/layout/StageView";
 import { Button } from "~/components/ui/Button";
@@ -55,6 +56,7 @@ export function ProjectPage() {
 	const autoStartTriggered = useRef(false);
 	const generateRequestTokenRef = useRef(0);
 	const retryCount = useRef(0);
+	const [_selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
 	const { viewMode, setViewMode } = useViewStore();
 
 	const { send } = useProjectWebSocket(projectId);
@@ -440,6 +442,42 @@ export function ProjectPage() {
 		}
 	}, [project, searchParams, setSearchParams, generateMutation]);
 
+	const timelineShapes = useMemo(() => {
+		const shapes: Array<{
+			id: string;
+			type: string;
+			x: number;
+			y: number;
+			content: any;
+		}> = [];
+
+		if (characters) {
+			characters.forEach((c: any, i: number) => {
+				shapes.push({
+					id: `char_${c.id}`,
+					type: "character-section",
+					x: i * 200,
+					y: 0,
+					content: { name: c.name, avatarUrl: c.image_url, ...c },
+				});
+			});
+		}
+
+		if (shots) {
+			(shots as any[]).forEach((s: any, i: number) => {
+				shapes.push({
+					id: `shot_${s.id}`,
+					type: "storyboard-section",
+					x: i * 200,
+					y: 100,
+					content: { imageUrl: s.image_url, ...s },
+				});
+			});
+		}
+
+		return shapes;
+	}, [characters, shots]);
+
 	if (projectLoading) {
 		return (
 			<div className="min-h-screen flex items-center justify-center flex-col gap-4 bg-base-100">
@@ -503,19 +541,17 @@ export function ProjectPage() {
 					/>
 				</div>
 				{viewMode === "canvas" && <StageView projectId={projectId} />}
-				{viewMode === "timeline" && <TimelineView projectId={projectId} />}
+				{viewMode === "timeline" && (
+					<TimelineView
+						projectId={projectId}
+						shapes={timelineShapes}
+						onShapeSelect={(id) => setSelectedShapeId(id)}
+						onTimeChange={(_time) => {}}
+					/>
+				)}
 				{viewMode === "list" && <ListView projectId={projectId} />}
 			</div>
 		</AppShell>
-	);
-}
-
-function TimelineView({ projectId: _projectId }: { projectId: number }) {
-	return (
-		<div className="flex h-full w-full items-center justify-center bg-base-100 flex-col gap-4">
-			<p className="text-base-content/40 text-sm">时间线视图</p>
-			<p className="text-base-content/30 text-xs">功能开发中...</p>
-		</div>
 	);
 }
 
