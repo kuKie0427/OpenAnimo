@@ -7,10 +7,12 @@ import {
 	useParams,
 	useSearchParams,
 } from "react-router-dom";
+import { ViewSwitcher } from "~/components/daw/ViewSwitcher";
 import { AppShell } from "~/components/layout/AppShell";
 import { StageView } from "~/components/layout/StageView";
 import { Button } from "~/components/ui/Button";
 import { Card } from "~/components/ui/Card";
+import { useViewStore } from "~/stores/viewStore";
 import { useProjectWebSocket } from "~/hooks/useWebSocket";
 import { canvasEvents } from "~/components/canvas/canvasEvents";
 import { projectsApi } from "~/services/api";
@@ -53,6 +55,7 @@ export function ProjectPage() {
 	const autoStartTriggered = useRef(false);
 	const generateRequestTokenRef = useRef(0);
 	const retryCount = useRef(0);
+	const { viewMode, setViewMode } = useViewStore();
 
 	const { send } = useProjectWebSocket(projectId);
 
@@ -493,8 +496,34 @@ export function ProjectPage() {
 			onVersionCompareClose={() => setVersionOpen(false)}
 		>
 			<div className="flex-1 relative overflow-hidden">
-				<StageView projectId={projectId} />
+				<div className="absolute top-3 right-4 z-20">
+					<ViewSwitcher
+						currentView={viewMode === "timeline" ? "detail" : viewMode}
+						onViewChange={(v) => setViewMode(v === "detail" ? "timeline" : v)}
+					/>
+				</div>
+				{viewMode === "canvas" && <StageView projectId={projectId} />}
+				{viewMode === "timeline" && <TimelineView projectId={projectId} />}
+				{viewMode === "list" && <ListView projectId={projectId} />}
 			</div>
 		</AppShell>
+	);
+}
+
+function TimelineView({ projectId: _projectId }: { projectId: number }) {
+	return (
+		<div className="flex h-full w-full items-center justify-center bg-base-100 flex-col gap-4">
+			<p className="text-base-content/40 text-sm">时间线视图</p>
+			<p className="text-base-content/30 text-xs">功能开发中...</p>
+		</div>
+	);
+}
+
+function ListView({ projectId: _projectId }: { projectId: number }) {
+	return (
+		<div className="flex h-full w-full items-center justify-center bg-base-100 flex-col gap-4">
+			<p className="text-base-content/40 text-sm">列表视图</p>
+			<p className="text-base-content/30 text-xs">功能开发中...</p>
+		</div>
 	);
 }

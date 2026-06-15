@@ -278,12 +278,12 @@ class FakeTextService:
             return self._character_response(payload)
         if task == "shots":
             return self._shot_response(payload)
+        if "planagent" in combined or "plan agent" in combined:
+            return self._full_plan_response(payload)
         if "critic" in combined or "审查" in combined or "score" in combined:
             return self._critic_response()
         if "outlineagent" in combined or "story_outline" in combined:
             return self._outline_response(payload)
-        if "planagent" in combined:
-            return self._full_plan_response(payload)
 
         configured = self._configured_response()
         if configured is not None:

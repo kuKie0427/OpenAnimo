@@ -162,6 +162,12 @@ async def test_ws_projects_handles_ping_and_echo(monkeypatch):
             events.append((project_id, event))
 
     class FakeSessionCtx:
+        async def close(self):
+            pass
+
+        async def rollback(self):
+            pass
+
         async def __aenter__(self):
             return self
 
@@ -238,6 +244,12 @@ async def test_ws_projects_replays_awaiting_payload(monkeypatch):
         status = "running"
 
     class FakeSessionCtx:
+        async def close(self):
+            pass
+
+        async def rollback(self):
+            pass
+
         async def __aenter__(self):
             return self
 
@@ -303,6 +315,12 @@ async def test_ws_projects_confirm_invalid_run_sends_error(monkeypatch):
             events.append((project_id, event))
 
     class FakeSessionCtx:
+        async def close(self):
+            pass
+
+        async def rollback(self):
+            pass
+
         async def __aenter__(self):
             return self
 
@@ -392,6 +410,12 @@ async def test_ws_projects_confirm_valid_run_saves_feedback_and_triggers_confirm
         project_id = 1
 
     class FakeSessionCtx:
+        async def close(self):
+            pass
+
+        async def rollback(self):
+            pass
+
         def __init__(self):
             self.committed = False
 
@@ -468,6 +492,12 @@ async def test_ws_projects_feedback_save_error_sends_ws_error(monkeypatch):
         project_id = 1
 
     class FakeSessionCtx:
+        async def close(self):
+            pass
+
+        async def rollback(self):
+            pass
+
         async def __aenter__(self):
             return self
 
@@ -541,6 +571,12 @@ async def test_ws_projects_message_exception_sends_error(monkeypatch):
             events.append((project_id, event))
 
     class FakeSessionCtx:
+        async def close(self):
+            pass
+
+        async def rollback(self):
+            pass
+
         async def __aenter__(self):
             return self
 

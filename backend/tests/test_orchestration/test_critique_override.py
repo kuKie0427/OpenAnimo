@@ -26,7 +26,6 @@ from app.orchestration.nodes import (
     _resolve_entity_name,
     critique_character_images_node,
     critique_shot_images_node,
-    set_parallel_mode,
 )
 from app.orchestration.runtime import build_phase2_runtime_context
 from tests.agent_fixtures import DummyWsManager, make_context
@@ -36,12 +35,6 @@ from tests.factories import create_character, create_shot
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-@pytest.fixture(autouse=True)
-def _reset_parallel_mode():
-    """Ensure _parallel_mode is False for critique node route assertions."""
-    set_parallel_mode(False)
 
 
 async def _eager_load_project(session, ctx):

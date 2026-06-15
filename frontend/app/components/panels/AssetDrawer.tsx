@@ -139,10 +139,10 @@ export function AssetDrawer({ open, onClose, projectId }: AssetDrawerProps) {
 				<div className="fixed inset-0 bg-black/30 z-drawer-backdrop" onClick={onClose} />
 			)}
 			<div
-				className={`fixed right-0 top-0 h-full w-80 lg:w-96 bg-base-100 border-l-2 border-base-content/15 z-drawer transform transition-transform duration-200 ${open ? "translate-x-0" : "translate-x-full"}`}
+				className={`fixed right-0 top-0 h-full w-80 lg:w-96 bg-base-100 border-l border-base-content/15 z-drawer transform transition-transform duration-200 ${open ? "translate-x-0" : "translate-x-full"}`}
 			>
 				{/* Header */}
-				<div className="flex items-center justify-between p-3 border-b-2 border-base-content/10">
+				<div className="flex items-center justify-between p-3 border-b border-base-content/10">
 					<div className="flex items-center gap-1.5">
 						<SvgIcon name="archive" size={16} className="text-primary" />
 						<h3 className="text-sm font-bold">资产库</h3>

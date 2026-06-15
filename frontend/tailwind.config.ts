@@ -32,9 +32,11 @@ export default {
         'sticky': 'var(--z-sticky)',
         'drawer-backdrop': 'var(--z-drawer-backdrop)',
         'drawer': 'var(--z-drawer)',
+        'toolbar': 'var(--z-toolbar)',
         'modal-backdrop': 'var(--z-modal-backdrop)',
         'modal': 'var(--z-modal)',
         'popover': 'var(--z-popover)',
+        'toast': 'var(--z-toast)',
         'tooltip': 'var(--z-tooltip)',
       },
       transitionDuration: {

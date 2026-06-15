@@ -27,10 +27,12 @@
     --z-sticky: 20;
     --z-drawer-backdrop: 30;
     --z-drawer: 40;
-    --z-modal-backdrop: 50;
-    --z-modal: 60;
-    --z-popover: 70;
-    --z-tooltip: 80;
+    --z-toolbar: 50;
+    --z-modal-backdrop: 60;
+    --z-modal: 70;
+    --z-popover: 80;
+    --z-toast: 90;
+    --z-tooltip: 100;
   }
 }
 

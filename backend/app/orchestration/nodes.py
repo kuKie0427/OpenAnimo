@@ -4,10 +4,13 @@ from __future__ import annotations
 from typing import Any
 
 from langgraph.runtime import Runtime
-from langgraph.types import Send, interrupt
+from langgraph.types import interrupt
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
 
 from app.agents.critic import CriticAgent
 from app.agents.review_rules import ALLOWED_START_AGENTS
+from app.models.project import Project as ProjectModel
 from .state import (
     Phase2RuntimeContext,
     Phase2State,
@@ -57,12 +60,27 @@ _STAGE_TO_AGENT: dict[str, str] = {
     "add_audio": "compose",
 }
 
-_parallel_mode: bool = False
 
+async def _eager_load_project(runtime: Runtime[Phase2RuntimeContext]) -> None:
+    """Eager-load characters and shots for safe async access.
 
-def set_parallel_mode(enabled: bool) -> None:
-    global _parallel_mode
-    _parallel_mode = enabled
+    SQLAlchemy lazy loading triggers MissingGreenlet in async LangGraph nodes.
+    This helper uses selectinload to pre-populate the relationships on the
+    project instance already tracked in the session identity map.
+    Skips gracefully when the agent context is a mock (no real session/project).
+    """
+    ctx = runtime.context.agent_context
+    if not hasattr(ctx, "project_id") or not hasattr(ctx, "session"):
+        return  # Mock/test context — skip eager loading
+    stmt = (
+        select(ProjectModel)
+        .where(ProjectModel.id == ctx.project_id)
+        .options(
+            selectinload(ProjectModel.characters),
+            selectinload(ProjectModel.shots),
+        )
+    )
+    await ctx.session.execute(stmt)
 
 
 # Gate name mapping from critique node names to gate_modes gate names
@@ -588,6 +606,7 @@ async def outline_approval_node(
 async def characters_approval_node(
     state: Phase2State, runtime: Runtime[Phase2RuntimeContext]
 ) -> dict[str, Any]:
+    await _eager_load_project(runtime)
     agent_ctx = runtime.context.agent_context
     characters = getattr(agent_ctx.project, "characters", None)
     entity_ids = [c.id for c in characters] if characters else None
@@ -607,6 +626,7 @@ async def characters_approval_node(
 async def shots_approval_node(
     state: Phase2State, runtime: Runtime[Phase2RuntimeContext]
 ) -> dict[str, Any]:
+    await _eager_load_project(runtime)
     agent_ctx = runtime.context.agent_context
     orchestrator = runtime.context.orchestrator
 
@@ -677,6 +697,7 @@ async def shots_approval_node(
 async def character_images_approval_node(
     state: Phase2State, runtime: Runtime[Phase2RuntimeContext]
 ) -> dict[str, Any]:
+    await _eager_load_project(runtime)
     agent_ctx = runtime.context.agent_context
     characters = getattr(agent_ctx.project, "characters", None)
     entity_ids = [c.id for c in characters] if characters else None
@@ -698,6 +719,7 @@ async def character_images_approval_node(
 async def shot_images_approval_node(
     state: Phase2State, runtime: Runtime[Phase2RuntimeContext]
 ) -> dict[str, Any]:
+    await _eager_load_project(runtime)
     agent_ctx = runtime.context.agent_context
     if _is_video_provider_invalid(_get_run_provider_snapshot(agent_ctx)):
         return _auto_approval_result(
@@ -807,7 +829,7 @@ async def critique_character_images_node(
             "stage_history": ["critique_character_images"],
             "artifact_lineage": [_stage_key("critique_character_images")],
             "critique_scores": {},
-            "route_stage": "compose_videos" if _parallel_mode else "render_shots",
+            "route_stage": "render_shots",
         }
 
     # Check max rounds
@@ -818,7 +840,7 @@ async def critique_character_images_node(
             "stage_history": ["critique_character_images"],
             "artifact_lineage": [_stage_key("critique_character_images")],
             "critique_scores": state.get("critique_scores", {}),
-            "route_stage": "compose_videos" if _parallel_mode else "render_shots",
+            "route_stage": "render_shots",
         }
 
     orchestrator = runtime.context.orchestrator
@@ -870,7 +892,7 @@ async def critique_character_images_node(
         )
     else:
         # Either quality is OK or we've hit max rounds
-        next_route = "compose_videos" if _parallel_mode else "render_shots"
+        next_route = "render_shots"
         new_round = critique_round
 
     return {
@@ -976,14 +998,11 @@ def route_after_critique_character_images(state: Phase2State) -> str:
 
     Uses route_stage set by the critique node:
     - 'render_characters' if score < threshold and within max rounds
-    - 'render_shots' if quality OK or max rounds exceeded (serial)
-    - 'compose_videos' if quality OK or max rounds exceeded (parallel)
+    - 'render_shots' if quality OK or max rounds exceeded
     """
     route = state.get("route_stage")
     if route:
         return route
-    if _parallel_mode:
-        return "compose_videos"
     return "render_shots"
 
 
@@ -1080,18 +1099,6 @@ def route_after_characters_approval(state: Phase2State) -> str:
 
 def route_after_shots_approval(state: Phase2State) -> str:
     return _route_after_approval(state, default_next="render_characters")
-
-
-def route_shots_approval_parallel(state: Phase2State) -> str | list[Send]:
-    route = state.get("route_stage")
-    if route:
-        return route
-    if state.get("review_requested"):
-        return "review"
-    return [
-        Send("render_characters", state),
-        Send("render_shots_parallel", state),
-    ]
 
 
 def route_after_character_images_approval(state: Phase2State) -> str:

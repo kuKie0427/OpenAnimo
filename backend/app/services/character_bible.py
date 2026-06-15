@@ -64,13 +64,32 @@ async def compute_face_embedding(image_url: str) -> list[float] | None:
         logger.info("InsightFace not available, skipping embedding computation")
         return None
 
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(image_url)
-            response.raise_for_status()
-            image_bytes = response.content
-    except httpx.HTTPError as e:
-        logger.warning("Failed to download image for embedding: %s", e)
+    # 本地 /static/ 路径 — 直接从文件系统读取
+    if image_url.startswith("/static/"):
+        try:
+            from pathlib import Path
+
+            base_dir = Path(__file__).resolve().parents[1]
+            file_path = base_dir / image_url.lstrip("/")
+            if file_path.exists():
+                image_bytes = file_path.read_bytes()
+            else:
+                logger.warning("Local image not found: %s", image_url)
+                return None
+        except (OSError, PermissionError) as exc:
+            logger.warning("Failed to read local image %s: %s", image_url, exc)
+            return None
+    elif image_url.startswith(("http://", "https://")):
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(image_url)
+                response.raise_for_status()
+                image_bytes = response.content
+        except httpx.HTTPError as e:
+            logger.warning("Failed to download image for embedding: %s", e)
+            return None
+    else:
+        logger.warning("Unsupported image URL format for embedding: %s", image_url[:100])
         return None
 
     faces = detect_faces(image_bytes)

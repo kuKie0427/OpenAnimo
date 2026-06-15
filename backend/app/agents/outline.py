@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any
 
 from app.agents.base import AgentContext, BaseAgent, CompletionInfo
 from app.agents.prompts.outline import SYSTEM_PROMPT
 from app.agents.utils import extract_json
 from app.db.utils import utcnow
+
+logger = logging.getLogger(__name__)
 
 
 def _clean_outline(data: dict[str, Any]) -> dict[str, Any]:
@@ -67,9 +70,16 @@ class OutlineAgent(BaseAgent):
                 ctx,
                 system_prompt=SYSTEM_PROMPT,
                 user_prompt=json.dumps(payload, ensure_ascii=False),
-                max_tokens=2048,
+                max_tokens=4096,
             )
-            data = extract_json(resp.text)
+            try:
+                data = extract_json(resp.text)
+            except ValueError:
+                logger.exception(
+                    "Failed to parse OutlineAgent LLM response (len=%d): %s",
+                    len(resp.text), resp.text[:2000],
+                )
+                raise
             outline = _clean_outline(data)
             visual_bible = data.get("visual_bible") if isinstance(data.get("visual_bible"), str) else ""
             user_message = data.get("user_message") if isinstance(data.get("user_message"), str) else ""

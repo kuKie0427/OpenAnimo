@@ -10,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
+from app.db.utils import utcnow
 from app.models.agent_run import AgentRun
 from app.models.agent_trace import AgentTrace
 from app.models.message import Message
@@ -353,11 +354,6 @@ class BaseAgent:
     @asynccontextmanager
     async def trace_step(self, ctx: AgentContext, stage: str, method: str):
         """Trace a sub-step execution. Non-blocking on failure."""
-        from datetime import datetime, timezone
-
-        def utcnow() -> datetime:
-            return datetime.now(timezone.utc)
-
         trace = AgentTrace(
             run_id=ctx.run.id,  # pyright: ignore[reportArgumentType]
             agent_name=self.name,

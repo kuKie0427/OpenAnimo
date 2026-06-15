@@ -789,3 +789,51 @@
 
 ### 下次
 - 需要新会话加载下一 Phase（daw-ui-redesign-p3），执行 `/handoff` 后等待用户指示
+
+## 2026-06-15 — Canvas Hybrid P3 — 画布优化
+
+### 完成内容
+- **Phase 3: 画布优化** — 全部 Gate 通过 ✅
+- Task 0: feature_list.json 添加 f-canvas-hybrid-p3 (active → passing)
+- Task 1: 创建 CanvasBreadcrumb 导航组件（面包屑导航：适应内容/当前阶段/选中 shape）
+- Task 2: 创建 CanvasSearch 搜索组件（名称搜索 + 类型筛选 + 结果导航）
+- Task 3: 创建 CanvasMinimap 小地图组件（shape 缩略图 + 视口指示器 + 点击跳转）
+- Task 4: 创建 CanvasQuickActions 快捷操作组件（对齐/分组/删除，选中 2+ 时显示）
+- Task 5: InfiniteCanvas 集成全部 4 个新组件 + 键盘快捷键（Cmd+F/Cmd+0/Cmd+G/Escape/Delete）
+- Task 6: 创建 ViewStore (Zustand + persist，管理视图模式/搜索/选中状态)
+- Task 7: ProjectPage 集成 ViewSwitcher，支持 canvas/timeline/list 三种视图切换
+- Task 8: 画布快捷键（键盘事件监听，防止输入框冲突）
+- Task 9: 5 个测试文件，123 个测试，全部通过
+
+### 改动文件
+- `frontend/app/components/canvas/CanvasBreadcrumb.tsx` (new, 50行)
+- `frontend/app/components/canvas/CanvasSearch.tsx` (new, 69行)
+- `frontend/app/components/canvas/CanvasMinimap.tsx` (new, 72行)
+- `frontend/app/components/canvas/CanvasQuickActions.tsx` (new, 56行)
+- `frontend/app/stores/viewStore.ts` (new, 55行)
+- `frontend/app/components/canvas/InfiniteCanvas.tsx` (mod, +269行 — 组件集成 + 快捷键)
+- `frontend/app/pages/ProjectPage.tsx` (mod, +29行 — ViewSwitcher + 视图切换)
+- `frontend/app/components/canvas/InfiniteCanvas.test.tsx` (mod — mock editor 添加新方法)
+- `frontend/app/components/canvas/CanvasBreadcrumb.test.tsx` (new)
+- `frontend/app/components/canvas/CanvasSearch.test.tsx` (new)
+- `frontend/app/components/canvas/CanvasMinimap.test.tsx` (new)
+- `frontend/app/components/canvas/CanvasQuickActions.test.tsx` (new)
+- `frontend/app/stores/viewStore.test.ts` (new)
+- `feature_list.json` (mod — f-canvas-hybrid-p3 +status→passing)
+
+### 验证结果
+- tsc --noEmit: 0 errors ✅
+- vitest: 15 files, 123 passed (69 new tests) ✅
+- pnpm build: 6.23s ✅
+
+### 决策
+- CanvasQuickActions 使用 @heroicons/react/24/outline 替代 SvgIcon（缺少对齐图标）
+- ViewSwitcher 的 "detail" ↔ "timeline" 映射通过桥接函数处理
+- Minimap 使用 inline 函数计算 shapes/viewport（避免过度 re-render）
+- 快捷键检查 `input`/`textarea`/`contentEditable` 防止与输入冲突
+
+### 阻断
+- 无
+
+### 下次
+- 下一 Phase 待新会话启动

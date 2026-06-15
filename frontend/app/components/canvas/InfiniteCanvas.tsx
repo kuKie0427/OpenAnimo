@@ -29,6 +29,13 @@ import { getPipelineStageIndex } from "~/utils/pipeline";
 import { toast } from "~/utils/toast";
 import { ApiError } from "~/types/errors";
 import { ShapeContextMenu } from "./ShapeContextMenu";
+import { CanvasBreadcrumb } from "./CanvasBreadcrumb";
+import { CanvasSearch } from "./CanvasSearch";
+import { CanvasMinimap } from "./CanvasMinimap";
+import { CanvasQuickActions } from "./CanvasQuickActions";
+import { useViewStore } from "~/stores/viewStore";
+
+type CanvasShapeType = "plan-section" | "character-section" | "storyboard-section" | "compose-section";
 
 interface InfiniteCanvasProps {
 	projectId: number;
@@ -313,6 +320,15 @@ export function InfiniteCanvas({ projectId }: InfiniteCanvasProps) {
 		})),
 	);
 
+	const {
+		isSearchOpen, setSearchOpen,
+		isMinimapVisible,
+		selectedShapeIds, setSelectedShapeIds,
+		setSearchQuery,
+		searchResults, setSearchResults,
+		currentSearchIndex, setCurrentSearchIndex,
+	} = useViewStore();
+
 	const { data: project } = useQuery({
 		queryKey: ["project", projectId],
 		queryFn: () => projectsApi.get(projectId),
@@ -326,6 +342,9 @@ export function InfiniteCanvas({ projectId }: InfiniteCanvasProps) {
 		src: string;
 		title: string;
 	} | null>(null);
+
+	// Force re-render for minimap on editor changes
+	const [, forceRender] = useState(0);
 
 	const rawVideoUrl = projectVideoUrl;
 	const finalVideoUrl = rawVideoUrl ? getStaticUrl(rawVideoUrl) : null;
@@ -468,6 +487,35 @@ export function InfiniteCanvas({ projectId }: InfiniteCanvasProps) {
 		[projectId, currentRunId, queryClient, updateCharacter, updateShot, invalidateProjectData],
 	);
 
+	const handleSearch = useCallback((query: string) => {
+		setSearchQuery(query);
+		const editor = editorRef.current;
+		if (!editor) return;
+		const allShapes = editor.getCurrentPageShapes();
+		const filtered = allShapes
+			.filter((s) => s.type !== "arrow")
+			.filter((s) => {
+				if (!query) return true;
+				const nameMatch = (s.props as { name?: string } | undefined)?.name?.toLowerCase()?.includes(query.toLowerCase());
+				const idMatch = s.id.toLowerCase().includes(query.toLowerCase());
+				return nameMatch || idMatch;
+			})
+			.map((s) => s.id);
+		setSearchResults(filtered.map((id) => id.toString()));
+		setCurrentSearchIndex(0);
+	}, [setSearchQuery, setSearchResults, setCurrentSearchIndex]);
+
+	const handleFilterType = useCallback((type: CanvasShapeType | "all") => {
+		const editor = editorRef.current;
+		if (!editor) return;
+		const allShapes = editor.getCurrentPageShapes();
+		const filtered = type === "all"
+			? allShapes.filter((s) => s.type !== "arrow")
+			: allShapes.filter((s) => s.type === type);
+		setSearchResults(filtered.map((s) => s.id.toString()));
+		setCurrentSearchIndex(0);
+	}, [setSearchResults, setCurrentSearchIndex]);
+
 	useEffect(() => {
 		const unsubscribers = [
 			canvasEvents.on("preview-image", setPreviewImage),
@@ -478,6 +526,116 @@ export function InfiniteCanvas({ projectId }: InfiniteCanvasProps) {
 			unsubscribers.forEach((unsub) => unsub());
 		};
 	}, [handleShapeAction]);
+
+	useEffect(() => {
+		const editor = editorRef.current;
+		if (!editor) return;
+		const handleChange = () => {
+			const ids = editor.getSelectedShapeIds();
+			setSelectedShapeIds(ids.map((id) => id.toString()));
+		};
+		editor.on("change", handleChange);
+		return () => {
+			editor.off("change", handleChange);
+		};
+	}, [editorRef, setSelectedShapeIds]);
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			const editor = editorRef.current;
+			if (!editor) return;
+
+			const target = e.target as HTMLElement;
+			if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
+
+			// Cmd+F / Ctrl+F — open search
+			if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+				e.preventDefault();
+				setSearchOpen(true);
+				return;
+			}
+
+			// Cmd+0 / Ctrl+0 — fit to content
+			if ((e.metaKey || e.ctrlKey) && e.key === "0") {
+				e.preventDefault();
+				editor.zoomToFit({ animation: { duration: 300 } });
+				return;
+			}
+
+			// Cmd+G / Ctrl+G — next search result
+			if ((e.metaKey || e.ctrlKey) && e.key === "g" && !e.shiftKey) {
+				e.preventDefault();
+				if (searchResults.length > 0) {
+					const nextIndex = (currentSearchIndex + 1) % searchResults.length;
+					const shapeId = searchResults[nextIndex];
+					const shape = editor.getShape(shapeId as TLShapeId);
+					if (shape) {
+						const props = shape.props as { w?: number; h?: number } | undefined;
+						editor.centerOnPoint(
+							{ x: shape.x + (props?.w ?? 420) / 2, y: shape.y + (props?.h ?? 260) / 2 },
+							{ animation: { duration: 300 } },
+						);
+						editor.select(shapeId as TLShapeId);
+						setCurrentSearchIndex(nextIndex);
+					}
+				}
+				return;
+			}
+
+			// Cmd+Shift+G / Ctrl+Shift+G — previous search result
+			if ((e.metaKey || e.ctrlKey) && e.key === "g" && e.shiftKey) {
+				e.preventDefault();
+				if (searchResults.length > 0) {
+					const prevIndex = (currentSearchIndex - 1 + searchResults.length) % searchResults.length;
+					const shapeId = searchResults[prevIndex];
+					const shape = editor.getShape(shapeId as TLShapeId);
+					if (shape) {
+						const props = shape.props as { w?: number; h?: number } | undefined;
+						editor.centerOnPoint(
+							{ x: shape.x + (props?.w ?? 420) / 2, y: shape.y + (props?.h ?? 260) / 2 },
+							{ animation: { duration: 300 } },
+						);
+						editor.select(shapeId as TLShapeId);
+						setCurrentSearchIndex(prevIndex);
+					}
+				}
+				return;
+			}
+
+			// Escape — close search / deselect
+			if (e.key === "Escape") {
+				if (isSearchOpen) {
+					setSearchOpen(false);
+					return;
+				}
+				editor.selectNone();
+				return;
+			}
+
+			// Delete / Backspace — delete selected shapes
+			if (e.key === "Delete" || e.key === "Backspace") {
+				const selectedIds = editor.getSelectedShapeIds();
+				if (selectedIds.length > 0) {
+					e.preventDefault();
+					editor.deleteShapes(selectedIds);
+				}
+			}
+		};
+
+		document.addEventListener("keydown", handleKeyDown);
+		return () => document.removeEventListener("keydown", handleKeyDown);
+	}, [editorRef, isSearchOpen, setSearchOpen, setCurrentSearchIndex, searchResults, currentSearchIndex]);
+
+	// Force re-render for minimap on editor changes
+	useEffect(() => {
+		const editor = editorRef.current;
+		if (!editor) return;
+		const handleChange = () => forceRender((n) => n + 1);
+		editor.on("change", handleChange);
+		return () => {
+			editor.off("change", handleChange);
+		};
+	}, [editorRef]);
 
 	const handleMount = useCallback((editor: Editor) => {
 		editorRef.current = editor;
@@ -596,6 +754,117 @@ export function InfiniteCanvas({ projectId }: InfiniteCanvasProps) {
 					<CanvasToolbar projectId={projectId} />
 					<ShapeContextMenu />
 				</Tldraw>
+
+				<CanvasBreadcrumb
+					projectId={projectId}
+					currentStage={currentStage}
+					selectedShapeId={selectedShapeIds[0]}
+					onStageClick={(stage) => {
+						useEditorStore.getState().setCurrentStage(stage);
+					}}
+					onShapeClick={(shapeId) => {
+						const editor = editorRef.current;
+						if (editor) {
+							editor.select(shapeId as TLShapeId);
+						}
+					}}
+					onFitToContent={() => {
+						editorRef.current?.zoomToFit({ animation: { duration: 300 } });
+					}}
+				/>
+
+				{isSearchOpen && (
+					<CanvasSearch
+						onSearch={handleSearch}
+						onFilterType={handleFilterType}
+						resultCount={searchResults.length}
+						currentIndex={currentSearchIndex}
+						onNavigateResult={(direction) => {
+							if (searchResults.length === 0) return;
+							const nextIndex = direction === "next"
+								? (currentSearchIndex + 1) % searchResults.length
+								: (currentSearchIndex - 1 + searchResults.length) % searchResults.length;
+							const shapeId = searchResults[nextIndex];
+							const editor = editorRef.current;
+							if (editor) {
+								const shape = editor.getShape(shapeId as TLShapeId);
+								if (shape) {
+									const props = shape.props as { w?: number; h?: number } | undefined;
+									editor.centerOnPoint(
+										{ x: shape.x + (props?.w ?? 420) / 2, y: shape.y + (props?.h ?? 260) / 2 },
+										{ animation: { duration: 300 } },
+									);
+									editor.select(shapeId as TLShapeId);
+								}
+							}
+							setCurrentSearchIndex(nextIndex);
+						}}
+					/>
+				)}
+
+				{isMinimapVisible && (
+					<CanvasMinimap
+						shapes={(() => {
+							const editor = editorRef.current;
+							if (!editor) return [];
+							return editor.getCurrentPageShapes()
+								.filter((s) => s.type !== "arrow")
+								.map((s) => {
+									const props = s.props as { w?: number; h?: number } | undefined;
+									return {
+										id: s.id.toString(),
+										x: s.x,
+										y: s.y,
+										width: props?.w ?? 420,
+										height: props?.h ?? 260,
+										type: s.type,
+									};
+								});
+						})()}
+						viewport={(() => {
+							const editor = editorRef.current;
+							if (!editor) return { x: 0, y: 0, width: 800, height: 600 };
+							const bounds = editor.getViewportPageBounds();
+							return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
+						})()}
+						canvasBounds={(() => {
+							const editor = editorRef.current;
+							if (!editor) return { width: 1200, height: 900 };
+							const allShapes = editor.getCurrentPageShapes();
+							if (allShapes.length === 0) return { width: 1200, height: 900 };
+							let maxX = 0;
+							let maxY = 0;
+							for (const s of allShapes) {
+								const props = s.props as { w?: number; h?: number } | undefined;
+								const w = props?.w ?? 420;
+								const h = props?.h ?? 260;
+								if (s.x + w > maxX) maxX = s.x + w;
+								if (s.y + h > maxY) maxY = s.y + h;
+							}
+							return { width: Math.max(maxX, 1200), height: Math.max(maxY, 900) };
+						})()}
+						onNavigate={(x, y) => {
+							editorRef.current?.centerOnPoint({ x, y }, { animation: { duration: 300 } });
+						}}
+					/>
+				)}
+
+				<CanvasQuickActions
+					selectedCount={selectedShapeIds.length}
+					onAlignH={() => {}}
+					onAlignV={() => {}}
+					onDistributeH={() => {}}
+					onDistributeV={() => {}}
+					onGroup={() => {}}
+					onUngroup={() => {}}
+					onDelete={() => {
+						const editor = editorRef.current;
+						if (editor) {
+							const ids = editor.getSelectedShapeIds();
+							if (ids.length > 0) editor.deleteShapes(ids);
+						}
+					}}
+				/>
 			</div>
 
 			{previewImage && (

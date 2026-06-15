@@ -311,7 +311,7 @@ class ConsistencyEvalService:
                 from pathlib import Path
 
                 # 项目根目录下的 static
-                base_dir = Path(__file__).resolve().parents[3]
+                base_dir = Path(__file__).resolve().parents[1]
                 file_path = base_dir / image_url.lstrip("/")
                 if file_path.exists():
                     return file_path.read_bytes()

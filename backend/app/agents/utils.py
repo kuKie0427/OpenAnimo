@@ -79,8 +79,10 @@ def extract_json(text: str) -> dict:
     for fix_func in [
         lambda x: x,  # 原样尝试
         _fix_common_json_errors,  # 修复常见错误
+        _fix_python_literals,  # 修复 Python 风格字面量
         _try_fix_incomplete_json,  # 修复不完整 JSON
         lambda x: _try_fix_incomplete_json(_fix_common_json_errors(x)),  # 组合修复
+        _extract_by_agent_header,  # 按 agent 字段定位 JSON 起点
     ]:
         try:
             fixed = fix_func(json_text)
@@ -172,6 +174,26 @@ def _fix_common_json_errors(text: str) -> str:
     # 修复 true/false/null 后面缺少逗号
     text = re.sub(r'(true|false|null)\s*\n\s*"', r'\1,\n"', text)
 
+    return text
+
+
+def _fix_python_literals(text: str) -> str:
+    """Convert Python-style literals to JSON: True→true, False→false, None→null,
+    and single-quoted strings to double-quoted strings."""
+    text = re.sub(r'\bTrue\b', 'true', text)
+    text = re.sub(r'\bFalse\b', 'false', text)
+    text = re.sub(r'\bNone\b', 'null', text)
+    # Single-quoted JSON strings: 'key': or : 'value' or ['value' or , 'value'
+    text = re.sub(r"'([^'\\]*(?:\\.[^'\\]*)*)'(?=\s*:)", r'"\1"', text)
+    text = re.sub(r"(?<=[\[{,:]\s)'([^'\\]*(?:\\.[^'\\]*)*)'(?=\s*[,\}\]])", r'"\1"', text)
+    return text
+
+
+def _extract_by_agent_header(text: str) -> str:
+    """从文本中按 agent 字段定位 JSON 起点，提升 OpenAnimo Agent 响应修复成功率。"""
+    match = re.search(r'\{"agent"\s*:', text)
+    if match:
+        return text[match.start():]
     return text
 
 

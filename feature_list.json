@@ -556,6 +556,16 @@
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/daw/ && pnpm build",
       "evidence": "2026-06-15: StageTabs/TrackList/TrackItem/DetailPanel/TimelineBar/ViewSwitcher created, barrel exports, 66 vitest+tsc+build all green"
+    },
+    {
+      "id": "f-canvas-hybrid-p3",
+      "name": "Canvas Hybrid P3 — 画布优化",
+      "description": "优化画布体验：导航、搜索、筛选、快捷键",
+      "dependencies": ["f-daw-ui-p2"],
+      "status": "passing",
+      "domain": "frontend",
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/canvas/ && pnpm build",
+      "evidence": "2026-06-15: CanvasBreadcrumb/Search/Minimap/QuickActions 4 components, ViewStore, InfiniteCanvas integration+keyboard shortcuts, ProjectPage ViewSwitcher, 123 vitest tests+tsc+build all green"
     }
   ]
 }

@@ -332,11 +332,6 @@ class Settings(BaseSettings):
     validation_enabled: bool = True
     validation_max_retries: int = 2
 
-    # ============================================
-    # Orchestration
-    # ============================================
-    parallel_enabled: bool = True
-
     @model_validator(mode='after')
     def _apply_stub_services(self):
         if self.stub_services:
@@ -359,4 +354,6 @@ def apply_settings_overrides(overrides: dict[str, Any]) -> None:
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings(_env_file=".env", _env_file_encoding="utf-8")  # pyright: ignore[reportCallIssue]
+    from pathlib import Path
+    env_file = Path(__file__).parent.parent / ".env"
+    return Settings(_env_file=str(env_file), _env_file_encoding="utf-8")  # pyright: ignore[reportCallIssue]

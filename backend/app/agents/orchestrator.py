@@ -950,7 +950,7 @@ class GenerationOrchestrator:
                 )
 
             await self._complete_run(project_id, run, run_id, final_stage, video_generation_skipped)
-        except RuntimeError as e:
+        except (RuntimeError, ValueError) as e:
             await self._handle_run_failure(project_id, run, run_id, e, context="Resume")
         finally:
             await self._cleanup_run(run_id)
@@ -1105,7 +1105,7 @@ class GenerationOrchestrator:
             )
 
             await self._complete_run(project_id, run, run_id, final_stage, video_generation_skipped)
-        except (RuntimeError, KeyError) as e:
+        except (RuntimeError, KeyError, ValueError) as e:
             await self._handle_run_failure(project_id, run, run_id, e, context="Run")
         finally:
             await self._cleanup_run(run_id)

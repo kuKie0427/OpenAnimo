@@ -48,6 +48,14 @@ interface MockEditor {
 		registerBeforeChangeHandler: ReturnType<typeof vi.fn<() => () => void>>;
 		registerAfterChangeHandler: ReturnType<typeof vi.fn<() => () => void>>;
 	};
+	// New methods for canvas enhancement features
+	on: ReturnType<typeof vi.fn<(event: string, handler: () => void) => void>>;
+	off: ReturnType<typeof vi.fn<(event: string, handler: () => void) => void>>;
+	getSelectedShapeIds: ReturnType<typeof vi.fn<() => MockShape["id"][]>>;
+	centerOnPoint: ReturnType<typeof vi.fn>;
+	selectNone: ReturnType<typeof vi.fn>;
+	select: ReturnType<typeof vi.fn<(id: string) => void>>;
+	getViewportPageBounds: ReturnType<typeof vi.fn<() => { x: number; y: number; width: number; height: number }>>;
 	reset: () => void;
 }
 
@@ -136,6 +144,13 @@ const mockEditor = vi.hoisted(() => {
 			registerBeforeChangeHandler: vi.fn(() => vi.fn()),
 			registerAfterChangeHandler: vi.fn(() => vi.fn()),
 		},
+		on: vi.fn() as MockEditor["on"],
+		off: vi.fn(),
+		getSelectedShapeIds: vi.fn(() => []),
+		centerOnPoint: vi.fn(),
+		selectNone: vi.fn(),
+		select: vi.fn(),
+		getViewportPageBounds: vi.fn(() => ({ x: 0, y: 0, width: 1600, height: 1200 })),
 		reset() {
 			shapes = [];
 			editor.createShapes.mockClear();
@@ -154,6 +169,13 @@ const mockEditor = vi.hoisted(() => {
 			editor.store.listen.mockClear();
 			editor.sideEffects.registerBeforeChangeHandler.mockClear();
 			editor.sideEffects.registerAfterChangeHandler.mockClear();
+			editor.on.mockClear();
+			editor.off.mockClear();
+			editor.getSelectedShapeIds.mockClear();
+			editor.centerOnPoint.mockClear();
+			editor.selectNone.mockClear();
+			editor.select.mockClear();
+			editor.getViewportPageBounds.mockClear();
 		},
 	};
 

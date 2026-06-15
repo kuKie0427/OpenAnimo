@@ -491,9 +491,16 @@ class PlanAgent(BaseAgent):
 
         user_prompt = json.dumps(payload, ensure_ascii=False)
         resp = await self.call_llm(
-            ctx, system_prompt=SYSTEM_PROMPT, user_prompt=user_prompt, max_tokens=4096
+            ctx, system_prompt=SYSTEM_PROMPT, user_prompt=user_prompt, max_tokens=16384
         )
-        data = extract_json(resp.text)
+        try:
+            data = extract_json(resp.text)
+        except ValueError:
+            logger.exception(
+                "Failed to parse PlanAgent LLM response (task=%s, len=%d): %s",
+                task, len(resp.text), resp.text[:2000],
+            )
+            raise
 
         project_update = data.get("project_update") or {}
         updated_fields: dict = {}
