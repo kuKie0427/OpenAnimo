@@ -1521,6 +1521,44 @@
 - /handoff 启动新会话
 - 新会话: 读 `openanimo-p1-multi-angle-data.md` → 验证前置 → 执行 7 任务 → Gate 通过 → 标 passing → /handoff 给 P2.2
 
+## 2026-06-16 — Session: p2.1-multi-angle-data review-fix
+
+### 做了什么
+- **5 路 review 综合**: P2.1 CharacterAsset (commit `b86c0a4`) = 5 PASS (0 FAIL)
+  - Goal/Constraint: PASS HIGH (1 HIGH: 缺 AdminDep)
+  - QA: PASS HIGH (25/25 tests, ruff 0, pyright 0, wider 694 pass, frontend 560 pass)
+  - Code Quality: PASS MEDIUM (1 MAJOR: 缺 AdminDep + 2 MINOR + 3 INFO)
+  - Security: PASS MEDIUM (1 MEDIUM: 缺 concurrent generation guard + 4 LOW + 3 INFO)
+  - Context Mining: PASS HIGH (evidence 填充, progress.md 详细, 0 regression)
+- **修复** (用户选"最小修复 AdminDep + concurrent guard (10 分钟)"):
+  - `character_assets.py`: 4 个 routes 全部加 `_: None = AdminDep` 依赖
+  - `POST /generate` 加 409 concurrent guard (查询 running/queued AgentRun with resource_type="character_asset" + resource_id=character_id, 存在则 409)
+  - 更新 tests: 加 `test_generate_concurrent_returns_409` + `test_requires_admin_token` (403/202 双路径)
+  - 更新 evidence 字段 (27 tests instead of 25)
+
+### 验证结果
+- 27/27 tests pass (13 model + 6 service + 8 API, 含 2 个新 admin + concurrent tests)
+- ruff: 0 errors
+- pyright: 0 errors / 0 warnings
+
+### 改动文件
+- `backend/app/api/v1/routes/character_assets.py` (加 AdminDep + 409 guard)
+- `backend/tests/test_api/test_character_assets.py` (加 2 tests: concurrent 409 + admin auth)
+- `feature_list.json` (更新 evidence)
+
+### 决策
+- **AdminDep 用法**: 沿用 P1.1 模式 (`_: None = AdminDep`), 与 config/text/subtitles 一致
+- **409 guard 模式**: 沿用 `characters.py:regenerate_character` 的 triple-cast + AgentRun 查询模式
+- **Admin auth test 用 `patch("app.api.deps.get_settings")`**: 与 P1.1 review-fix 相同, 绕过 `@lru_cache`
+- **409 test 需要先 POST 成功再 POST 409**: 第一次 202 创建 AgentRun, 第二次 409 因为已有 running/queued
+
+### 阻断
+- 无
+
+### 下次
+- Re-run 5-way review 验证 P2.1 修复
+- 通过后 /handoff 启动 P2.2 (多角度角色库·分镜选图)
+
 
 
 

@@ -682,7 +682,7 @@
       "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/test_models/test_character_asset.py tests/test_services/test_character_asset_service.py tests/test_api/test_character_assets.py -q && uv run ruff check app tests && uv run pyright app/",
-      "evidence": "2026-06-16: 25 tests (13 model + 6 service + 6 API). CharacterAsset model+validators, alembic 0024 migration, service generate_matrix/list_assets/get_matrix/delete_asset, 4 API endpoints, multi_angle_enabled=False config, render.py hook. ruff 0, pyright 0.",
+      "evidence": "2026-06-16: 27 tests (13 model + 6 service + 8 API). CharacterAsset model+validators, alembic 0024 migration, service generate_matrix/list_assets/get_matrix/delete_asset, 4 API endpoints (POST /generate 202 + 409 guard, GET /, GET /matrix, DELETE /), AdminDep auth on all routes, multi_angle_enabled=False config, render.py hook. ruff 0, pyright 0.",
       "notes": "Phase P2.1 — openanimo-evaluation.md P0 #4 改进项（'当前单图驱动多场景，漫剧角色崩坏的根本原因'）。耗时 2-3 天。Character.reference_images: list[str] 字段已存在但为空，可平滑扩展。roadmap: .sisyphus/plans/openanimo-p1-roadmap.md"
     },
     {

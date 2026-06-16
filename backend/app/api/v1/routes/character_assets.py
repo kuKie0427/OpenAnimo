@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, HTTPException, Query, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import InstrumentedAttribute
 
-from app.api.deps import SessionDep, SettingsDep, WsManagerDep, get_or_404, require_run_id
+from app.api.deps import AdminDep, SessionDep, SettingsDep, WsManagerDep, get_or_404, require_run_id
 from app.config import Settings
 from app.models.agent_run import AgentRun
 from app.models.project import Character
@@ -111,6 +113,7 @@ async def generate_character_assets(
     session: AsyncSession = SessionDep,
     settings: Settings = SettingsDep,
     ws: ConnectionManager = WsManagerDep,
+    _: None = AdminDep,
 ) -> dict[str, Any]:
     """Trigger background generation of 4 angles × 4 emotions = 16 character assets."""
     character = await get_or_404(session, Character, character_id)
@@ -120,6 +123,25 @@ async def generate_character_assets(
         raise HTTPException(
             status_code=400,
             detail="Character must have visual_notes or description for asset generation",
+        )
+
+    project_id_col = cast(InstrumentedAttribute[int], cast(object, AgentRun.project_id))
+    status_col = cast(InstrumentedAttribute[str], cast(object, AgentRun.status))
+    resource_type_col = cast(
+        InstrumentedAttribute[str | None], cast(object, AgentRun.resource_type)
+    )
+    resource_id_col = cast(InstrumentedAttribute[int | None], cast(object, AgentRun.resource_id))
+    res = await session.execute(
+        select(AgentRun)
+        .where(project_id_col == project_id)
+        .where(status_col.in_(("queued", "running")))
+        .where(resource_type_col == "character_asset")
+        .where(resource_id_col == character_id)
+        .limit(1)
+    )
+    if res.scalars().first() is not None:
+        raise HTTPException(
+            status_code=409, detail="Asset generation is already in progress for this character"
         )
 
     run = AgentRun(
@@ -154,6 +176,7 @@ async def get_character_assets(
     angle: str | None = Query(default=None, description="Filter by angle: front, side, back, three_quarter"),
     emotion: str | None = Query(default=None, description="Filter by emotion: smile, angry, crying, surprised"),
     session: AsyncSession = SessionDep,
+    _: None = AdminDep,
 ) -> list[dict[str, Any]]:
     """List all character assets, optionally filtered by angle/emotion."""
     await get_or_404(session, Character, character_id)
@@ -165,6 +188,7 @@ async def get_character_assets(
 async def get_character_asset_matrix(
     character_id: int,
     session: AsyncSession = SessionDep,
+    _: None = AdminDep,
 ) -> dict[str, dict[str, dict]]:
     """Get the 4×4 asset matrix (angle × emotion)."""
     await get_or_404(session, Character, character_id)
@@ -176,6 +200,7 @@ async def delete_character_asset(
     character_id: int,
     asset_id: int,
     session: AsyncSession = SessionDep,
+    _: None = AdminDep,
 ) -> None:
     """Delete a single character asset by ID."""
     await get_or_404(session, Character, character_id)
