@@ -338,23 +338,22 @@ class ComposeAgent(BaseAgent):
                 bgm_type: str | None = None
                 bgm_path: str | None = None
 
-                # 1. 生成 TTS（如果有对白）
-                if tts_enabled and shot.dialogue:
-                    # 从 character_ids 找角色名
-                    character_name = ""
-                    if shot.character_ids:
-                        for char in characters:
-                            if char.id in shot.character_ids:
-                                character_name = char.name
-                                break
-
-                    tts_url = await audio_service.generate_character_tts(
-                        dialogue=shot.dialogue,
-                        character_name=character_name,
-                        characters=characters,
-                    )
+                # 1. 生成多轨音频（对白/旁白/音效）
+                if tts_enabled:
+                    tracks = await audio_service.generate_tracks(shot, characters)
+                    tts_url = tracks.get("dialogue")
                     if tts_url:
                         shot.tts_url = tts_url
+                    narrator_url = tracks.get("narrator")
+                    if narrator_url:
+                        shot.narrator_url = narrator_url
+                    sfx_url = tracks.get("sfx")
+                    if sfx_url:
+                        shot.sfx_url = sfx_url
+                    logger.info(
+                        "Shot %s tracks: dialogue=%s, narrator=%s, sfx=%s",
+                        shot.order, tts_url, narrator_url, sfx_url,
+                    )
 
                 # 2. 匹配 BGM
                 if bgm_enabled:

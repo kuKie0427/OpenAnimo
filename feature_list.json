@@ -701,10 +701,10 @@
       "name": "P3.1 — 多角色配音·分轨生成 (配音导演分轨精修)",
       "description": "TTS 分轨生成：dialogue(对白) / narrator(旁白) / SFX(音效) 三类独立 wav 输出。Character.voice_profile 扩展（语速/情绪/停顿/气息）。每类单独 FFmpeg 渲染 + 文件管理。",
       "dependencies": [],
-      "status": "active",
+      "status": "passing",
       "domain": "backend",
-      "verification": "cd backend && uv run pytest tests/test_services/test_audio_service.py -q && uv run ruff check app tests",
-      "evidence": "",
+      "verification": "cd backend && uv run pytest tests/test_services/test_audio_tracks.py -q && uv run ruff check app tests",
+      "evidence": "2026-06-17: Character.voice_profile (JSON, nullable) + Shot.narrator_url/sfx_url fields + alembic 0025 migration (reversible). AudioService.generate_track() + generate_tracks() methods — 3 track types (dialogue/narrator/sfx), voice_profile→Edge TTS rate/pitch mapping, partial failure tolerance. compose.py audio loop now calls generate_tracks instead of generate_character_tts. 10 new track tests pass. ruff 0, pytest 1297/1297.",
       "notes": "Phase P3.1 — openanimo-evaluation.md P0 #5 改进项（'配音导演需要分轨精修'）。AudioService.generate_tts + generate_character_tts 已存在，扩展为分轨。耗时 1.5-2 天。roadmap: .sisyphus/plans/openanimo-p1-roadmap.md"
     },
     {

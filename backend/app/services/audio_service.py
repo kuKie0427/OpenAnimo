@@ -182,6 +182,133 @@ class AudioService:
 
         return await self.generate_tts(dialogue, voice=voice)
 
+    async def generate_track(
+        self,
+        track_type: str,
+        text: str,
+        voice_profile: dict | None = None,
+        voice: str | None = None,
+    ) -> str | None:
+        """Generate a single audio track of the specified type.
+
+        Maps voice_profile to Edge TTS parameters (rate/pitch) and delegates
+        to generate_tts for the actual synthesis.
+
+        Args:
+            track_type: One of "dialogue", "narrator", "sfx"
+            text: Text to synthesize
+            voice_profile: Optional voice profile dict with speed/pitch keys
+            voice: Edge TTS voice name (falls back to tts_default_voice)
+
+        Returns:
+            Audio file URL, or None on failure
+        """
+        allowed_types = {"dialogue", "narrator", "sfx"}
+        if track_type not in allowed_types:
+            logger.warning(
+                "Invalid track_type: %s (allowed: %s)", track_type, allowed_types,
+            )
+            return None
+
+        if not text or not text.strip():
+            return None
+
+        # Map voice_profile to Edge TTS parameters
+        if voice_profile is not None:
+            speed = voice_profile.get("speed", 1.0)
+            rate = f"{int((speed - 1.0) * 100):+d}%"
+            pitch_val = voice_profile.get("pitch", 0)
+            pitch = f"{pitch_val:+d}Hz"
+        else:
+            rate = "+0%"
+            pitch = "+0Hz"
+
+        # Fallback voice
+        actual_voice = voice or self.settings.tts_default_voice
+
+        logger.info(
+            "Generating %s track: text=%s..., voice=%s, rate=%s, pitch=%s",
+            track_type, text[:30], actual_voice, rate, pitch,
+        )
+
+        result = await self.generate_tts(
+            text, voice=actual_voice, rate=rate, pitch=pitch,
+        )
+        if result is None:
+            logger.warning(
+                "Failed to generate %s track: text=%s..., voice=%s",
+                track_type, text[:30], actual_voice,
+            )
+        return result
+
+    async def generate_tracks(
+        self,
+        shot,
+        characters: list[Character],
+    ) -> dict[str, str | None]:
+        """Generate all audio tracks for a shot: dialogue, narrator, and SFX.
+
+        Each track is generated independently with partial failure tolerance.
+
+        Args:
+            shot: Shot object with dialogue, action, sfx, character_ids fields
+            characters: List of Character objects for voice matching
+
+        Returns:
+            Dict with keys "dialogue", "narrator", "sfx" mapping to audio URLs or None
+        """
+        results: dict[str, str | None] = {"dialogue": None, "narrator": None, "sfx": None}
+        default_voice = self.settings.tts_default_voice
+
+        # --- Dialogue track ---
+        if shot.dialogue and shot.dialogue.strip():
+            char = next(
+                (c for c in characters if c.id in (shot.character_ids or [])), None,
+            )
+            char_profile = char.voice_profile if char else None
+            char_voice = get_voice_for_character(char) if char else default_voice
+            try:
+                results["dialogue"] = await self.generate_track(
+                    "dialogue", shot.dialogue,
+                    voice_profile=char_profile, voice=char_voice,
+                )
+            except Exception:  # noqa: BLE001
+                logger.warning(
+                    "Failed to generate dialogue track for shot (order=%s)",
+                    getattr(shot, "order", "?"), exc_info=True,
+                )
+        logger.info("Dialogue track result: %s", results["dialogue"])
+
+        # --- Narrator track ---
+        if shot.action and shot.action.strip():
+            try:
+                results["narrator"] = await self.generate_track(
+                    "narrator", shot.action,
+                    voice_profile=None, voice=default_voice,
+                )
+            except Exception:  # noqa: BLE001
+                logger.warning(
+                    "Failed to generate narrator track for shot (order=%s)",
+                    getattr(shot, "order", "?"), exc_info=True,
+                )
+        logger.info("Narrator track result: %s", results["narrator"])
+
+        # --- SFX track ---
+        if shot.sfx and shot.sfx.strip():
+            try:
+                results["sfx"] = await self.generate_track(
+                    "sfx", shot.sfx,
+                    voice_profile=None, voice=default_voice,
+                )
+            except Exception:  # noqa: BLE001
+                logger.warning(
+                    "Failed to generate sfx track for shot (order=%s)",
+                    getattr(shot, "order", "?"), exc_info=True,
+                )
+        logger.info("SFX track result: %s", results["sfx"])
+
+        return results
+
     def match_bgm(
         self,
         scene: str | None = None,

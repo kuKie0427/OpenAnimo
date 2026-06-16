@@ -1,5 +1,46 @@
 # Progress Log
 
+## 2026-06-17 — Session: openanimo-p3-voice-tracks-gen — Phase P3.1 多角色配音·分轨生成
+
+### 做了什么
+- **Task 1+5**: Character 模型加 `voice_profile: dict | None`（JSON 列，nullable） + Shot 模型加 `narrator_url` / `sfx_url` 字段 + alembic 0025 迁移（可逆）
+- **Task 2**: AudioService.generate_track() — 根据 track_type (dialogue/narrator/sfx) + voice_profile 映射 speed/pitch 到 Edge TTS rate/pitch 参数
+- **Task 3**: AudioService.generate_tracks() — 对单个 shot 生成三轨（dialogue→角色 voice_profile + voice, narrator→shot.action + 默认 voice, sfx→shot.sfx + 默认 voice），部分失败不阻塞
+- **Task 4**: compose.py 音频循环 — 替换 generate_character_tts → generate_tracks，保持 shot.tts_url 向后兼容 + 新字段 narrator_url/sfx_url + 日志
+- **Task 6**: 10 个新测试 — generate_track 三类型/空文本/非法类型/语速映射/自定义voice + generate_tracks 部分失败/空shot/仅对白
+
+### 改了什么文件
+- `backend/app/models/project.py` (mod, +4行) — Character.voice_profile + Shot.narrator_url/sfx_url
+- `backend/alembic/versions/0025_add_voice_profile_to_character.py` (new, 24行) — 3列 add/drop 迁移
+- `backend/app/services/audio_service.py` (mod, +127行) — generate_track() + generate_tracks() 方法
+- `backend/app/agents/compose.py` (mod, +14/-15) — 音频循环改用 generate_tracks
+- `backend/tests/test_services/test_audio_tracks.py` (new, 258行) — 10 个测试
+- `feature_list.json` (mod) — f-voice-tracks-gen = passing
+- `progress.md` (mod) — 本条目
+
+### 当前状态
+- f-voice-tracks-gen = passing ✅
+- **Phase P3.1 多角色配音·分轨生成完成**
+- Gate: ruff 0, pytest 1297/1297 pass (10 new tracks tests + 1287 existing), pyright clean
+
+### 决策
+- voice_profile 用 dict + sa_column=Column(JSON, nullable=True) 而非独立字段（灵活兼容未来扩展）
+- voice_profile None = 使用 Edge TTS 默认参数（+0% speed, +0Hz pitch），不设独立默认值
+- generate_tracks 顺序（非并发）执行各轨 — 符合 plan 约定
+- 轨迹失败用 bare except 捕获（与 generate_tts 现有模式一致）
+- compose.py 保持 tts_url 局部变量向下游 mix_audio_into_video 传递
+
+### 阻断
+- 无
+
+### 验证结果
+- backend: 1297 tests pass (10 new + 1287 existing), 2 skipped (pre-existing)
+- ruff: 0 errors on all changed files
+- 10 track tests: dialogue/narrator/sfx/empty/invalid/speed/custom-voice/partial-failure/empty-shot/dialogue-only 全过
+
+### 下次
+- P3.2 多角色配音·分轨混音（新会话 + 新 roadmap）
+
 ## 2026-06-17 — Session: openanimo-p1-multi-angle-select — Phase P2.2 多角度角色库·分镜选图
 
 ### 做了什么

@@ -73,6 +73,8 @@ class Character(SQLModel, table=True):
     reference_images: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=True))
     face_embedding: Optional[str] = Field(default=None)  # JSON string of 512-dim float list
     visual_notes: Optional[str] = None  # Character visual bible text
+    # Voice synthesis profile, schema: {"speed": 1.0, "pitch": 0, "emotion": "neutral", "pause_ms": 200, "breath": false}
+    voice_profile: dict | None = Field(default=None, sa_column=Column(JSON, nullable=True))
     approved_name: Optional[str] = None
     approved_description: Optional[str] = None
     approved_image_url: Optional[str] = None
@@ -127,6 +129,8 @@ class Shot(SQLModel, table=True):
     dialogue: Optional[str] = None
     sfx: Optional[str] = None
     tts_url: Optional[str] = None  # TTS 音频文件 URL
+    narrator_url: Optional[str] = None  # 旁白音频 URL
+    sfx_url: Optional[str] = None  # 音效音频 URL
     bgm_type: Optional[str] = None  # 使用的 BGM 类型（suspense/warm/action/sad/happy/ambient）
     seed: Optional[int] = None
     character_ids: list[int] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
