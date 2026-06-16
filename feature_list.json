@@ -690,10 +690,10 @@
       "name": "P2.2 — 多角度角色库·分镜选图 (前端 picker + bible 集成)",
       "description": "分镜渲染时按 shot.angle + shot.emotion 从 CharacterAsset 选图（最近邻匹配）。前端 picker UI（4×4 网格 + 表情标签）。bible 注入资产 URL 到 prompt。",
       "dependencies": ["f-multi-angle-character-data"],
-      "status": "active",
+      "status": "passing",
       "domain": "fullstack",
-      "verification": "cd backend && uv run pytest tests/test_agents/ -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
-      "evidence": "",
+      "verification": "cd backend && uv run pytest tests/test_agents/test_render.py tests/test_services/test_character_asset_service.py -q && uv run ruff check app/services/character_asset_service.py app/agents/render.py && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
+      "evidence": "2026-06-17: select_asset_for_shot() added to character_asset_service.py (exact match → nearest neighbor Manhattan distance). render.py _render_shots loop now calls select_asset_for_shot per character. Frontend CharacterAssetPicker (4×4 grid, loading/error/empty states, Chinese labels, responsive). DetailPanel overlay with per-character tab browsing. 7 backend + 7 frontend tests. ruff 0, backend 1287/1287 pass, frontend 567/567 pass (560+7), tsc clean, pnpm build OK.",
       "notes": "Phase P2.2 — 续 P2.1。耗时 1.5-2 天。roadmap: .sisyphus/plans/openanimo-p1-roadmap.md"
     },
     {

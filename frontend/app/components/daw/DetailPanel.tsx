@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
+import { CharacterAssetPicker } from "~/components/assets";
 import { Button } from "~/components/ui/Button";
 
 interface DetailPanelProps {
@@ -12,9 +14,24 @@ interface DetailPanelProps {
   } | null;
   onEdit?: (id: number) => void;
   onRegenerate?: (id: number) => void;
+  characterIds?: number[];
+  characterNames?: Record<number, string>;
 }
 
-export function DetailPanel({ item, onEdit, onRegenerate }: DetailPanelProps) {
+export function DetailPanel({
+  item,
+  onEdit,
+  onRegenerate,
+  characterIds,
+  characterNames,
+}: DetailPanelProps) {
+  const [assetOverlayOpen, setAssetOverlayOpen] = useState(false);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<
+    number | null
+  >(null);
+
+  const hasCharacters = characterIds && characterIds.length > 0;
+
   if (!item) {
     return (
       <div className="flex-1 flex items-center justify-center text-base-content/30">
@@ -33,6 +50,20 @@ export function DetailPanel({ item, onEdit, onRegenerate }: DetailPanelProps) {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-heading">{item.title}</h2>
           <div className="flex gap-2">
+            {hasCharacters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedCharacterId(
+                    characterIds.length === 1 ? characterIds[0] : null,
+                  );
+                  setAssetOverlayOpen(true);
+                }}
+              >
+                查看角色资产
+              </Button>
+            )}
             {onEdit && (
               <Button
                 variant="ghost"
@@ -106,6 +137,76 @@ export function DetailPanel({ item, onEdit, onRegenerate }: DetailPanelProps) {
           </div>
         )}
       </div>
+
+      {assetOverlayOpen && hasCharacters && (
+        <div
+          className="fixed inset-0 z-[var(--z-modal-backdrop)] flex items-center justify-center"
+          role="dialog"
+          aria-label="角色资产查看器"
+        >
+          <div
+            className="absolute inset-0 bg-base-content/40 backdrop-blur-sm"
+            onClick={() => setAssetOverlayOpen(false)}
+          />
+
+          <div className="relative z-10 w-full max-w-4xl max-h-[85vh] mx-4 bg-screen-surface rounded-xl shadow-2xl border border-base-content/10 flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-base-content/10">
+              <h3 className="font-heading text-lg">角色资产</h3>
+              <button
+                type="button"
+                className="btn-projection text-base-content/50 hover:text-base-content p-1 rounded-lg hover:bg-base-200 transition-colors cursor-pointer"
+                onClick={() => setAssetOverlayOpen(false)}
+                aria-label="关闭"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {characterIds.length > 1 && (
+              <div className="flex gap-1 px-6 pt-3 pb-0 overflow-x-auto">
+                {characterIds.map((charId) => (
+                  <button
+                    key={charId}
+                    type="button"
+                    className={`px-3 py-1.5 text-sm font-sans rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                      selectedCharacterId === charId
+                        ? "bg-primary text-primary-content"
+                        : "text-base-content/60 hover:bg-base-200 hover:text-base-content"
+                    }`}
+                    onClick={() => setSelectedCharacterId(charId)}
+                  >
+                    {characterNames?.[charId] ?? `角色 ${charId}`}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {selectedCharacterId != null ? (
+                <CharacterAssetPicker
+                  characterId={selectedCharacterId}
+                />
+              ) : (
+                <div className="flex items-center justify-center py-12 text-sm text-base-content/40">
+                  选择一个角色查看资产
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

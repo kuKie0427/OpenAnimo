@@ -207,3 +207,72 @@ async def delete_asset(session: AsyncSession, asset_id: int) -> bool:
     await session.delete(asset)
     await session.commit()
     return True
+
+
+# Ordered lists for nearest-neighbor matching in select_asset_for_shot.
+# ANGLE_ORDER: spatial ordering (front → side → three_quarter → back).
+# EMOTION_ORDER: expression intensity ordering.
+ANGLE_ORDER = ("front", "side", "three_quarter", "back")
+EMOTION_ORDER = ("smile", "surprised", "angry", "crying")
+
+
+async def select_asset_for_shot(
+    session: AsyncSession,
+    character_id: int,
+    angle: str | None,
+    expression: str | None,
+) -> CharacterAsset | None:
+    """Select the best-matching CharacterAsset for a shot's camera angle and emotional expression.
+
+    Selection strategy:
+    1. If angle or expression is None → return None (fall back to character default image_url).
+    2. If the character has no assets → return None.
+    3. Try EXACT match (asset.angle == angle AND asset.emotion == expression).
+    4. If no exact match → NEAREST NEIGHBOR by minimum Manhattan distance in
+       (ANGLE_ORDER, EMOTION_ORDER) space.
+
+    Args:
+        session: 异步数据库会话
+        character_id: 角色 ID
+        angle: 目标角度（对应 Shot.camera）
+        expression: 目标情绪（对应 Shot.expression）
+
+    Returns:
+        最佳匹配的 CharacterAsset，或 None（无资产 / 参数缺失 / 无法映射）
+    """
+    if angle is None or expression is None:
+        return None
+
+    assets = await list_assets(session, character_id)
+    if not assets:
+        return None
+
+    # 1) Exact match
+    for asset in assets:
+        if asset.angle == angle and asset.emotion == expression:
+            return asset
+
+    # 2) Nearest neighbor via Manhattan distance in order-index space
+    try:
+        target_angle_idx = ANGLE_ORDER.index(angle)
+        target_emotion_idx = EMOTION_ORDER.index(expression)
+    except ValueError:
+        # angle or expression not in our known order lists → cannot map
+        return None
+
+    best_asset: CharacterAsset | None = None
+    best_distance: float = float("inf")
+
+    for asset in assets:
+        try:
+            a_idx = ANGLE_ORDER.index(asset.angle)
+            e_idx = EMOTION_ORDER.index(asset.emotion)
+        except ValueError:
+            continue  # skip assets whose angle/emotion aren't in our order lists
+
+        distance = abs(a_idx - target_angle_idx) + abs(e_idx - target_emotion_idx)
+        if distance < best_distance:
+            best_distance = distance
+            best_asset = asset
+
+    return best_asset

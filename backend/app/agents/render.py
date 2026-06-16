@@ -19,6 +19,7 @@ from app.services.character_bible import (
     compute_face_embedding,
 )
 from app.services.image_composer import ImageComposer
+from app.services.character_asset_service import select_asset_for_shot
 from app.services.shot_binding import resolve_shot_bound_approved_characters
 from app.services.version_service import VersionService, character_snapshot, shot_snapshot
 
@@ -327,7 +328,20 @@ class RenderAgent(BaseAgent):
                 )
 
                 characters = await resolve_shot_bound_approved_characters(ctx.session, shot)
-                char_image_urls = [c.image_url for c in characters if c.image_url]
+                char_image_urls = []
+                for c in characters:
+                    asset = await select_asset_for_shot(ctx.session, c.id, shot.camera, shot.expression)
+                    if asset:
+                        char_image_urls.append(asset.image_url)
+                        logger.info(
+                            "Selected asset for character %s in shot %d: angle=%s, emotion=%s",
+                            c.name,
+                            shot.id,
+                            asset.angle,
+                            asset.emotion,
+                        )
+                    elif c.image_url:
+                        char_image_urls.append(c.image_url)
 
                 # Thinking: reasoning for each shot
                 n_refs = len(char_image_urls)

@@ -1,5 +1,74 @@
 # Progress Log
 
+## 2026-06-17 — Session: openanimo-p1-multi-angle-select — Phase P2.2 多角度角色库·分镜选图
+
+### 做了什么
+- **Task 1**: `select_asset_for_shot()` 函数添加到 `character_asset_service.py`
+  - 定义 `ANGLE_ORDER = ("front", "side", "three_quarter", "back")` 空间排序 + `EMOTION_ORDER = ("smile", "surprised", "angry", "crying")` 情绪强度排序
+  - angle/expression 为 None → 返回 None（回退到 character 默认 image_url）
+  - 无资产 → 返回 None
+  - 精确匹配优先（asset.angle == angle AND asset.emotion == expression）
+  - 无精确匹配 → Manhattan 距离最近邻（`abs(angle_idx_diff) + abs(emotion_idx_diff)`）
+  - angle/expression 不在 order list → 返回 None（无法映射到已知角度/情绪）
+- **Task 2**: `render.py` `_render_shots` 循环改用 `select_asset_for_shot`
+  - 替换 `char_image_urls = [c.image_url for c in characters if c.image_url]` 为逐角色资产选择循环
+  - 导入 `select_asset_for_shot` from `app.services.character_asset_service`
+  - 选中资产时 `logger.info("Selected asset for character %s in shot %d: angle=%s, emotion=%s", ...)`
+  - 未选中资产时 fallback 到 `c.image_url`
+  - 未修改 `_build_shot_prompt` 逻辑
+- **Task 3**: 前端 `CharacterAssetPicker` 组件
+  - 4×4 网格显示角色所有 assets (4 angles × 4 emotions)
+  - 加载态/错误态(含重试按钮)/空态
+  - 选中态高亮 + 中文标签(正面/侧面/背面/斜侧 × 微笑/愤怒/哭泣/惊讶)
+  - 响应式布局 `grid-cols-2 lg:grid-cols-4`
+  - 使用 `getApiBase()` 调用 GET /api/v1/characters/{id}/assets/matrix
+  - 零新 npm 依赖
+- **Task 4**: `DetailPanel` 集成 CharacterAssetPicker
+  - 新增 `characterIds?: number[]` 和 `characterNames?: Record<number, string>` props
+  - 有角色时显示"查看角色资产"按钮（variant="ghost" size="sm"）
+  - 弹出覆盖层（暗色背景 + 居中面板 + 关闭按钮）
+  - 多角色时支持 Tab 切换角色
+  - 只读预览（不传 onSelect / selectedAssetId）
+- **Task 5**: 测试
+  - 后端 `test_character_asset_selection.py`: 7 个测试（精确匹配/最近邻/无资产/None angle/None emotion/最近情感/最近角度）
+  - 前端 `CharacterAssetPicker.test.tsx`: 7 个测试（加载/错误/空/4×4网格/选中回调/禁用点击/高亮）
+  - 后端 1287 测试通过 + 前端 567 测试通过
+
+### 改了什么文件
+- `backend/app/services/character_asset_service.py` (mod, +69 行) — ANGLE_ORDER/EMOTION_ORDER 常量 + select_asset_for_shot() 函数
+- `backend/app/agents/render.py` (mod, +10/-1 行) — import + char_image_urls 循环替换
+- `frontend/app/components/assets/CharacterAssetPicker.tsx` (new, 159 行) — 4×4 picker 组件
+- `frontend/app/components/assets/index.ts` (new) — 导出入口
+- `frontend/app/components/daw/DetailPanel.tsx` (mod, +102/-1 行) — 角色资产查看按钮 + overlay
+- `backend/tests/test_services/test_character_asset_selection.py` (new, 154 行) — 7 个选择逻辑测试
+- `frontend/app/components/assets/CharacterAssetPicker.test.tsx` (new, 182 行) — 7 个 picker UI 测试
+- `feature_list.json` (mod) — f-multi-angle-character-select = passing
+- `progress.md` (mod) — 本条目
+
+### 当前状态
+- f-multi-angle-character-select = passing ✅
+- **Phase P2.2 多角度角色库·分镜选图完成**
+- Gate: ruff 0, backend 1287/1287 pass, frontend 567/567 pass, tsc clean, pnpm build OK
+
+### 决策
+- ANGLE_ORDER/EMOTION_ORDER 与同文件 ANGLES/EMOTIONS 元组顺序不同——专用于最近邻匹配的空间/情绪有序排列
+- Manhattan 距离（非 Euclidean）用于离散序数空间更自然
+- 未知 angle/expression 返回 None 而非抛异常，确保渲染管线不被非标准值阻塞
+- "happy" 不作为 valid emotion（CharacterAsset 模型不允许），使用实际 valid 值（smile, angry, crying, surprised）
+- CharacterAssetPicker 不传 onSelect/selectedAssetId 实现只读预览（P2.2 约定）
+- 前端的 ANGLE_ORDER 使用与 backend 不同的顺序（back 排在 three_quarter 前）——仅影响显示布局，不影响匹配逻辑
+
+### 阻断
+- 无
+
+### 验证结果
+- backend: 1287 tests pass, ruff 0 errors
+- frontend: 567 tests pass (560 pre-existing + 7 new), tsc 0 errors, pnpm build OK
+- 7 select_asset_for_shot 测试: exact/nn/none/null/null-emotion/closest-angle/closest-emotion 全过
+
+### 下次
+- P3 多角色配音·分轨生成（新会话 + 新 roadmap）
+
 ## 2026-06-16 — Session: openanimo-p1-multi-angle-data — Phase P2.1 多角度角色库·数据模型
 
 ### 做了什么
