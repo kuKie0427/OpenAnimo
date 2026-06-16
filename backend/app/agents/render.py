@@ -432,9 +432,10 @@ class RenderAgent(BaseAgent):
         async with self.trace_step(
             ctx, stage="render_characters", method="run_characters",
             model_name=ctx.settings.image_model,
-        ):
+        ) as trace:
             await self.send_message(ctx, "开始生成角色形象图...", progress=0.0, is_loading=True)
             char_count = await self._render_characters(ctx)
+            trace.images_generated += char_count
             ctx.completion_info = CompletionInfo(
                 completed=f"已生成 {char_count} 个角色形象图",
                 details="角色形象已渲染完成",
@@ -453,9 +454,10 @@ class RenderAgent(BaseAgent):
         async with self.trace_step(
             ctx, stage="render_shots", method="run_shots",
             model_name=ctx.settings.image_model,
-        ):
+        ) as trace:
             await self.send_message(ctx, "开始生成分镜首帧图...", progress=0.0, is_loading=True)
             shot_count = await self._render_shots(ctx)
+            trace.images_generated += shot_count
             ctx.completion_info = CompletionInfo(
                 completed=f"已生成 {shot_count} 个分镜首帧图",
                 details="分镜画面已渲染完成",

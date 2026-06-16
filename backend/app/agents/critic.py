@@ -12,7 +12,6 @@ from app.agents.base import AgentContext, BaseAgent
 from app.agents.prompts.critic import CHARACTER_REVIEW_SYSTEM_PROMPT, SHOT_REVIEW_SYSTEM_PROMPT
 from app.config import Settings
 from app.models.project import Character, Shot
-from app.services.text_factory import create_text_service
 
 logger = logging.getLogger(__name__)
 
@@ -190,48 +189,54 @@ class CriticAgent(BaseAgent):
                 "will_regenerate": False,
             }
 
-        text_service = create_text_service(settings)
-
         messages = await self._build_multimodal_message(
             text_prompt=user_prompt,
             image_url=image_url,
             settings=settings,
         )
 
-        try:
-            llm_response = await text_service.generate(
-                messages=messages,
-                system=system_prompt,
-                max_tokens=512,
-                temperature=0.3,
-            )
-            raw_text = llm_response.text
-        except (RuntimeError, ValueError) as exc:
-            logger.warning("CriticAgent: VLM call failed, degrading to text-only: %s", exc)
-            # Graceful degradation: try text-only (no image)
-            text_only_messages = [
-                {"role": "user", "content": user_prompt + "\n[注意：图片无法加载，仅基于文本描述评估]"}
-            ]
+        async with self.trace_step(
+            ctx, stage="review", method="_run_review", model_name=settings.text_model
+        ) as trace:
             try:
-                llm_response = await text_service.generate(
-                    messages=text_only_messages,
-                    system=system_prompt,
+                llm_response = await self.call_llm(
+                    ctx,
+                    system_prompt=system_prompt,
+                    user_prompt="",
+                    messages=messages,
                     max_tokens=512,
-                    temperature=0.3,
+                    trace=trace,
                 )
                 raw_text = llm_response.text
-            except (RuntimeError, ValueError) as exc2:
-                logger.error("CriticAgent: text-only fallback also failed: %s", exc2)
-                return {
-                    "score": 5.0,
-                    "dimensions": {"consistency": 5, "quality": 5, "composition": 5},
-                    "issues": ["VLM 审查调用失败"],
-                    "suggestions": ["请检查文本服务配置"],
-                    "failed_checks": [],
-                    "entity_type": entity_type,
-                    "entity_id": entity_id,
-                    "will_regenerate": False,
-                }
+            except (RuntimeError, ValueError) as exc:
+                logger.warning(
+                    "CriticAgent: VLM call failed, degrading to text-only: %s", exc
+                )
+                # Graceful degradation: try text-only (no image)
+                try:
+                    llm_response = await self.call_llm(
+                        ctx,
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt
+                        + "\n[注意：图片无法加载，仅基于文本描述评估]",
+                        max_tokens=512,
+                        trace=trace,
+                    )
+                    raw_text = llm_response.text
+                except (RuntimeError, ValueError) as exc2:
+                    logger.error(
+                        "CriticAgent: text-only fallback also failed: %s", exc2
+                    )
+                    return {
+                        "score": 5.0,
+                        "dimensions": {"consistency": 5, "quality": 5, "composition": 5},
+                        "issues": ["VLM 审查调用失败"],
+                        "suggestions": ["请检查文本服务配置"],
+                        "failed_checks": [],
+                        "entity_type": entity_type,
+                        "entity_id": entity_id,
+                        "will_regenerate": False,
+                    }
 
         result = self._parse_review_response(raw_text)
         result["entity_type"] = entity_type

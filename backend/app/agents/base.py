@@ -309,6 +309,7 @@ class BaseAgent:
         ctx: AgentContext,
         system_prompt: str,
         user_prompt: str,
+        messages: list[dict[str, Any]] | None = None,
         tools: list[dict[str, Any]] | None = None,
         max_tokens: int = 2048,
         stream_to_ws: bool = False,
@@ -317,10 +318,13 @@ class BaseAgent:
         """调用 LLM 并返回最终响应。
 
         Args:
+            messages: Optional pre-built messages list (e.g. multimodal with images).
+                      If provided, user_prompt is ignored.
             stream_to_ws: 是否将流式文本推送到 WebSocket（默认关闭，因为 JSON 输出不适合直接展示）
         """
 
-        messages: list[dict[str, Any]] = [{"role": "user", "content": user_prompt}]
+        if messages is None:
+            messages = [{"role": "user", "content": user_prompt}]
 
         final: LLMResponse | None = None
         buffer = ""

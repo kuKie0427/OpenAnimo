@@ -538,7 +538,7 @@ class PlanAgent(BaseAgent):
         return data
 
     async def run_characters(self, ctx: AgentContext) -> None:
-        async with self.trace_step(ctx, stage="plan_characters", method="run_characters") as trace:
+        async with self.trace_step(ctx, stage="plan_characters", method="run_characters", model_name=ctx.settings.text_model) as trace:
             is_incremental = ctx.rerun_mode == "incremental"
             if is_incremental:
                 await self.send_message(ctx, "正在增量更新角色...", progress=0.0, is_loading=True)
@@ -651,7 +651,7 @@ class PlanAgent(BaseAgent):
             )
 
     async def run_shots(self, ctx: AgentContext) -> None:
-        async with self.trace_step(ctx, stage="plan_shots", method="run_shots") as trace:
+        async with self.trace_step(ctx, stage="plan_shots", method="run_shots", model_name=ctx.settings.text_model) as trace:
             char_res = await ctx.session.execute(
                 select(Character).where(Character.project_id == ctx.project_id)
             )

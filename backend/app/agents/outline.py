@@ -47,7 +47,7 @@ class OutlineAgent(BaseAgent):
     name = "outline"
 
     async def run_outline(self, ctx: AgentContext) -> None:
-        async with self.trace_step(ctx, stage="plan_outline", method="run_outline") as trace:
+        async with self.trace_step(ctx, stage="plan_outline", method="run_outline", model_name=ctx.settings.text_model) as trace:
             await self.send_message(ctx, "正在生成故事大纲...", progress=0.0, is_loading=True)
             await self.send_thinking(
                 ctx,

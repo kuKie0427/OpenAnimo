@@ -1,5 +1,43 @@
 # Progress Log
 
+## 2026-06-16 — Session: openanimo-p0a-fix-p2-coverage — Phase complete
+
+### 做了什么
+- Task 1: 3 处 trace_step 补 model_name=ctx.settings.text_model (outline.py run_outline, plan.py run_characters + run_shots)
+- Task 2: critic.py _run_review 改用 trace_step + call_llm（含 multimodal messages 支持），删除 text_service.generate 直调
+- Task 3: render.py run_characters + run_shots 写回 trace.images_generated
+- Task 4: 2 个 critic trace 单测 (test_critic_trace.py) — 主调用成功 + fallback 成功
+- Task 5: 1 个 images_generated 单测 (test_render_images_trace.py) — 3 角色渲染验证
+- Task 6: base.py call_llm 添加可选的 messages 参数（multimodal 支持）
+
+### 改了什么文件
+- backend/app/agents/base.py (mod) — call_llm 添加 messages 参数
+- backend/app/agents/outline.py (mod) — trace_step 加 model_name
+- backend/app/agents/plan.py (mod) — trace_step 加 model_name (2 处)
+- backend/app/agents/critic.py (mod) — _run_review trace_step + call_llm, 移除 text_service.generate
+- backend/app/agents/render.py (mod) — images_generated 写回 (2 处)
+- backend/tests/test_agents/test_critic_trace.py (new) — 2 trace 测试
+- backend/tests/test_agents/test_render_images_trace.py (new) — 1 images_generated 测试
+- feature_list.json (mod) — f-cost-dashboard-fix-p2 = passing
+- progress.md (mod) — 本条目
+
+### 当前状态
+- f-cost-dashboard-fix-p2 = passing ✅
+
+### 决策
+- call_llm 添加 `messages` 可选参数支持 multimodal（_build_multimodal_message 预构建消息）；`user_prompt` 仍为默认传参方式，messages 非 None 时优先使用
+- critic.py 主 VLM 调用用 `call_llm(messages=messages)`，回退用 `call_llm(user_prompt=...)`，同一 trace 累计 token
+- VLM 主调用支持 multimodal（含 image_url），回退纯文本——符合 trace_step 覆盖要求和优雅降级
+
+### 阻断
+- 无
+
+### 验证结果
+- backend: 1218 tests pass (1215 pre-existing + 3 new trace tests), ruff 0 errors
+- frontend: tsc clean, build succeed, 560 vitest tests pass
+- 关键 grep: trace_step 缺 model_name = 0, text_service.generate in critic = 0, images_generated += >= 2
+- feature_list.json: f-cost-dashboard-fix-p2 = passing
+
 ## 2026-06-16 — Session: openanimo-p0a-fix-p1-data-pipeline — Phase complete
 
 ### 做了什么

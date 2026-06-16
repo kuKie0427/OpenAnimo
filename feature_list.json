@@ -618,6 +618,17 @@
       "verification": "cd backend && uv run pytest tests/ -q --ignore=tests/e2e --ignore=tests/integration && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm build && pnpm exec vitest run",
       "evidence": "2026-06-16: call_llm trace param + token write-back (base.py), 3 call sites wired (outline.py+plan.py), get_cost_breakdown pricing_overrides wiring (metrics_service.py+route), 6 trace unit tests + 3 pricing override tests, ruff 0, 1215 backend tests pass, 560 frontend tests pass, tsc+build green",
       "notes": "Phase 1 — 数据管线修复。改动范围: base.py/outline.py/plan.py/metrics_service.py/routes/metrics.py + 2 test files。Gate: 全部通过。"
+    },
+    {
+      "id": "f-cost-dashboard-fix-p2",
+      "name": "API 成本仪表板修复 P2 — Coverage 修复",
+      "description": "补全所有 LLM 调用的 trace_step 覆盖 + trace 上 model_name 准确 + images_generated 写回。修复 critic.py 走 text_service.generate() 直调的问题，替换为 call_llm + trace_step。",
+      "dependencies": ["f-cost-dashboard-fix-p1"],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -q --ignore=tests/e2e --ignore=tests/integration && uv run ruff check app tests",
+      "evidence": "2026-06-16: 3 trace_step 补 model_name (outline/plan), critic.py call_llm + trace_step, render.py images_generated 写回, 3 trace 新测试通过, 1218 backend tests pass, ruff 0, frontend tsc+build+560 vitest all green",
+      "notes": "Phase 2 — Coverage 修复。改动范围: base.py/outline.py/plan.py/critic.py/render.py + 2 新测试文件"
     }
   ]
 }
