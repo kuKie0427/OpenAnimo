@@ -31,7 +31,7 @@ export const CanvasToolbar = track(function CanvasToolbar({
 
   // 导出状态
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
-  const [exporting, setExporting] = useState<"pdf" | "webtoon" | null>(null);
+  const [exporting, setExporting] = useState<"pdf" | "webtoon" | "vertical" | null>(null);
   const exportMenuRef = useRef<HTMLDivElement>(null);
 
   // 一致性评估面板
@@ -80,12 +80,17 @@ export const CanvasToolbar = track(function CanvasToolbar({
 
   // 导出操作
   const handleExport = useCallback(
-    async (format: "pdf" | "webtoon") => {
+    async (format: "pdf" | "webtoon" | "vertical") => {
       if (!projectId) return;
       setExportMenuOpen(false);
       setExporting(format);
 
-      const formatLabel = format === "pdf" ? "PDF 漫画册" : "Webtoon 长图";
+      const formatLabel =
+        format === "pdf"
+          ? "PDF 漫画册"
+          : format === "webtoon"
+            ? "Webtoon 长图"
+            : "9:16 竖屏视频";
 
       try {
         toast.info({
@@ -97,7 +102,9 @@ export const CanvasToolbar = track(function CanvasToolbar({
         const resp =
           format === "pdf"
             ? await exportApi.triggerPdf(projectId)
-            : await exportApi.triggerWebtoon(projectId);
+            : format === "webtoon"
+              ? await exportApi.triggerWebtoon(projectId)
+              : await exportApi.triggerVertical(projectId);
 
         // 轮询状态
         const pollStatus = async (exportId: string): Promise<ExportResponse> => {
@@ -247,7 +254,12 @@ export const CanvasToolbar = track(function CanvasToolbar({
                 <ArrowDownTrayIcon className="w-5 h-5" />
                 {exporting && (
                   <span className="text-xs">
-                    {exporting === "pdf" ? "PDF" : "Webtoon"}...
+                    {exporting === "pdf"
+                      ? "PDF"
+                      : exporting === "webtoon"
+                        ? "Webtoon"
+                        : "9:16"}
+                    ...
                   </span>
                 )}
               </button>
@@ -295,6 +307,26 @@ export const CanvasToolbar = track(function CanvasToolbar({
                     />
                   </svg>
                   导出 Webtoon 长图
+                </button>
+                <button
+                  className="btn btn-sm btn-ghost w-full justify-start text-base-content gap-2"
+                  onClick={() => handleExport("vertical")}
+                  disabled={!!exporting}
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 4v16h18V4H3zm2 2h14v12H5V6zm3 3h8v2H8V9zm0 4h8v2H8v-2z"
+                    />
+                  </svg>
+                  导出 9:16 竖屏视频
                 </button>
               </div>
             )}

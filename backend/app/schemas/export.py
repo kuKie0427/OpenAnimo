@@ -10,9 +10,16 @@ from pydantic import BaseModel, Field
 class ExportRequest(BaseModel):
     """导出请求"""
 
-    format: Literal["pdf", "webtoon"]
+    format: Literal["pdf", "webtoon", "vertical"]
     include_dialogue: bool = True
     include_character_info: bool = True
+
+
+class ExportVerticalRequest(BaseModel):
+    """竖屏视频导出请求"""
+
+    reframe_mode: str = "smart"
+    target_aspect: str = "9:16"
 
 
 class ExportResponse(BaseModel):

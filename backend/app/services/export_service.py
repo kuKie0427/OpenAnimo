@@ -6,10 +6,15 @@
 """
 from __future__ import annotations
 
+import asyncio
 import logging
+import shutil
+import subprocess  # noqa: F401
+import tempfile
 import textwrap
 import uuid
 from io import BytesIO
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import httpx
@@ -480,6 +485,77 @@ class ExportService:
         logger.info(f"Webtoon exported: {filepath}")
 
         return f"/static/exports/{filename}"
+
+    async def export_vertical_video(
+        self,
+        video_url: str,
+        target_aspect: str = "9:16",
+        reframe_mode: str = "smart",
+    ) -> str:
+        """Convert input video to 9:16 portrait video using FFmpeg.
+
+        Uses center-crop as placeholder for smart reframe.
+        """
+        if target_aspect != "9:16":
+            raise ValueError(f"Unsupported target_aspect: {target_aspect}. Only '9:16' is currently supported.")
+
+        if not shutil.which("ffmpeg"):
+            raise RuntimeError("ffmpeg not found in PATH — cannot export vertical video")
+
+        video_data = await self._download_image(video_url)
+        if not video_data:
+            raise RuntimeError(f"Failed to download video from {video_url}")
+
+        EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        output_filename = f"vertical_{uuid.uuid4().hex[:8]}.mp4"
+        output_path = EXPORTS_DIR / output_filename
+
+        tmp_path: str | None = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:
+                tmp.write(video_data)
+                tmp_path = tmp.name
+
+            cmd = [
+                "ffmpeg",
+                "-y",
+                "-i", tmp_path,
+                "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
+                "-c:v", "libx264",
+                "-preset", "medium",
+                "-crf", "23",
+                "-c:a", "aac",
+                "-b:a", "128k",
+                "-movflags", "+faststart",
+                str(output_path),
+            ]
+
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                err_msg = stderr.decode("utf-8", errors="replace")
+                raise RuntimeError(
+                    f"FFmpeg conversion failed (exit code {process.returncode}): {err_msg[-800:]}"
+                )
+
+            logger.info(f"Vertical video exported: {output_path}")
+            return f"/static/exports/{output_filename}"
+
+        except Exception as e:
+            logger.exception(f"Vertical export failed: {e}")
+            raise RuntimeError(f"Vertical video export failed: {e}")
+
+        finally:
+            if tmp_path and Path(tmp_path).exists():
+                try:
+                    Path(tmp_path).unlink()
+                except OSError:
+                    logger.warning(f"Failed to clean up temp file: {tmp_path}")
 
     def _overlay_dialogue_on_image(
         self,

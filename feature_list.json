@@ -668,7 +668,7 @@
       "name": "P1.1 — 9:16 竖屏视频导出 (短视频分发命门)",
       "description": "ExportService 加 export_vertical_video() (9:16 H.264 + AAC，1080x1920，智能 reframe 或中心裁切) + Project.aspect_ratio 字段 + API /export/vertical + 前端下载按钮。短视频分发(抖音/B站/YouTube Shorts/TikTok) 的基础能力。",
       "dependencies": ["f-subtitle-burnin-bugfix"],
-      "status": "active",
+      "status": "passing",
       "domain": "fullstack",
       "verification": "cd backend && uv run pytest tests/test_services/test_export_service.py -q && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
       "evidence": "",

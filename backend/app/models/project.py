@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, List, Optional, cast
 from sqlalchemy import Column, JSON
 from sqlalchemy.orm import declared_attr
 from sqlmodel import Field, Relationship, SQLModel
+from pydantic import field_validator
 
 from app.db.utils import utcnow
 
@@ -27,6 +28,7 @@ class Project(SQLModel, table=True):
     text_provider_override: Optional[str] = None
     image_provider_override: Optional[str] = None
     video_provider_override: Optional[str] = None
+    aspect_ratio: str = Field(default="16:9")
     target_shot_count: Optional[int] = None
     character_hints: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=True))
     creation_mode: Optional[str] = None
@@ -37,6 +39,14 @@ class Project(SQLModel, table=True):
     exports: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=True))
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
+
+    @field_validator("aspect_ratio")
+    @classmethod
+    def validate_aspect_ratio(cls, v: str) -> str:
+        allowed = {"16:9", "9:16", "1:1", "4:3"}
+        if v not in allowed:
+            raise ValueError(f"aspect_ratio must be one of {allowed}, got {v!r}")
+        return v
 
     universe: Optional["Universe"] = Relationship(back_populates="projects")
     universe_link: Optional["UniverseProjectLink"] = Relationship(back_populates="project")

@@ -11,10 +11,10 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import SessionDep, SettingsDep, WsManagerDep, get_or_404
+from app.api.deps import AdminDep, SessionDep, SettingsDep, WsManagerDep, get_or_404
 from app.config import Settings
 from app.models.project import Character, Project, Shot
-from app.schemas.export import ExportResponse
+from app.schemas.export import ExportResponse, ExportVerticalRequest
 from app.services.export_service import ExportService
 from app.ws.manager import ConnectionManager
 
@@ -64,6 +64,8 @@ async def _run_export_task(
     include_dialogue: bool,
     include_character_info: bool,
     ws: ConnectionManager,
+    target_aspect: str = "9:16",
+    reframe_mode: str = "smart",
 ) -> None:
     """后台导出任务"""
     from app.db.session import async_session_maker
@@ -93,6 +95,14 @@ async def _run_export_task(
                 characters=characters,
                 include_dialogue=include_dialogue,
                 include_character_info=include_character_info,
+            )
+        elif format == "vertical":
+            if not project.video_url:
+                raise ValueError("Project has no video_url to export")
+            download_url = await _export_service.export_vertical_video(
+                video_url=project.video_url,
+                target_aspect=target_aspect,
+                reframe_mode=reframe_mode,
             )
         else:
             download_url = await _export_service.export_webtoon(
@@ -238,6 +248,49 @@ async def export_webtoon(
             include_dialogue=True,
             include_character_info=True,
             ws=ws,
+        )
+    )
+
+    return export_resp
+
+
+@router.post(
+    "/{project_id}/export/vertical",
+    response_model=ExportResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def export_vertical(
+    project_id: int,
+    body: ExportVerticalRequest,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = SessionDep,
+    settings: Settings = SettingsDep,
+    ws: ConnectionManager = WsManagerDep,
+    _: None = AdminDep,
+):
+    """触发竖屏视频导出"""
+    await get_or_404(session, Project, project_id)
+
+    export_id = uuid.uuid4().hex[:12]
+    export_resp = ExportResponse(
+        export_id=export_id,
+        project_id=project_id,
+        format="vertical",
+        status="processing",
+        created_at=datetime.now(),
+    )
+    await _store_export_status(export_resp)
+
+    asyncio.create_task(
+        _run_export_task(
+            project_id=project_id,
+            export_id=export_id,
+            format="vertical",
+            include_dialogue=True,
+            include_character_info=True,
+            ws=ws,
+            target_aspect=body.target_aspect,
+            reframe_mode=body.reframe_mode,
         )
     )
 

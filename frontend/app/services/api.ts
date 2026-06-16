@@ -518,6 +518,12 @@ export const exportApi = {
 			method: "POST",
 		}),
 
+	triggerVertical: (projectId: number, body?: { reframe_mode?: string; target_aspect?: string }) =>
+		fetchApi<ExportResponse>(`/api/v1/projects/${projectId}/export/vertical`, {
+			method: "POST",
+			body: body ? JSON.stringify(body) : undefined,
+		}),
+
 	getStatus: (projectId: number, exportId: string) =>
 		fetchApi<ExportResponse>(
 			`/api/v1/projects/${projectId}/export/${exportId}/status`,

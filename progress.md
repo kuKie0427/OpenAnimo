@@ -1,5 +1,50 @@
 # Progress Log
 
+## 2026-06-16 — Session: openanimo-p1-vertical-export — P1.1 竖屏视频导出
+
+### 做了什么
+- **T1**: Project 模型新增 `aspect_ratio` 字段 (str, default="16:9") + `@field_validator` 校验 4 种合法值 + alembic 0023 迁移
+- **T2**: ExportService 新增 `export_vertical_video()` 方法 — FFmpeg 转 9:16 (1080x1920), 中心裁切占位, 异步 subprocess, temp 文件清理
+- **T3**: 新增 `ExportVerticalRequest` schema + POST `/projects/{id}/export/vertical` 端点 (202 响应, AdminDep 鉴权, WS export_completed 事件复用)
+- **T4**: 前端 CanvasToolbar 导出菜单新增 "📱 导出 9:16 竖屏视频" 按钮 + api.ts `triggerVertical` 方法
+- **T5**: 9 个新测试 (5 服务层 + 4 API 层) — ffmpeg 缺失/下载失败/非法 aspect/reframe_mode 透传/202 响应/404 项目不存在
+- **T6**: feature_list.json f-vertical-export → passing, progress.md 更新
+
+### 改了什么文件
+- `backend/app/models/project.py` (mod, +10) — aspect_ratio field + validator
+- `backend/alembic/versions/0023_add_aspect_ratio_to_project.py` (new, 28行) — 迁移
+- `backend/app/services/export_service.py` (mod, +76) — export_vertical_video() method
+- `backend/app/schemas/export.py` (mod, +8) — ExportVerticalRequest schema + format Literal 扩展
+- `backend/app/api/v1/routes/export.py` (mod, +55) — POST /export/vertical 端点 + _run_export_task 扩展
+- `frontend/app/services/api.ts` (mod, +6) — triggerVertical API
+- `frontend/app/components/canvas/CanvasToolbar.tsx` (mod, +37/-5) — 竖屏导出按钮
+- `backend/tests/test_models/test_project_aspect_ratio.py` (new, 39行, 5 tests)
+- `backend/tests/test_services/test_export_vertical.py` (new, 49行, 5 tests)
+- `backend/tests/test_api/test_export_vertical.py` (new, 51行, 4 tests)
+- `feature_list.json` (mod) — f-vertical-export = passing
+- `progress.md` (mod) — 本条目
+
+### 当前状态
+- f-vertical-export = passing ✅
+- **P1.1 竖屏视频导出正式完成**
+
+### 决策
+- Alembic 版本使用 0023（plan 原文写 0024，但实际最新版本为 0022，按序为 0023）
+- aspect_ratio 用 `str` + `@field_validator`（SQLModel 不支持 Literal 做 table=True column 类型推断）
+- 前端按钮放入现有导出下拉菜单，与 PDF/Webtoon 按钮统一布局
+- Smart reframe 用中心裁切占位（不实现真 InsightFace 集成，超范围）
+- 测试中的 API 202 测试创建真实 project 后调用 endpoint，background task 异步执行不影响 response
+
+### 阻断
+- 无
+
+### 验证结果
+- backend: 38 导出/模型测试全过, ruff 0 errors
+- frontend: tsc clean, 560 vitest pass, pnpm build OK
+
+### 下次
+- P1.1 全部通过。可启动 P2.1（多角度角色库·数据模型）— 新会话 + 新 roadmap 文件
+
 ## 2026-06-16 — Session: openanimo-p0b-subtitle-burnin-v2 — 字幕烧入管线 Phase 0b
 
 ### 做了什么
