@@ -1,5 +1,39 @@
 # Progress Log
 
+## 2026-06-16 — Session: openanimo-p0a-fix-p2-bugfix — P2 review bug fix
+
+### 做了什么
+- P2 review 5 路并行：Oracle 1 PASS (WARN), QA PASS, Oracle 3 FAIL (MAJOR), Security 无结果, Context Mining PASS
+- Oracle 3 发现 MAJOR bug: critic.py 双重失败时 `return {...}` 在 `async with self.trace_step()` 块内正常退出，导致 `trace.status` 错为 "completed" 而非 "failed"（PR 描述错误地声称了相反行为）
+- 修复方案 A（最小侵入）：base.py trace_step 加 1 行 status 守卫 + critic.py 双重失败前显式设 `trace.status="failed"` + `trace.error=str(exc2)[:500]`
+- 加 1 个回归测试 `test_run_review_trace_both_fail` 覆盖双重失败路径
+
+### 改了什么文件
+- backend/app/agents/base.py (mod, +3 lines) — trace_step yield 后加 `if trace.status != "failed":` 守卫
+- backend/app/agents/critic.py (mod, +2 lines) — 双重失败前显式设 status="failed" + error
+- backend/tests/test_agents/test_critic_trace.py (mod, +32 lines) — BothFailFakeLLM + test_run_review_trace_both_fail
+- feature_list.json (mod) — f-cost-dashboard-fix-p2 evidence/notes 更新
+- progress.md (mod) — 本条目
+
+### 当前状态
+- f-cost-dashboard-fix-p2 = passing ✅ (修 bug 后)
+
+### 决策
+- 选方案 A（不改异常流）而非方案 B（return 提到块外）或方案 C（用 raise 替代 return）—— A 最小侵入，1 行守卫 + 2 行显式设 status
+- trace_step 守卫加 `if trace.status != "failed":` 而非 `if trace.status == "completed":` —— 未来调用方可以预设 "running" 等中间值时不被强制覆盖为 completed
+- BothFailFakeLLM 用 `if False: yield` 模式让函数成为 async generator（Python 区分 `async def` + `yield` = generator vs `async def` 无 yield = coroutine）
+
+### 阻断
+- 无
+
+### 验证结果
+- backend: 1219 tests pass (P2 修复后 1218 + 1 新 both_fail 测试), ruff 0 errors, pyright 0 errors
+- 关键测试：test_run_review_trace_both_fail 验证 trace.status="failed" + trace.error 记录
+- 3/3 critic trace 测试通过 (main_vlm_success + fallback_succeeds + both_fail)
+
+### 下次
+- P2 修复 + bug fix 全部通过，可启动 P3 (Polishing: video_seconds + per-run cost + caplog 恢复 + UI 死 props)
+
 ## 2026-06-16 — Session: openanimo-p0a-fix-p2-coverage — Phase complete
 
 ### 做了什么

@@ -381,7 +381,8 @@ class BaseAgent:
         await ctx.session.commit()
         try:
             yield trace
-            trace.status = "completed"
+            if trace.status != "failed":
+                trace.status = "completed"
         except Exception as e:
             trace.status = "failed"
             trace.error = str(e)[:500]

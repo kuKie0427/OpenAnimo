@@ -227,6 +227,8 @@ class CriticAgent(BaseAgent):
                     logger.error(
                         "CriticAgent: text-only fallback also failed: %s", exc2
                     )
+                    trace.status = "failed"
+                    trace.error = str(exc2)[:500]
                     return {
                         "score": 5.0,
                         "dimensions": {"consistency": 5, "quality": 5, "composition": 5},

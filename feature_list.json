@@ -627,8 +627,8 @@
       "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/ -q --ignore=tests/e2e --ignore=tests/integration && uv run ruff check app tests",
-      "evidence": "2026-06-16: 3 trace_step 补 model_name (outline/plan), critic.py call_llm + trace_step, render.py images_generated 写回, 3 trace 新测试通过, 1218 backend tests pass, ruff 0, frontend tsc+build+560 vitest all green",
-      "notes": "Phase 2 — Coverage 修复。改动范围: base.py/outline.py/plan.py/critic.py/render.py + 2 新测试文件"
+      "evidence": "2026-06-16: 3 trace_step 补 model_name (outline/plan), critic.py call_llm + trace_step, render.py images_generated 写回, 3 trace 新测试通过, 1218 backend tests pass, ruff 0, frontend tsc+build+560 vitest all green. P2 review found double-failure trace.status bug (Oracle 3 MAJOR), fixed in commit: trace_step 加 status 守卫 + critic.py 显式设 status='failed' + 新 test_run_review_trace_both_fail 测试覆盖双重失败路径, 1219 tests pass, ruff 0, pyright 0",
+      "notes": "Phase 2 — Coverage 修复。改动范围: base.py/outline.py/plan.py/critic.py/render.py + 2 新测试文件。后续 bug fix: base.py (status guard) + critic.py (显式设 failed) + test_critic_trace.py (both_fail 测试)。"
     }
   ]
 }
