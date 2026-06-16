@@ -677,9 +677,9 @@
     {
       "id": "f-multi-angle-character-data",
       "name": "P2.1 — 多角度角色库·数据模型 (修'角色崩坏'根因)",
-      "description": "Character 扩展：4 视角(正/侧/背/斜) × 4 情绪(微笑/愤怒/哭泣/惊讶) = 16 张资产生成。引入 CharacterAsset 子表 (character_id, angle, emotion, image_url, face_embedding, prompt, seed)。复用现有 face_embedding 验证。alembic 0023 迁移。",
+      "description": "Character 扩展：4 视角(正/侧/背/斜) × 4 情绪(微笑/愤怒/哭泣/惊讶) = 16 张资产生成。引入 CharacterAsset 子表 (character_id, angle, emotion, image_url, face_embedding, prompt, seed)。复用现有 face_embedding 验证。alembic 0024 迁移。",
       "dependencies": [],
-      "status": "not_started",
+      "status": "active",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/test_agents/test_multi_angle.py tests/test_models/test_character_asset.py -q && uv run ruff check app tests && uv run pyright app/",
       "evidence": "",

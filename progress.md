@@ -1436,5 +1436,45 @@
 - Re-run 5-way review 验证 P1.1 修复（用户 explicit constraint）
 - 通过后 /handoff 启动 P2.1 (多角度角色库·数据模型)
 
+## 2026-06-16 — Session: p2.1-multi-angle-data plan
+
+### 做了什么
+- **5 路 P1.1 re-review 全部 PASS HIGH** (commit 1b620e1 修复 5 个 BLOCKs/Q-* 后)
+- **P1.1 完整收官**: f-vertical-export 正式 passing, 0 P0a/P0b regression, 2 Security MEDIUM 显式 deferred
+- **生成 P2.1 phase plan**: `openanimo-p1-multi-angle-data.md` (117 行, 100-150 范围内)
+- **Mark active**: `f-multi-angle-character-data` 状态从 not_started → active
+
+### P2.1 设计决策
+- **数据模型**: 新 `CharacterAsset` SQLModel 子表 (character_id, angle, emotion, image_url, face_embedding, prompt, seed, is_approved, created_at) — 比 "扩展 Character.reference_images 字段" 更结构化
+- **矩阵规模**: 4 视角 (front/side/back/three_quarter) × 4 情绪 (smile/angry/crying/surprised) = 16 资产
+- **顺序生成**: 先 sequential 避免 rate limit, 后续可优化并发
+- **Graceful degradation**: 1/16 失败不阻塞其他 15; face_embedding 调用失败 → None (InsightFace 不可用不崩)
+- **可逆迁移**: alembic 0024 + downgrade (有 character_id,angle + character_id,emotion 复合 index)
+- **Deterministic seed**: `hash(character_id + angle + emotion) % 2**32` 保证 re-run 出相同图
+- **复用现有**: `compute_face_embedding` (character_bible.py:54) + `generate_and_cache_image` (base.py:228) + `AdminDep` + WS 事件
+- **不破坏现有**: 保留 `Character.reference_images` (P2.2 选图用); render.py 只在 `multi_angle_enabled=True` 时才自动触发 (默认 OFF)
+- **P2.1 不实现并发**: 先 sequential 简化, 并发改 P2.1+ 优化
+- **P2.1 不引入新 face 识别库**: 只复用现有 InsightFace
+
+### 改动文件 (P2.1 预计, 实施时)
+- `backend/app/models/character_asset.py` (新)
+- `backend/app/models/project.py` (加 Relationship)
+- `backend/alembic/versions/0024_create_character_asset_table.py` (新)
+- `backend/app/services/character_asset_service.py` (新)
+- `backend/app/api/v1/routes/character_assets.py` (新)
+- `backend/app/api/v1/router.py` (注册新路由)
+- `backend/app/agents/render.py` (加可选 trigger)
+- `backend/app/config.py` (加 multi_angle_enabled setting)
+- 3 个新 test 文件 (model + service + api)
+- `feature_list.json` + `progress.md`
+
+### 阻断
+- 无
+
+### 下次
+- /handoff 启动新会话
+- 新会话: 读 `openanimo-p1-multi-angle-data.md` → 验证前置 → 执行 7 任务 → Gate 通过 → 标 passing → /handoff 给 P2.2
+
+
 
 
