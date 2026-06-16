@@ -1168,3 +1168,38 @@
 - Timeline 支持音频同步
 - List 支持拖拽排序
 - Canvas 支持节点式连线（类似 LibTV）
+
+## 2026-06-16 — Session: openanimo-p0a-fix-p3-polish — 验证收官
+
+### 做了什么
+- **全量验证 P3 Polish 收尾**: 确认 P0a 修复全部 9 项 issues 均已实现+验证通过
+- **Verification Gate 全绿**: ruff 0 errors, backend 1235 core tests pass (11 pre-existing E2E/integration failures allowed), frontend tsc 0 errors, pnpm build OK, vitest 560/560 pass, `./init.sh` ✅ All checks passed
+- **修复 ruff F401**: 移除 test_pricing.py 中未使用的 `import logging`（caplog 重构为 monkeypatch 后的残留）
+
+### 验证成果 (P3 Polish)
+| Task | 内容 | 状态 |
+|------|------|------|
+| 1 | AgentTrace `video_seconds` + migration 0022 + compose writeback | ✅ |
+| 2 | `get_cost_breakdown` 真聚合 `video_seconds` | ✅ |
+| 3 | `get_run_summaries` 加 per-run cost (`total_cost_usd`) | ✅ |
+| 4 | metrics route 传 `pricing_overrides` | ✅ |
+| 5 | `test_pricing.py` caplog 断言恢复 (monkeypatch) | ✅ |
+| 6 | MetricsPage 16 空 callback 清理 + AppShell props optional | ✅ (240行 < 254) |
+| 7 | Frontend `RunMetricsSummary.total_cost_usd` + Cost (USD) 列 | ✅ |
+| 9 | feature_list.json + progress.md 更新 | ✅ |
+
+### P0a 修复总成果（9/9 issues）
+1. LLM token 回填 → P1
+2. pricing_overrides 接线 → P1
+3. 3 处 trace_step model_name 显式 → P2
+4. critic LLM 被 trace → P2
+5. images_generated 写回 → P2
+6. 视频模型成本可追踪 (video_seconds) → P3 ✅
+7. per-run cost 字段 → P3 ✅
+8. caplog 断言恢复 (测试覆盖率修复) → P3 ✅
+9. MetricsPage 死代码清理 → P3 ✅
+
+### 决策
+- P3 所有代码在之前的 session 中已完成实现，本 session 执行全量验证 + Gate
+- `f-cost-dashboard-fix-p3` 确认 `passing`
+- P0a 修复正式收官。后续工作（字幕、9:16、多角度角色、多角色配音）需新开会话 + 新 roadmap
