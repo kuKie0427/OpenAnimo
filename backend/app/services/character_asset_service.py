@@ -212,6 +212,9 @@ async def delete_asset(session: AsyncSession, asset_id: int) -> bool:
 # Ordered lists for nearest-neighbor matching in select_asset_for_shot.
 # ANGLE_ORDER: spatial ordering (front → side → three_quarter → back).
 # EMOTION_ORDER: expression intensity ordering.
+# NOTE: different ordering from ANGLES/EMOTIONS above — ANGLES/EMOTIONS are plain
+# enumerations for generation, while these encode spatial/intensity adjacency for
+# Manhattan distance selection. If you add a new angle/emotion, update BOTH sets.
 ANGLE_ORDER = ("front", "side", "three_quarter", "back")
 EMOTION_ORDER = ("smile", "surprised", "angry", "crying")
 

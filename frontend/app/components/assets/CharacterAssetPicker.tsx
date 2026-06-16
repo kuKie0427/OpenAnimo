@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { clsx } from "clsx";
-import { getApiBase } from "~/utils/runtimeBase";
+import { fetchApi } from "~/services/api";
 
 interface CharacterAssetEntry {
 	id: number;
@@ -51,16 +51,9 @@ export function CharacterAssetPicker({
 		setError(null);
 
 		try {
-			const base = getApiBase();
-			const res = await fetch(
-				`${base}/api/v1/characters/${characterId}/assets/matrix`,
+			const data = await fetchApi<AssetMatrix>(
+				`/api/v1/characters/${characterId}/assets/matrix`,
 			);
-
-			if (!res.ok) {
-				throw new Error(`请求失败 (${res.status})`);
-			}
-
-			const data: AssetMatrix = await res.json();
 			setMatrix(data);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "加载失败");

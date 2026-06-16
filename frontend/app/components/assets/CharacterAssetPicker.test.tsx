@@ -2,10 +2,9 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { CharacterAssetPicker } from "./CharacterAssetPicker";
+import { fetchApi } from "~/services/api";
 
-vi.mock("~/utils/runtimeBase", () => ({
-	getApiBase: () => "http://localhost:18765",
-}));
+vi.mock("~/services/api");
 
 /* ── sample data ──────────────────────────────────────────── */
 
@@ -43,28 +42,13 @@ const FULL_MATRIX = {
 	},
 };
 
-/* ── helpers ──────────────────────────────────────────────── */
-
-function jsonResponse(data: unknown, ok = true, status = 200) {
-	return {
-		ok,
-		status,
-		json: () => Promise.resolve(data),
-	} as Response;
-}
-
-function errorResponse(status = 500) {
-	return jsonResponse(null, false, status);
-}
-
 /* ── tests ────────────────────────────────────────────────── */
 
 describe("CharacterAssetPicker", () => {
-	const fetchSpy = vi.fn<typeof fetch>();
+	const mockedFetchApi = vi.mocked(fetchApi);
 
 	beforeEach(() => {
-		fetchSpy.mockReset();
-		vi.stubGlobal("fetch", fetchSpy);
+		mockedFetchApi.mockReset();
 	});
 
 	afterEach(() => {
@@ -72,23 +56,23 @@ describe("CharacterAssetPicker", () => {
 	});
 
 	it("renders loading state initially", () => {
-		fetchSpy.mockReturnValue(new Promise(() => {}));
+		mockedFetchApi.mockReturnValue(new Promise(() => {}));
 		render(<CharacterAssetPicker characterId={1} />);
 		expect(screen.getByText("加载中…")).toBeInTheDocument();
 	});
 
 	it("renders error state when API fails", async () => {
-		fetchSpy.mockResolvedValue(errorResponse(500));
+		mockedFetchApi.mockRejectedValue(new Error("网络错误"));
 		render(<CharacterAssetPicker characterId={1} />);
 
 		await waitFor(() => {
-			expect(screen.getByText(/请求失败/)).toBeInTheDocument();
+			expect(screen.getByText(/网络错误/)).toBeInTheDocument();
 		});
 		expect(screen.getByRole("button", { name: /重试/i })).toBeInTheDocument();
 	});
 
 	it("renders empty state when matrix is null", async () => {
-		fetchSpy.mockResolvedValue(jsonResponse(null));
+		mockedFetchApi.mockResolvedValue(null as never);
 		render(<CharacterAssetPicker characterId={1} />);
 
 		await waitFor(() => {
@@ -97,7 +81,7 @@ describe("CharacterAssetPicker", () => {
 	});
 
 	it("renders 4x4 grid with assets", async () => {
-		fetchSpy.mockResolvedValue(jsonResponse(FULL_MATRIX));
+		mockedFetchApi.mockResolvedValue(FULL_MATRIX as never);
 		render(<CharacterAssetPicker characterId={1} />);
 
 		await waitFor(() => {
@@ -117,7 +101,7 @@ describe("CharacterAssetPicker", () => {
 	it("calls onSelect when an asset cell is clicked", async () => {
 		const user = userEvent.setup();
 		const onSelect = vi.fn();
-		fetchSpy.mockResolvedValue(jsonResponse(FULL_MATRIX));
+		mockedFetchApi.mockResolvedValue(FULL_MATRIX as never);
 
 		render(
 			<CharacterAssetPicker
@@ -140,7 +124,7 @@ describe("CharacterAssetPicker", () => {
 	it("does not call onSelect when a null cell is clicked", async () => {
 		const user = userEvent.setup();
 		const onSelect = vi.fn();
-		fetchSpy.mockResolvedValue(jsonResponse(FULL_MATRIX));
+		mockedFetchApi.mockResolvedValue(FULL_MATRIX as never);
 
 		render(
 			<CharacterAssetPicker
@@ -162,7 +146,7 @@ describe("CharacterAssetPicker", () => {
 	});
 
 	it("highlights the selected asset", async () => {
-		fetchSpy.mockResolvedValue(jsonResponse(FULL_MATRIX));
+		mockedFetchApi.mockResolvedValue(FULL_MATRIX as never);
 
 		render(
 			<CharacterAssetPicker

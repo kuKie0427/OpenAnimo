@@ -68,7 +68,7 @@ export function getStaticUrl(path: string | null | undefined): string | null {
 	return `${API_BASE}${trimmedPath}`;
 }
 
-async function fetchApi<T>(
+export async function fetchApi<T>(
 	endpoint: string,
 	options?: RequestInit,
 ): Promise<T> {
