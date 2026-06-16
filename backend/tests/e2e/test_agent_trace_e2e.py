@@ -11,7 +11,6 @@ from unittest.mock import AsyncMock
 import pytest
 from sqlmodel import select
 
-from app.agents import critic as critic_mod
 from app.agents import orchestrator as orchestrator_mod
 from app.api.v1.routes import generation as generation_routes
 from app.models.agent_run import AgentRun
@@ -55,9 +54,6 @@ def _stub_async_provider_resolution(
     # Patch local 'from X import Y' bindings for create_text_service
     monkeypatch.setattr(
         orchestrator_mod, "create_text_service", lambda s: FakeTextService(s)
-    )
-    monkeypatch.setattr(
-        critic_mod, "create_text_service", lambda s: FakeTextService(s)
     )
     monkeypatch.setattr(
         agent_runner_mod, "create_text_service", lambda s: FakeTextService(s)
