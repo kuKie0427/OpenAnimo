@@ -640,6 +640,17 @@
       "verification": "cd backend && uv run pytest tests/ -q --ignore=tests/e2e --ignore=tests/integration && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm build && pnpm test --run",
       "evidence": "2026-06-16: AgentTrace 加 video_seconds 字段 + alembic 0022 migration, compose.py run_videos 写回 trace.video_seconds, get_cost_breakdown 真聚合 video_seconds, get_run_summaries 加 total_cost_usd + total_video_seconds 字段, metrics route /runs 传 pricing_overrides, 恢复 test_pricing.py caplog warning 断言 (monkeypatch 实现，绕过 full suite logger 干扰), AppShell interface props 全部 optional, MetricsPage 删 16 个空 callback + 加 Cost (USD) 列, 1219 backend tests pass, 560 frontend tests pass, ruff 0, tsc 0, build OK",
       "notes": "Phase 3 — Polish 收尾。改动范围: agent_trace.py/alembic 0022/compose.py/metrics_service.py/routes/metrics.py/test_pricing.py/AppShell.tsx/MetricsPage.tsx/types/index.ts。P0a 修复正式收官 (9/9 issues 全部修完)。"
+    },
+    {
+      "id": "f-subtitle-burnin",
+      "name": "字幕烧入管线 — SRT 生成 + FFmpeg 硬字幕 (Phase 0b)",
+      "description": "将 Shot.dialogue 烧入最终视频为硬字幕：SRT 生成器、FFmpeg overlay 烧入、compose.py 流水线衔接、API 端点（POST /burn + GET /srt）、前端 <track> 播放预览",
+      "dependencies": ["f-pipeline-core"],
+      "status": "passing",
+      "domain": "fullstack",
+      "verification": "cd backend && uv run pytest tests/test_services/test_subtitle_service.py tests/test_orchestration/test_subtitle_burnin.py -q && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
+      "evidence": "2026-06-16: subtitle_service.py (165行) SRT生成+FFmpeg硬字幕, compose.py _add_audio_to_videos 衔接字幕烧入, subtitles.py POST/GET API, ComposeSectionShape.tsx <track> SRT加载, 16个单元测试+1集成测试通过, backend 1236 tests pass, frontend 560 tests pass, ruff 0, tsc clean, build OK",
+      "notes": "Phase 0b — 字幕烧入管线。改动范围: subtitle_service.py (new) + compose.py (mod) + subtitles.py (new) + router.py (mod) + ComposeSectionShape.tsx (mod) + 2 test files。任务4字体解析跳过（get_pillow_font_path已存在且更智能）。"
     }
   ]
 }

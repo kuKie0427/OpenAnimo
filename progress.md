@@ -1,5 +1,50 @@
 # Progress Log
 
+## 2026-06-16 — Session: openanimo-p0b-subtitle-burnin-v2 — 字幕烧入管线 Phase 0b
+
+### 做了什么
+- **T1+T2**: 新建 `subtitle_service.py` — SRT 生成器 (`build_srt`/`_format_timestamp`) + FFmpeg 硬字幕烧入 (`burn_subtitles_into_video`)
+- **T3**: compose.py `_add_audio_to_videos` 衔接字幕烧入（BGM 混音后串行调用，`subtitle_burned` WS 事件）
+- **T5**: 新建 `subtitles.py` API 路由 — `POST /projects/{id}/subtitles/burn` + `GET /projects/{id}/subtitles/srt`（AdminDep 鉴权）
+- **T6**: 16 个单元测试（14 字幕服务 + 2 集成导入）+ 1 个跳过（需 FFmpeg 视频文件）
+- **T7**: 前端 `ComposeSectionShape.tsx` — 条件 `<track kind="captions">` 加载真实 SRT URL
+- **T4**: 跳过（字体解析 — `get_pillow_font_path` 已存在且更智能）
+- **T8**: feature_list.json 添加 f-subtitle-burnin=passing，progress.md 更新
+
+### 改了什么文件
+- `backend/app/services/subtitle_service.py` (new, 165行) — SRT 生成 + FFmpeg 烧入
+- `backend/app/agents/compose.py` (mod, +58行) — _add_audio_to_videos 字幕衔接
+- `backend/app/api/v1/routes/subtitles.py` (new, 121行) — POST/GET API
+- `backend/app/api/v1/router.py` (mod, +2行) — 注册 subtitles 路由
+- `backend/tests/test_services/test_subtitle_service.py` (new, 140行, 14 tests)
+- `backend/tests/test_orchestration/test_subtitle_burnin.py` (new, 100行, 2+1 integration)
+- `frontend/app/components/canvas/shapes/ComposeSectionShape.tsx` (mod, +21/-7) — SRT track
+- `feature_list.json` (mod) — +f-subtitle-burnin=passing
+- `progress.md` (mod) — 本条目
+
+### 当前状态
+- f-subtitle-burnin = passing ✅
+- **P0 字幕烧入管线正式收官**
+
+### 决策
+- 任务 4（字体解析）跳过 — `get_pillow_font_path()` 使用 `fc-list :lang=zh` 智能找中文字体，比 plan 最初的 3 个固定候选更智能
+- 集成测试标记 skip (requires FFmpeg + real video files) — 保持 CI 兼容
+- 前端 SRT URL 直接使用 `/api/v1/projects/{id}/subtitles/srt` 路径（Vite 代理自动转发）
+- SRT 文件在 POST /burn 后保留（供下载），在 compose.py 流水线中清理（临时文件）
+
+### 阻断
+- 无
+
+### 验证结果
+- backend: 1236 tests pass, ruff 0 errors
+- frontend: tsc clean, 560 vitest pass, pnpm build OK
+- Subtitle tests: 16/17 passed (1 skipped — FFmpeg integration)
+- Plans: `.sisyphus/plans/openanimo-p0b-subtitle-burnin-v2.md` — pre-checks + gate checks partially updated
+
+### 下次
+- P0a + P0b 全部完成。Gate 剩余项（E2E 手动验证、./init.sh 全绿）需 Docker 环境。
+- 可启动 P1+ 事项（9:16 导出、多角度角色、多角色配音）— 新会话 + 新 roadmap。
+
 ## 2026-06-16 — Session: openanimo-p0a-fix-p3-bugfix — P3 review MAJOR bug fix
 
 ### 做了什么

@@ -425,6 +425,64 @@ class ComposeAgent(BaseAgent):
             except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as e:
                 logger.warning("Final video BGM mixing failed: %s", e)
 
+        # 5. 字幕烧入（硬字幕）
+        if ctx.project.video_url:
+            try:
+                import uuid
+                from pathlib import Path
+
+                from app.services.subtitle_service import build_srt, burn_subtitles_into_video
+
+                srt_content = build_srt(shots, include_unapproved=False)
+
+                if srt_content:
+                    project_id = ctx.project_id
+                    run_id = getattr(ctx, "run_id", None) or ctx.project_id
+                    exports_dir = Path("static/exports")
+                    exports_dir.mkdir(parents=True, exist_ok=True)
+
+                    srt_filename = f"{project_id}_{run_id}.srt"
+                    srt_path = exports_dir / srt_filename
+                    srt_path.write_text(srt_content, encoding="utf-8")
+
+                    video_output_dir = Path("static/videos")
+                    video_output_dir.mkdir(parents=True, exist_ok=True)
+                    output_filename = f"sub_{uuid.uuid4().hex[:8]}.mp4"
+                    output_path = str(video_output_dir / output_filename)
+
+                    await burn_subtitles_into_video(
+                        video_path=ctx.project.video_url,
+                        srt_path=str(srt_path),
+                        output_path=output_path,
+                    )
+
+                    new_video_url = f"/static/videos/{output_filename}"
+                    ctx.project.video_url = new_video_url
+                    ctx.session.add(ctx.project)
+
+                    shots_with_dialogue = sum(
+                        1 for s in shots
+                        if s.approved_dialogue or s.dialogue
+                    )
+
+                    await ctx.ws.send_event(
+                        ctx.project_id,
+                        {
+                            "type": "subtitle_burned",
+                            "data": {
+                                "video_url": new_video_url,
+                                "srt_download_url": f"/static/exports/{srt_filename}",
+                                "shot_count": shots_with_dialogue,
+                            },
+                        },
+                    )
+
+                    srt_path.unlink(missing_ok=True)
+
+                    logger.info("Subtitles burned into final video: %s", new_video_url)
+            except Exception:
+                logger.warning("Subtitle burn-in failed, keeping original video", exc_info=True)
+
         await ctx.session.commit()
 
         if audio_count > 0:

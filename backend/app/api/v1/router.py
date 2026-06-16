@@ -12,10 +12,12 @@ from app.api.v1.routes.style_templates import router as style_templates_router
 from app.api.v1.routes.text import router as text_router
 from app.api.v1.routes.universes import router as universes_router
 from app.api.v1.routes.metrics import router as metrics_router
+from app.api.v1.routes.subtitles import router as subtitles_router
 from app.api.v1.routes.versions import router as versions_router
 
 api_router = APIRouter()
 api_router.include_router(projects_router, prefix="/projects", tags=["projects"])
+api_router.include_router(subtitles_router, prefix="/projects", tags=["subtitles"])
 api_router.include_router(generation_router, tags=["generation"])
 api_router.include_router(config_router, prefix="/config", tags=["config"])
 api_router.include_router(characters_router, prefix="/characters", tags=["characters"])

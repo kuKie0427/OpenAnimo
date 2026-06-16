@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
 	HTMLContainer,
 	Rectangle2d,
@@ -92,8 +93,19 @@ export class ComposeSectionShapeUtil extends ShapeUtil<ComposeSectionShape> {
 			placeholderText,
 			statusLabel,
 			sectionState,
+			projectId,
 		} = shape.props;
 		const ref = useDomSize(shape, this.editor ?? null);
+
+		const [srtUrl, setSrtUrl] = useState<string | null>(null);
+
+		useEffect(() => {
+			if (videoUrl && projectId && projectId > 0) {
+				setSrtUrl(`/api/v1/projects/${projectId}/subtitles/srt`);
+			} else {
+				setSrtUrl(null);
+			}
+		}, [videoUrl, projectId]);
 
 		return (
 			<HTMLContainer
@@ -122,13 +134,15 @@ export class ComposeSectionShapeUtil extends ShapeUtil<ComposeSectionShape> {
 									onPointerDown={stopCanvasDrag}
 									aria-label={videoTitle}
 								>
-									<track
-										kind="captions"
-										label="中文"
-										srcLang="zh"
-										default
-										src={`data:text/vtt;charset=utf-8,${encodeURIComponent(`WEBVTT\n\n00:00:00.000 --> 00:00:05.000\n${videoTitle || "最终视频"}`)}`}
-									/>
+									{srtUrl && (
+										<track
+											kind="captions"
+											label="中文"
+											srcLang="zh"
+											src={srtUrl}
+											default
+										/>
+									)}
 								</video>
 								<div className="flex justify-end">
 									<Button
