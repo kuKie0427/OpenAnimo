@@ -1664,6 +1664,42 @@
 - /handoff 启动新会话
 - 新会话: 读 `openanimo-p1-multi-angle-select.md` → 验证前置 → 执行 6 任务 → Gate 通过 → 标 passing → /handoff 给 P3.1
 
+## 2026-06-17 — Session: p3.1-voice-tracks-gen plan
+
+### 做了什么
+- **P2.2 review-fix 5 路 re-review 全部 PASS** (commit 536e5ce 修复 duplicate constants + fetchApi auth)
+- **P2.2 完整收官**: f-multi-angle-character-select 正式 passing, 0 regression
+- **生成 P3.1 phase plan**: `openanimo-p3-voice-tracks-gen.md` (103 行, 100-150 范围内)
+- **Mark active**: `f-voice-tracks-gen` 状态从 not_started → active
+
+### P3.1 设计决策
+- **数据模型**: `Character.voice_profile: dict | None` (JSON) — 存储 voice 参数 (speed, pitch, emotion, pause_ms, breath)
+- **alembic 0025**: 同一个 migration 加 3 列 (character.voice_profile + shot.narrator_url + shot.sfx_url)
+- **AudioService.generate_track()**: 新方法, track_type 限定 "dialogue"/"narrator"/"sfx", voice_profile 参数映射到 Edge TTS rate/pitch
+- **AudioService.generate_tracks()**: 新方法, 为单个 shot 生成 3 轨音频, 部分失败不阻塞
+- **compose.py 集成**: 替换 `generate_character_tts` → `generate_tracks`, 存储 `shot.tts_url = tracks["dialogue"]` (dialogue 轨作为主 TTS, 兼容现有)
+- **Shot 模型扩展**: 加 `narrator_url` + `sfx_url` 字段 (Optional[str])
+- **voice_profile schema**: `{"speed": 1.0, "pitch": 0, "emotion": "neutral", "pause_ms": 200, "breath": false}`
+- **不改**: `generate_tts` / `generate_character_tts` / `mix_audio_into_video` (P3.2 再做混音)
+- **不引入新 TTS 引擎**: 只用 Edge TTS
+- **不实现并发**: 先 sequential
+- **预计 5-7 文件改动, 1.5-2 天**
+
+### 改动文件 (P3.1 预计, 实施时)
+- `backend/app/models/project.py` (Character 加 voice_profile + Shot 加 narrator_url/sfx_url)
+- `backend/alembic/versions/0025_add_voice_profile_and_track_urls.py` (新)
+- `backend/app/services/audio_service.py` (加 generate_track + generate_tracks)
+- `backend/app/agents/compose.py` (替换 generate_character_tts → generate_tracks)
+- `backend/tests/test_services/test_audio_tracks.py` (新)
+- `feature_list.json` + `progress.md`
+
+### 阻断
+- 无
+
+### 下次
+- /handoff 启动新会话
+- 新会话: 读 `openanimo-p3-voice-tracks-gen.md` → 验证前置 → 执行 7 任务 → Gate 通过 → 标 passing → /handoff 给 P3.2
+
 
 
 

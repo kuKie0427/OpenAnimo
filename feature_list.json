@@ -701,7 +701,7 @@
       "name": "P3.1 — 多角色配音·分轨生成 (配音导演分轨精修)",
       "description": "TTS 分轨生成：dialogue(对白) / narrator(旁白) / SFX(音效) 三类独立 wav 输出。Character.voice_profile 扩展（语速/情绪/停顿/气息）。每类单独 FFmpeg 渲染 + 文件管理。",
       "dependencies": [],
-      "status": "not_started",
+      "status": "active",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/test_services/test_audio_service.py -q && uv run ruff check app tests",
       "evidence": "",
