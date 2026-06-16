@@ -1,5 +1,6 @@
 from app.models.agent_run import AgentMessage, AgentRun
 from app.models.agent_trace import AgentTrace
+from app.models.character_asset import CharacterAsset
 from app.models.artifact import Artifact
 from app.models.config_item import ConfigItem
 from app.models.consistency_report import ConsistencyReport
@@ -16,6 +17,7 @@ __all__ = [
     "AgentTrace",
     "Artifact",
     "Character",
+    "CharacterAsset",
     "ConfigItem",
     "ConsistencyReport",
     "Message",

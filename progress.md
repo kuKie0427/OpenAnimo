@@ -1,5 +1,51 @@
 # Progress Log
 
+## 2026-06-16 — Session: openanimo-p1-multi-angle-data — Phase P2.1 多角度角色库·数据模型
+
+### 做了什么
+- **T1**: CharacterAsset 数据模型 — 新 `character_asset.py` (9 字段 + angle/emotion field_validator) + Character.assets Relationship + `__init__.py` 导出
+- **T2**: alembic 0024 migration — `characterasset` 表 (FK→character.id + 3 indexes: character_id, character_id+angle, character_id+emotion) + 可逆 downgrade
+- **T3**: CharacterAssetService — `generate_matrix` (16 selected sequential, partial failure tolerant) + `list_assets` (filtered) + `get_matrix` (4×4 dict) + `delete_asset` (bool)
+- **T4**: API 路由 — 4 endpoints (POST /generate 202 async, GET / 200, GET /matrix 200, DELETE /{id} 204) + router 注册
+- **T5**: config.py `multi_angle_enabled: bool = False` + render.py lazy conditional hook (default OFF, 不影响现有用户)
+- **T6**: 25 测试 (13 model + 6 service + 6 API) — 全部通过
+- **T7**: feature_list.json f-multi-angle-character-data → passing + progress.md
+
+### 改了什么文件
+- `backend/app/models/character_asset.py` (new, 43 行) — CharacterAsset 模型
+- `backend/app/models/project.py` (mod, +6 行) — Character.assets relationship
+- `backend/app/models/__init__.py` (mod, +1 行) — CharacterAsset 导出
+- `backend/alembic/versions/0024_create_character_asset_table.py` (new, 58 行) — 迁移
+- `backend/app/services/character_asset_service.py` (new, 209 行) — 资产生成服务
+- `backend/app/api/v1/routes/character_assets.py` (new, 185 行) — 4 API endpoints
+- `backend/app/api/v1/router.py` (mod, +2 行) — 注册路由
+- `backend/app/config.py` (mod, +5 行) — multi_angle_enabled flag
+- `backend/app/agents/render.py` (mod, +24 行) — 可选多角度 hook
+- `backend/tests/test_models/test_character_asset.py` (new, 68 行, 13 tests)
+- `backend/tests/test_services/test_character_asset_service.py` (new, 155 行, 6 tests)
+- `backend/tests/test_api/test_character_assets.py` (new, 106 行, 6 tests)
+- `feature_list.json` (mod) — f-multi-angle-character-data = passing
+- `progress.md` (mod) — 本条目
+
+### 当前状态
+- f-multi-angle-character-data = passing ✅
+- **Phase P2.1 多角度角色库·数据模型正式完成**
+
+### 决策
+- CharacterAsset 用独立文件 (非合入 project.py) — 模型独立职责
+- service 接受 `generate_and_cache` callable 做 DI（不依赖 AgentContext）
+- config flag 默认 False 保证向后兼容
+- render.py 用 lazy import 避免循环引用
+
+### 阻断
+- 无
+
+### 验证结果
+- backend: 25 asset tests + existing tests all pass, ruff 0, pyright 0
+
+### 下次
+- P2.2 多角度角色库·分镜选图（前端 picker + bible 集成）
+
 ## 2026-06-16 — Session: openanimo-p1-vertical-export — P1.1 竖屏视频导出
 
 ### 做了什么

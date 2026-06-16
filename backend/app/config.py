@@ -149,6 +149,11 @@ class Settings(BaseSettings):
         default=True,
         description="是否启用分层故事大纲审批流程",
     )
+    # 多角度角色资产生成
+    multi_angle_enabled: bool = Field(
+        default=False,
+        description="是否启用多角度角色资产生成（4 视角 × 4 情绪）。默认 OFF 不影响现有用户。",
+    )
 
     # ============================================
     # 视频生成服务 (OpenAI 兼容接口)

@@ -9,6 +9,7 @@ from pydantic import field_validator
 from app.db.utils import utcnow
 
 if TYPE_CHECKING:
+    from app.models.character_asset import CharacterAsset
     from app.models.universe import Universe, UniverseProjectLink
 
 
@@ -79,6 +80,11 @@ class Character(SQLModel, table=True):
     approval_version: int = Field(default=0, ge=0)
 
     project: Optional[Project] = Relationship(back_populates="characters")
+
+    assets: List["CharacterAsset"] = Relationship(
+        back_populates="character",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+    )
 
     @property
     def approval_state(self) -> str:

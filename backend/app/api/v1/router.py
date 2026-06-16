@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.routes.assets import router as assets_router
+from app.api.v1.routes.character_assets import router as character_assets_router
 from app.api.v1.routes.characters import router as characters_router
 from app.api.v1.routes.config import router as config_router
 from app.api.v1.routes.consistency import router as consistency_router
@@ -21,6 +22,7 @@ api_router.include_router(subtitles_router, prefix="/projects", tags=["subtitles
 api_router.include_router(generation_router, tags=["generation"])
 api_router.include_router(config_router, prefix="/config", tags=["config"])
 api_router.include_router(characters_router, prefix="/characters", tags=["characters"])
+api_router.include_router(character_assets_router, prefix="/characters", tags=["character-assets"])
 api_router.include_router(shots_router, prefix="/shots", tags=["shots"])
 api_router.include_router(assets_router, prefix="/assets", tags=["assets"])
 api_router.include_router(style_templates_router, prefix="/style-templates", tags=["style-templates"])

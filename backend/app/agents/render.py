@@ -226,6 +226,30 @@ class RenderAgent(BaseAgent):
                     except (httpx.HTTPError, RuntimeError, ValueError) as e:
                         logger.warning("Failed to compute face embedding for %s: %s", char.name, e)
 
+                # Multi-angle asset generation (optional, gated by config flag)
+                if ctx.settings.multi_angle_enabled:
+                    try:
+                        from app.services.character_asset_service import generate_matrix
+
+                        async def _multi_angle_generate_fn(prompt: str, seed: int | None) -> str:
+                            return await self.generate_and_cache_image(ctx, prompt=prompt, seed=seed)
+
+                        _result = await generate_matrix(
+                            ctx.session, char, _multi_angle_generate_fn
+                        )
+                        logger.info(
+                            "Multi-angle assets generated for %s: %d/%d succeeded",
+                            char.name,
+                            _result["succeeded"],
+                            _result["total"],
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            "Failed to generate multi-angle assets for %s: %s",
+                            char.name,
+                            e,
+                        )
+
                 current_version = await self.version_service.create_version(
                     ctx.session,
                     "character",
