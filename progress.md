@@ -1284,3 +1284,41 @@
 - P3 所有代码在之前的 session 中已完成实现，本 session 执行全量验证 + Gate
 - `f-cost-dashboard-fix-p3` 确认 `passing`
 - P0a 修复正式收官。后续工作（字幕、9:16、多角度角色、多角色配音）需新开会话 + 新 roadmap
+
+## 2026-06-16 — Session: p0b-subtitle-burnin-bugfix — CRITICAL bug 修复
+
+### 做了什么
+- **5 路 review 综合**: P0b v2 字幕烧入管线 review = 4 PASS / 1 FAIL（Code Quality agent 发现 1 CRITICAL + 6 MAJOR）
+- **CRITICAL bug 定位**: `backend/app/agents/compose.py:440` 的 `getattr(ctx, "run_id", None) or ctx.project_id` 因 `AgentContext` 实际字段是 `run: AgentRun`（不是 `run_id`），`getattr` 永远返回 None，fallback 永远 fire，SRT 文件名恒退化为 `{project_id}_{project_id}.srt`，并发 run 必冲突
+- **最小修复**（用户选择 5 分钟路径）:
+  - 改 1 行: `getattr(ctx, "run_id", None) or ctx.project_id` → `ctx.run.id`（保留 `# pyright: ignore[reportArgumentType]` 与 base.py:373 一致）
+  - 加 2 个 regression test:
+    - `test_srt_filename_uses_run_id_not_getattr_fallback`: source-level 检查确保 `ctx.run.id` 存在且 `getattr(ctx, "run_id"` 不存在
+    - `test_srt_filename_includes_run_id_for_concurrent_safety`: 行为级验证同 project 不同 run_id → 不同 SRT 文件名
+
+### 验证结果
+- 单元测试: 4/4 passed + 1 skip (FFmpeg integration), 0 regression
+- backend tests 全量: 1254 passed, 11 failed (5 critic_e2e AttributeError + 6 e2e TimeoutError — 全部 pre-existing from `10be0e9` P2 cleanup 和需要真实服务)
+- ruff: 0 errors
+- pyright (compose.py): 0 errors
+
+### 改动文件
+- `backend/app/agents/compose.py` (mod, 1 行 fix) — `getattr(ctx, "run_id", None) or ctx.project_id` → `ctx.run.id`
+- `backend/tests/test_orchestration/test_subtitle_burnin.py` (mod, +50 行) — 2 regression tests
+- `feature_list.json` (mod) — 添加 f-subtitle-burnin-bugfix (passing)
+
+### 决策
+- 用户选择"最小修复 CRITICAL bug（5 分钟）"路径，跳过 6 MAJOR issue（代码重复、bare except、utf-8 BOM、try/finally cleanup、shutil.which、模块级 import）
+- 6 MAJOR 留待后续 phase 处理
+- 保留 `# pyright: ignore[reportArgumentType]` 注释以保持与 base.py:373 风格一致（ctx.run.id 类型是 Optional[int]）
+- docstring 严格控制：回归测试不加 docstring（依赖测试名 + assertion error message 表达 why，符合"不写无意义 docstring"约定）
+
+### 阻断
+- 无
+
+### 下次
+- 待 5 路 review 验证修复后（review-work 1 round）
+- 后续可选项:
+  1. 修 6 MAJOR issue (2-3 小时)
+  2. 进入 P1+ 后续工作 (WYSIWYG 编辑器 / 9:16 竖屏 / 多角度角色库 / 多角色对话配音分轨)
+

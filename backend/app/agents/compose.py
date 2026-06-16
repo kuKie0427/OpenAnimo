@@ -437,7 +437,7 @@ class ComposeAgent(BaseAgent):
 
                 if srt_content:
                     project_id = ctx.project_id
-                    run_id = getattr(ctx, "run_id", None) or ctx.project_id
+                    run_id = ctx.run.id  # pyright: ignore[reportArgumentType]
                     exports_dir = Path("static/exports")
                     exports_dir.mkdir(parents=True, exist_ok=True)
 

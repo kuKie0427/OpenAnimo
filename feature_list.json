@@ -651,6 +651,17 @@
       "verification": "cd backend && uv run pytest tests/test_services/test_subtitle_service.py tests/test_orchestration/test_subtitle_burnin.py -q && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
       "evidence": "2026-06-16: subtitle_service.py (165行) SRT生成+FFmpeg硬字幕, compose.py _add_audio_to_videos 衔接字幕烧入, subtitles.py POST/GET API, ComposeSectionShape.tsx <track> SRT加载, 16个单元测试+1集成测试通过, backend 1236 tests pass, frontend 560 tests pass, ruff 0, tsc clean, build OK",
       "notes": "Phase 0b — 字幕烧入管线。改动范围: subtitle_service.py (new) + compose.py (mod) + subtitles.py (new) + router.py (mod) + ComposeSectionShape.tsx (mod) + 2 test files。任务4字体解析跳过（get_pillow_font_path已存在且更智能）。"
+    },
+    {
+      "id": "f-subtitle-burnin-bugfix",
+      "name": "字幕烧入 CRITICAL bug 修复 — SRT 文件名并发冲突",
+      "description": "修复 Code Quality review 发现的 CRITICAL bug：compose.py:440 的 `getattr(ctx, 'run_id', None) or ctx.project_id` 因 AgentContext 实际字段是 `run: AgentRun`（不是 `run_id`）永远 fallback 到 ctx.project_id，导致 SRT 文件名恒退化为 {project_id}_{project_id}.srt，并发 run 必冲突。最小修复：1 行 fix + 2 个 regression test。",
+      "dependencies": ["f-subtitle-burnin"],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/test_orchestration/test_subtitle_burnin.py -v && uv run pyright app/agents/compose.py && uv run ruff check app tests",
+      "evidence": "2026-06-16: compose.py:440 `getattr(ctx, 'run_id', None) or ctx.project_id` → `ctx.run.id`, 2 regression tests added (test_srt_filename_uses_run_id_not_getattr_fallback + test_srt_filename_includes_run_id_for_concurrent_safety), 4 subtitle_burnin tests pass + 1 skip (FFmpeg integration), pyright 0 errors, ruff 0",
+      "notes": "Phase 0b review CRITICAL fix。Code Quality agent 在 5 路 review 中找到的 1 CRITICAL bug 的最小修复。其他 6 MAJOR issue（代码重复、bare except、utf-8-sig BOM、try/finally cleanup、shutil.which、模块级 import）按用户选择暂不修，留给后续 phase。"
     }
   ]
 }

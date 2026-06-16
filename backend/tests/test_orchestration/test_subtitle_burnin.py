@@ -34,6 +34,39 @@ async def test_build_srt_with_real_shots(test_session):
     assert isinstance(result, str)
 
 
+def test_srt_filename_uses_run_id_not_getattr_fallback():
+    import inspect
+
+    from app.agents.compose import ComposeAgent
+
+    source = inspect.getsource(ComposeAgent._add_audio_to_videos)
+    assert "ctx.run.id" in source, (
+        "compose.py 字幕块必须用 ctx.run.id 解析 run id "
+        "（AgentContext.run: AgentRun，run.id 是实际字段）"
+    )
+    assert 'getattr(ctx, "run_id"' not in source, (
+        "defensive getattr(ctx, 'run_id', None) 是 bug — AgentContext 没有 run_id 字段，"
+        "该 fallback 永远 fire，导致 SRT 文件名恒为 {project_id}_{project_id}.srt，"
+        "并发 run 必冲突"
+    )
+
+
+def test_srt_filename_includes_run_id_for_concurrent_safety():
+    from app.agents.compose import ComposeAgent
+
+    project_id = 42
+    run_a_id = 1001
+    run_b_id = 1002
+
+    filename_a = f"{project_id}_{run_a_id}.srt"
+    filename_b = f"{project_id}_{run_b_id}.srt"
+
+    assert filename_a != filename_b, "并发 run 必须生成不同 SRT 文件名（不同 run_id）"
+    assert filename_a == "42_1001.srt"
+    assert filename_b == "42_1002.srt"
+    assert hasattr(ComposeAgent, "_add_audio_to_videos")
+
+
 @pytest.mark.skip(reason="Requires FFmpeg on PATH and real video files")
 class TestSubtitleBurninIntegration:
     """字幕烧入集成测试（需 DB + FFmpeg + 视频文件）"""
