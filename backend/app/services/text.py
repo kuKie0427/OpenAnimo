@@ -315,20 +315,41 @@ class TextService:
     async def _generate_from_payload(self, payload: dict[str, Any]) -> LLMResponse:
         data = await self._post_json_with_retry(self._build_url(), payload)
         text = self._extract_text_from_response(data)
-        return LLMResponse(text=text, tool_calls=[], raw=data)
+        usage = data.get("usage", {})
+        input_tokens = usage.get("prompt_tokens", 0) or 0
+        output_tokens = usage.get("completion_tokens", 0) or 0
+        return LLMResponse(
+            text=text,
+            tool_calls=[],
+            raw=data,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )
 
     async def _stream_native_events(self, payload: dict[str, Any]) -> AsyncIterator[dict[str, Any]]:
         full_text: list[str] = []
+        last_usage: dict[str, Any] = {}
 
         async for chunk in self._post_stream_with_retry(self._build_url(), payload):
             text = self._extract_text_from_stream_chunk(chunk)
             if text:
                 full_text.append(text)
                 yield {"type": "text", "text": text}
+            chunk_usage = chunk.get("usage")
+            if isinstance(chunk_usage, dict):
+                last_usage = chunk_usage
 
+        input_tokens = last_usage.get("prompt_tokens", 0) or 0
+        output_tokens = last_usage.get("completion_tokens", 0) or 0
         yield {
             "type": "final",
-            "response": LLMResponse(text="".join(full_text), tool_calls=[], raw=None),
+            "response": LLMResponse(
+                text="".join(full_text),
+                tool_calls=[],
+                raw=None,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+            ),
         }
 
     def _stream_fallback_message(self, exc: Exception) -> str:

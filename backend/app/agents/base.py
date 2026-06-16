@@ -352,11 +352,18 @@ class BaseAgent:
         return final
 
     @asynccontextmanager
-    async def trace_step(self, ctx: AgentContext, stage: str, method: str):
+    async def trace_step(
+        self,
+        ctx: AgentContext,
+        stage: str,
+        method: str,
+        model_name: str | None = None,
+    ):
         """Trace a sub-step execution. Non-blocking on failure."""
         trace = AgentTrace(
             run_id=ctx.run.id,  # pyright: ignore[reportArgumentType]
             agent_name=self.name,
+            model_name=model_name or ctx.settings.text_model or "",
             stage=stage,
             method=method,
             start_time=utcnow(),

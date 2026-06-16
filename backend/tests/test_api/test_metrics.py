@@ -365,3 +365,143 @@ async def test_metrics_no_project_id_returns_all(
         res = await async_client.get(endpoint)
         assert res.status_code == 200
         assert len(res.json()) > 0
+
+
+@pytest.mark.asyncio
+async def test_get_cost_breakdown_groups_by_agent_model(
+    async_client: AsyncClient, test_session, test_settings
+):
+    project = await create_project(test_session)
+    run = await create_run(test_session, project_id=project.id)
+
+    trace1 = AgentTrace(
+        run_id=run.id,
+        agent_name="planner",
+        model_name="claude-sonnet-4-5",
+        stage="planning",
+        method="test",
+        start_time=datetime(2025, 1, 1, 10, 0, 0),
+        tokens_input=1000,
+        tokens_output=500,
+        images_generated=0,
+        status="completed",
+    )
+    trace2 = AgentTrace(
+        run_id=run.id,
+        agent_name="render",
+        model_name="claude-haiku-4-5",
+        stage="rendering",
+        method="test",
+        start_time=datetime(2025, 1, 1, 10, 0, 0),
+        tokens_input=200,
+        tokens_output=100,
+        images_generated=0,
+        status="completed",
+    )
+    test_session.add_all([trace1, trace2])
+    await test_session.commit()
+
+    res = await async_client.get("/api/v1/metrics/cost-breakdown")
+    assert res.status_code == 200
+    data = res.json()
+    assert isinstance(data, list)
+    assert len(data) == 2
+
+    planner = next(b for b in data if b["agent_name"] == "planner")
+    assert planner["model_name"] == "claude-sonnet-4-5"
+    assert planner["total_input_tokens"] == 1000
+    assert planner["total_output_tokens"] == 500
+    assert float(planner["total_cost_usd"]) > 0
+
+    renderer = next(b for b in data if b["agent_name"] == "render")
+    assert renderer["model_name"] == "claude-haiku-4-5"
+    assert renderer["total_input_tokens"] == 200
+    assert renderer["total_output_tokens"] == 100
+    assert float(renderer["total_cost_usd"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_get_cost_breakdown_filter_by_project(
+    async_client: AsyncClient, test_session, test_settings
+):
+    project_a = await create_project(test_session, title="A")
+    project_b = await create_project(test_session, title="B")
+    run_a = await create_run(test_session, project_id=project_a.id)
+    run_b = await create_run(test_session, project_id=project_b.id)
+
+    trace_a = AgentTrace(
+        run_id=run_a.id,
+        agent_name="planner",
+        model_name="claude-sonnet-4-5",
+        stage="planning",
+        method="test",
+        start_time=datetime(2025, 1, 1, 10, 0, 0),
+        tokens_input=100,
+        tokens_output=50,
+        status="completed",
+    )
+    trace_b = AgentTrace(
+        run_id=run_b.id,
+        agent_name="render",
+        model_name="claude-haiku-4-5",
+        stage="rendering",
+        method="test",
+        start_time=datetime(2025, 1, 1, 10, 0, 0),
+        tokens_input=5000,
+        tokens_output=3000,
+        status="completed",
+    )
+    test_session.add_all([trace_a, trace_b])
+    await test_session.commit()
+
+    res = await async_client.get(
+        f"/api/v1/metrics/cost-breakdown?project_id={project_a.id}"
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data) == 1
+    assert data[0]["agent_name"] == "planner"
+    assert data[0]["total_input_tokens"] == 100
+
+
+@pytest.mark.asyncio
+async def test_get_cost_breakdown_filter_by_run(
+    async_client: AsyncClient, test_session, test_settings
+):
+    project = await create_project(test_session)
+    run_a = await create_run(test_session, project_id=project.id)
+    run_b = await create_run(test_session, project_id=project.id)
+
+    trace_a = AgentTrace(
+        run_id=run_a.id,
+        agent_name="planner",
+        model_name="claude-sonnet-4-5",
+        stage="planning",
+        method="test",
+        start_time=datetime(2025, 1, 1, 10, 0, 0),
+        tokens_input=100,
+        tokens_output=50,
+        status="completed",
+    )
+    trace_b = AgentTrace(
+        run_id=run_b.id,
+        agent_name="render",
+        model_name="gpt-4o",
+        stage="rendering",
+        method="test",
+        start_time=datetime(2025, 1, 1, 10, 0, 0),
+        tokens_input=200,
+        tokens_output=100,
+        status="completed",
+    )
+    test_session.add_all([trace_a, trace_b])
+    await test_session.commit()
+
+    res = await async_client.get(
+        f"/api/v1/metrics/cost-breakdown?run_id={run_a.id}"
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data) == 1
+    assert data[0]["agent_name"] == "planner"
+    assert data[0]["total_input_tokens"] == 100

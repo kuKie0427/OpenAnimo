@@ -543,6 +543,38 @@ export const consistencyApi = {
 		),
 };
 
+// Metrics API
+export const metricsApi = {
+	listRuns: (projectId?: number, limit?: number) => {
+		const params = new URLSearchParams();
+		if (projectId !== undefined) params.set("project_id", String(projectId));
+		if (limit !== undefined) params.set("limit", String(limit));
+		const qs = params.toString();
+		return fetchApi<
+			import("~/types").RunMetricsSummary[]
+		>(`/api/v1/metrics/runs${qs ? `?${qs}` : ""}`);
+	},
+
+	getCostBreakdown: (projectId?: number, runId?: number) => {
+		const params = new URLSearchParams();
+		if (projectId !== undefined) params.set("project_id", String(projectId));
+		if (runId !== undefined) params.set("run_id", String(runId));
+		const qs = params.toString();
+		return fetchApi<
+			import("~/types").CostBreakdownItem[]
+		>(`/api/v1/metrics/cost-breakdown${qs ? `?${qs}` : ""}`);
+	},
+
+	getQuality: (projectId?: number) => {
+		const params = new URLSearchParams();
+		if (projectId !== undefined) params.set("project_id", String(projectId));
+		const qs = params.toString();
+		return fetchApi<
+			import("~/types").QualityByStage[]
+		>(`/api/v1/metrics/quality${qs ? `?${qs}` : ""}`);
+	},
+};
+
 export const universesApi = {
 	list: () =>
 		fetchApi<import("~/types").Universe[]>("/api/v1/universes"),

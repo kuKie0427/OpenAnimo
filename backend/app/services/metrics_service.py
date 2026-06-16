@@ -116,6 +116,56 @@ class MetricsService:
             for row in rows
         ]
 
+    async def get_cost_breakdown(
+        self, project_id: int | None = None, run_id: int | None = None
+    ) -> list[dict]:
+        """Cost breakdown grouped by (agent_name, model_name).
+
+        Fields: agent_name, model_name, total_input_tokens, total_output_tokens,
+                total_images, total_video_seconds, total_cost_usd.
+        """
+        from app.services.pricing import estimate_cost
+
+        stmt = select(
+            AgentTrace.agent_name,
+            AgentTrace.model_name,
+            func.sum(AgentTrace.tokens_input).label("total_tokens_input"),
+            func.sum(AgentTrace.tokens_output).label("total_tokens_output"),
+            func.sum(AgentTrace.images_generated).label("total_images"),
+        )
+
+        if project_id is not None:
+            stmt = stmt.join(AgentRun, AgentTrace.run_id == AgentRun.id).where(
+                AgentRun.project_id == project_id
+            )
+        if run_id is not None:
+            stmt = stmt.where(AgentTrace.run_id == run_id)
+
+        stmt = stmt.group_by(AgentTrace.agent_name, AgentTrace.model_name)
+
+        result = await self.session.execute(stmt)
+        rows = result.all()
+
+        breakdown = []
+        for row in rows:
+            cost = estimate_cost(
+                model_name=row.model_name or "",
+                tokens_input=row.total_tokens_input or 0,
+                tokens_output=row.total_tokens_output or 0,
+                images=row.total_images or 0,
+            )
+            breakdown.append({
+                "agent_name": row.agent_name,
+                "model_name": row.model_name or "",
+                "total_input_tokens": row.total_tokens_input or 0,
+                "total_output_tokens": row.total_tokens_output or 0,
+                "total_images": row.total_images or 0,
+                "total_video_seconds": 0,
+                "total_cost_usd": str(cost),
+            })
+
+        return breakdown
+
     async def get_quality_by_stage(
         self, project_id: int | None = None
     ) -> list[dict]:

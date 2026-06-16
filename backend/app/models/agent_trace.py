@@ -11,6 +11,7 @@ class AgentTrace(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     run_id: int = Field(foreign_key="agentrun.id", index=True)
     agent_name: str
+    model_name: str = Field(default="")
     stage: str
     method: str
     start_time: datetime

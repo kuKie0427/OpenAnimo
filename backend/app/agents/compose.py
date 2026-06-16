@@ -446,7 +446,10 @@ class ComposeAgent(BaseAgent):
 
     async def run_videos(self, ctx: AgentContext) -> int:
         """Generate shot videos only (sub-step 1)."""
-        async with self.trace_step(ctx, stage="compose_videos", method="run_videos"):
+        async with self.trace_step(
+            ctx, stage="compose_videos", method="run_videos",
+            model_name=ctx.settings.video_model,
+        ):
             await self.send_message(ctx, "开始生成分镜视频...", progress=0.0, is_loading=True)
             video_count = await self._generate_videos(ctx)
             if video_count > 0:
@@ -465,12 +468,18 @@ class ComposeAgent(BaseAgent):
 
     async def run_merge(self, ctx: AgentContext) -> None:
         """Merge shot videos into final video (sub-step 2)."""
-        async with self.trace_step(ctx, stage="compose_merge", method="run_merge"):
+        async with self.trace_step(
+            ctx, stage="compose_merge", method="run_merge",
+            model_name=ctx.settings.video_model,
+        ):
             await self._merge_videos(ctx)
 
     async def run_add_audio(self, ctx: AgentContext) -> None:
         """Add TTS dubbing and BGM to shot videos and final merged video (sub-step 3)."""
-        async with self.trace_step(ctx, stage="add_audio", method="run_add_audio"):
+        async with self.trace_step(
+            ctx, stage="add_audio", method="run_add_audio",
+            model_name=ctx.settings.video_model,
+        ):
             await self._add_audio_to_videos(ctx)
 
     async def run(self, ctx: AgentContext) -> None:

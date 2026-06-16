@@ -327,6 +327,15 @@ class Settings(BaseSettings):
         return f"{self.public_base_url.rstrip('/')}{normalized}"
 
     # ============================================
+    # Pricing
+    # ============================================
+    pricing_json: str = Field(
+        default="",
+        description="JSON string to override DEFAULT_PRICING (e.g., '{\"gpt-4o\": "
+        "{\"input\": 2.5, \"output\": 10.0}}')",
+    )
+
+    # ============================================
     # Validation
     # ============================================
     validation_enabled: bool = True

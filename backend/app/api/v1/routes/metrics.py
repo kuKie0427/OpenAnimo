@@ -29,6 +29,17 @@ async def get_cost_aggregates(
     return await service.get_cost_aggregates(project_id=project_id)
 
 
+@router.get("/cost-breakdown")
+async def get_cost_breakdown(
+    project_id: int | None = Query(default=None, description="Filter by project"),
+    run_id: int | None = Query(default=None, description="Filter by run"),
+    session=SessionDep,
+    settings=SettingsDep,
+):
+    service = MetricsService(session)
+    return await service.get_cost_breakdown(project_id=project_id, run_id=run_id)
+
+
 @router.get("/quality")
 async def get_quality_by_stage(
     project_id: int | None = Query(default=None, description="Filter by project"),

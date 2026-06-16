@@ -728,6 +728,35 @@ export interface ConsistencyEvalCompletedEventData {
 	character_count: number;
 }
 
+// ── Metrics ─────────────────────────────────────────────────
+
+export interface RunMetricsSummary {
+	run_id: number;
+	agent_count: number;
+	total_llm_calls: number;
+	total_tokens: number;
+	total_images: number;
+	avg_duration_seconds: number | null;
+	success_rate: number;
+}
+
+export interface CostBreakdownItem {
+	agent_name: string;
+	model_name: string;
+	total_input_tokens: number;
+	total_output_tokens: number;
+	total_images: number;
+	total_video_seconds: number;
+	total_cost_usd: string;
+}
+
+export interface QualityByStage {
+	stage: string;
+	total_runs: number;
+	successful_runs: number;
+	avg_duration_seconds: number | null;
+}
+
 // ── Universe / IP 宇宙 ──────────────────────────────────────
 
 export interface Universe {

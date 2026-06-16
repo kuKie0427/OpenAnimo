@@ -21,6 +21,8 @@ class LLMResponse:
     text: str
     tool_calls: list[ToolCall]
     raw: Any
+    input_tokens: int = 0
+    output_tokens: int = 0
 
 
 class LLMService:
@@ -95,7 +97,16 @@ class LLMService:
                     )
                 )
 
-        return LLMResponse(text="".join(text_parts), tool_calls=tool_calls, raw=message)
+        usage = getattr(message, "usage", None)
+        input_tokens = getattr(usage, "input_tokens", 0) or 0
+        output_tokens = getattr(usage, "output_tokens", 0) or 0
+        return LLMResponse(
+            text="".join(text_parts),
+            tool_calls=tool_calls,
+            raw=message,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )
 
     def _is_retryable_error(self, exc: Exception) -> bool:
         anthropic = self._import_anthropic()

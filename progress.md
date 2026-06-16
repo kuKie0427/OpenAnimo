@@ -1,5 +1,51 @@
 # Progress Log
 
+## 2026-06-16 — Session: openanimo-p0a-cost-dashboard — API 成本仪表板
+
+### 做了什么
+- Task 1: LLMResponse 添加 input_tokens/output_tokens 字段，text.py 非流式+流式 usage 解析，llm.py Anthropic usage 解析
+- Task 2: AgentTrace 添加 model_name 字段，trace_step 参数化 model_name（text/image/video 按 Agent 类型），Alembic migration 0021
+- Task 3: 新建 pricing.py（DEFAULT_PRICING 5 个模型 + estimate_cost + parse_pricing_overrides），Settings 添加 pricing_json 字段
+- Task 4: MetricsService.get_cost_breakdown() — 按 (agent_name, model_name) 分组 + estimate_cost 调用，新增 GET /metrics/cost-breakdown 端点
+- Task 5: 前端 MetricsPage（3 区块：汇总卡片/运行概览表/成本明细表），metricsApi 扩展，/metrics 路由
+- Task 6: test_pricing.py 12 个新测试 + test_metrics.py 3 个新测试（24 passed）
+- Task 7: feature_list.json 添加 f-cost-dashboard，progress.md 更新
+
+### 改了什么文件
+- backend/app/services/llm.py (mod) — LLMResponse 新字段 + _parse_message usage 提取
+- backend/app/services/text.py (mod) — usage 解析（非流式+流式）
+- backend/app/models/agent_trace.py (mod) — model_name 字段
+- backend/app/agents/base.py (mod) — trace_step model_name 参数
+- backend/app/agents/render.py (mod) — image_model 传递
+- backend/app/agents/compose.py (mod) — video_model 传递
+- backend/app/config.py (mod) — pricing_json 配置字段
+- backend/app/services/pricing.py (new) — 定价配置+estimation
+- backend/alembic/versions/0021_add_model_name_to_agent_trace.py (new) — 迁移
+- backend/app/services/metrics_service.py (mod) — get_cost_breakdown()
+- backend/app/api/v1/routes/metrics.py (mod) — cost-breakdown 端点
+- frontend/app/pages/MetricsPage.tsx (new) — 成本仪表板页面
+- frontend/app/services/api.ts (mod) — metricsApi
+- frontend/app/types/index.ts (mod) — 新类型
+- frontend/app/App.tsx (mod) — /metrics 路由
+- backend/tests/test_services/test_pricing.py (new) — 12 tests
+- backend/tests/test_api/test_metrics.py (mod) — 3 new tests
+- feature_list.json (mod) — f-cost-dashboard
+- progress.md (mod) — 本条目
+
+### 当前状态
+- Gate 部分通过: pytest 24/24 (9 existing + 15 new), ruff 0, tsc clean, pnpm build OK
+- ⚠️ init.sh 全量待跑（需 DATABASE_URL 环境）
+
+### 决策
+- model_name 参数化：trace_step 通过可选参数传递，outline/plan 用 text_model，render 用 image_model，compose 用 video_model
+- pricing 模块独立：不依赖外部 API，纯本地定价表 + 环境变量覆盖
+- cost 返回 String：Decimal 不可 JSON 序列化，前端 parseFloat 处理
+
+### 下一步
+- 启动验证 Gate（pytest/ruff/tsc/build/init.sh）
+- E2E 手动验证 /metrics 页面
+- 下一 Phase: p0b-subtitle-burnin（新会话）
+
 ## 2026-06-15 — DAW UI P1 布局架构重构
 
 ### 完成内容

@@ -429,7 +429,10 @@ class RenderAgent(BaseAgent):
 
     async def run_characters(self, ctx: AgentContext) -> None:
         """Render character images only (sub-step 1)."""
-        async with self.trace_step(ctx, stage="render_characters", method="run_characters"):
+        async with self.trace_step(
+            ctx, stage="render_characters", method="run_characters",
+            model_name=ctx.settings.image_model,
+        ):
             await self.send_message(ctx, "开始生成角色形象图...", progress=0.0, is_loading=True)
             char_count = await self._render_characters(ctx)
             ctx.completion_info = CompletionInfo(
@@ -447,7 +450,10 @@ class RenderAgent(BaseAgent):
 
     async def run_shots(self, ctx: AgentContext) -> None:
         """Render shot storyboard images only (sub-step 2)."""
-        async with self.trace_step(ctx, stage="render_shots", method="run_shots"):
+        async with self.trace_step(
+            ctx, stage="render_shots", method="run_shots",
+            model_name=ctx.settings.image_model,
+        ):
             await self.send_message(ctx, "开始生成分镜首帧图...", progress=0.0, is_loading=True)
             shot_count = await self._render_shots(ctx)
             ctx.completion_info = CompletionInfo(

@@ -596,6 +596,17 @@
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run && pnpm exec playwright test tests/e2e/canvas-hybrid.spec.ts && pnpm build",
       "evidence": "2026-06-15: ViewSwitcher canvas/timeline/list, ProjectPage clean integration, StageTabs header bar, view animation CSS, E2E test file, data-testid on controls, tsc clean, 560 vitest pass, pnpm build OK"
+    },
+    {
+      "id": "f-cost-dashboard",
+      "name": "API 成本仪表板 (Phase 0a)",
+      "description": "LLM token usage 回填、AgentTrace model_name 字段、pricing 配置、成本分组 API、前端 MetricsPage",
+      "dependencies": ["f-harness-p3"],
+      "status": "passing",
+      "domain": "fullstack",
+      "verification": "cd backend && uv run pytest tests/test_services/test_pricing.py tests/test_api/test_metrics.py -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm build",
+      "evidence": "2026-06-16: LLMResponse usage fields, text.py+llm.py usage parsing, AgentTrace.model_name, pricing.py DEFAULT_PRICING+estimate_cost, /metrics/cost-breakdown API, frontend MetricsPage with run table+cost breakdown+summary cards, 15 new tests pass",
+      "notes": "Phase 0a — 完成所有 7 项任务。前置条件: f-harness-p3 passing。Gate: pytest 24/24, ruff 0, tsc clean, pnpm build OK"
     }
   ]
 }
