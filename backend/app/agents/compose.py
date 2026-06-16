@@ -45,7 +45,7 @@ class ComposeAgent(BaseAgent):
             return shot.duration
         return default_duration
 
-    async def _generate_videos(self, ctx: AgentContext) -> int:
+    async def _generate_videos(self, ctx: AgentContext) -> tuple[int, float]:
         query = select(Shot).where(
             Shot.project_id == ctx.project_id,
             Shot.video_url.is_(None),
@@ -57,7 +57,7 @@ class ComposeAgent(BaseAgent):
 
         if not shots:
             await self.send_message(ctx, "所有分镜已有视频。")
-            return 0
+            return 0, 0.0
 
         use_image_mode = ctx.settings.use_i2v()
         is_doubao = isinstance(ctx.video, DoubaoVideoService)
@@ -66,6 +66,7 @@ class ComposeAgent(BaseAgent):
 
         total = len(shots)
         updated_count = 0
+        total_duration = 0.0
         mode_desc = "图生视频" if use_image_mode else "文生视频"
 
         # Thinking: planning phase — starting video generation
@@ -167,6 +168,7 @@ class ComposeAgent(BaseAgent):
 
                 shot.video_url = video_url
                 shot.duration = duration
+                total_duration += duration
                 ctx.session.add(shot)
                 await ctx.session.flush()
                 await self.send_shot_event(ctx, shot, "shot_updated")
@@ -175,7 +177,7 @@ class ComposeAgent(BaseAgent):
                 await self.send_message(ctx, f"镜头 {shot.order} 视频生成失败: {e}")
 
         await ctx.session.commit()
-        return updated_count
+        return updated_count, total_duration
 
     async def _merge_videos(self, ctx: AgentContext) -> None:
         project_id = ctx.project_id
@@ -451,10 +453,9 @@ class ComposeAgent(BaseAgent):
             model_name=ctx.settings.video_model,
         ) as trace:
             await self.send_message(ctx, "开始生成分镜视频...", progress=0.0, is_loading=True)
-            video_count = await self._generate_videos(ctx)
+            video_count, total_duration = await self._generate_videos(ctx)
             if video_count > 0:
-                total_seconds = await self._sum_project_video_seconds(ctx)
-                trace.video_seconds += total_seconds
+                trace.video_seconds += total_duration
                 ctx.completion_info = CompletionInfo(
                     completed=f"已生成 {video_count} 个分镜视频",
                     next="接下来拼接完整视频",
@@ -467,19 +468,6 @@ class ComposeAgent(BaseAgent):
                     question="",
                 )
             return video_count
-
-    async def _sum_project_video_seconds(self, ctx: AgentContext) -> float:
-        from sqlalchemy import func, select
-
-        from app.models.project import Shot
-
-        result = await ctx.session.execute(
-            select(func.coalesce(func.sum(Shot.duration), 0.0)).where(
-                Shot.project_id == ctx.project_id,
-                Shot.video_url.isnot(None),
-            )
-        )
-        return float(result.scalar() or 0.0)
 
     async def run_merge(self, ctx: AgentContext) -> None:
         """Merge shot videos into final video (sub-step 2)."""

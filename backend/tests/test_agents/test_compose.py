@@ -112,7 +112,7 @@ async def test_compose_agent_no_videos_to_generate(test_session, test_settings):
     ctx = await make_context(test_session, test_settings, project=project, run=run, video=video)
     agent = ComposeAgent()
 
-    count = await agent._generate_videos(ctx)
+    count, _ = await agent._generate_videos(ctx)
     assert count == 0
 
 
@@ -252,7 +252,7 @@ async def test_compose_agent_target_ids_filter(test_session, test_settings):
     agent = ComposeAgent()
     agent.image_composer = FakeImageComposer()
 
-    count = await agent._generate_videos(ctx)
+    count, _ = await agent._generate_videos(ctx)
 
     assert count == 1
     await test_session.refresh(shot1)
@@ -315,7 +315,7 @@ async def test_compose_agent_image_composer_fails_fallback(test_session, test_se
     agent = ComposeAgent()
     agent.image_composer = FakeImageComposerFails()
 
-    count = await agent._generate_videos(ctx)
+    count, _ = await agent._generate_videos(ctx)
     assert count == 1
 
 
@@ -441,6 +441,51 @@ async def test_compose_agent_doubao_reference_mode(test_session, test_settings):
     await test_session.refresh(shot)
     assert shot.video_url == "http://video.test/doubao.mp4"
     assert any(c[0] == "save_ref" for c in composer.calls)
+
+
+@pytest.mark.asyncio
+async def test_compose_agent_total_duration_only_counts_this_run(
+    test_session, test_settings,
+):
+    """Regression: total_duration must include ONLY shots generated in this run,
+    not pre-existing shots with video_url. Prevents per-run video cost from
+    accumulating across re-runs.
+    """
+    project = await create_project(test_session)
+    run = await create_run(test_session, project_id=project.id)
+    await create_shot(
+        test_session,
+        project_id=project.id,
+        image_url="http://img/old.png",
+        video_url="http://video.test/old.mp4",
+        duration=99.0,
+    )
+    new_shot = await create_shot(
+        test_session,
+        project_id=project.id,
+        image_url="http://img/new.png",
+        video_url=None,
+        duration=None,
+    )
+    await test_session.commit()
+
+    video = FakeDoubaoVideoService()
+    ctx = await make_context(test_session, test_settings, project=project, run=run, video=video)
+    object.__setattr__(ctx.settings, "use_i2v", lambda: True)
+    ctx.settings.video_image_mode = "first_frame"
+    ctx.settings.doubao_video_duration = 7
+    ctx.settings.doubao_video_ratio = "16:9"
+    ctx.settings.doubao_generate_audio = False
+
+    agent = ComposeAgent()
+    agent.image_composer = FakeImageComposer()
+
+    count, total_duration = await agent._generate_videos(ctx)
+
+    assert count == 1
+    assert total_duration == 7.0
+    await test_session.refresh(new_shot)
+    assert new_shot.duration == 7.0
 
 
 @pytest.mark.asyncio

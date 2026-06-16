@@ -1,5 +1,41 @@
 # Progress Log
 
+## 2026-06-16 — Session: openanimo-p0a-fix-p3-bugfix — P3 review MAJOR bug fix
+
+### 做了什么
+- P3 review (Oracle 3) 发现 1 个 MAJOR bug: `_sum_project_video_seconds` 累加 project 内所有 shots 而非本次 run 的 shots — re-run 时 per-run video cost 被高估
+- 修复方案 A（最干净）:
+  - 改 `_generate_videos` 返回 `tuple[int, float]` — 累积 `total_duration` (本次生成的 shots 时长之和)
+  - `run_videos` 解包使用新返回值 `trace.video_seconds += total_duration`（不再查 SQL）
+  - 删除 `_sum_project_video_seconds` helper (不再需要)
+  - 删除其内部重复 import (func/select/Shot 模块级已有)
+- 加 1 个回归测试 `test_compose_agent_total_duration_only_counts_this_run`: 预存在 shot.duration=99 + 新 shot duration=7, 验证 total_duration=7.0（不累加 99）
+
+### 改了什么文件
+- backend/app/agents/compose.py (mod, +2/-16) — `_generate_videos` 返回类型 + 累积 total_duration + run_videos 解包 + 删 _sum_project_video_seconds
+- backend/tests/test_agents/test_compose.py (mod, +35) — 3 个 test caller `count = ` → `count, _ = ` + 1 个新回归测试
+- progress.md (mod) — 本条目
+
+### 当前状态
+- **P0a 修复真正收官**：9/9 issues 全部修完且**无 known bug**
+
+### 决策
+- 选方案 A（改 _generate_videos 返回值）而非方案 B（加 Shot.run_id）或方案 C（加 WHERE 过滤）—— A 最干净，零 alembic 迁移
+- 3 个 test 改 `count, _ = `（忽略 total_duration）；4 个不接收返回值的 test 保持原样
+- 新回归测试模拟"已有 video shot + 新 shot"场景，覆盖 Oracle 3 标记的 over-counting bug
+
+### 阻断
+- 无
+
+### 验证结果
+- backend: 1220 tests pass (P3 修后 1219 + 1 新回归), ruff 0 errors, pyright 0 errors
+- 关键: test_compose_agent_total_duration_only_counts_this_run PASSED — 修复有效
+- frontend: tsc clean, build OK, 560 vitest tests pass (未受影响)
+- 9/9 P0a review issues 真修 + 0 known bugs
+
+### 下次
+- P0a 修复正式收官。可启动评估文档剩余 P0 (字幕、9:16、多角度角色、多角色配音)
+
 ## 2026-06-16 — Session: openanimo-p0a-fix-p3-polish — P0a 修复收官
 
 ### 做了什么
