@@ -1559,6 +1559,42 @@
 - Re-run 5-way review 验证 P2.1 修复
 - 通过后 /handoff 启动 P2.2 (多角度角色库·分镜选图)
 
+## 2026-06-16 — Session: p2.2-multi-angle-select plan
+
+### 做了什么
+- **P2.1 review-fix 5 路 re-review 全部 PASS** (commit 3a3882d 修复 AdminDep + 409 guard)
+- **P2.1 完整收官**: f-multi-angle-character-data 正式 passing, 0 regression
+- **生成 P2.2 phase plan**: `openanimo-p1-multi-angle-select.md` (146 行, 100-150 范围内)
+- **Mark active**: `f-multi-angle-character-select` 状态从 not_started → active
+
+### P2.2 设计决策
+- **Asset 选择逻辑**: nearest neighbor match (exact match → 距离函数 fallback → None)
+  - `ANGLE_ORDER = ("front", "side", "three_quarter", "back")`
+  - `EMOTION_ORDER = ("smile", "happy", "surprised", "angry", "crying")`
+  - 距离: `abs(ANGLE_ORDER.index(a.angle) - ANGLE_ORDER.index(target)) + abs(EMOTION_ORDER.index(a.emotion) - EMOTION_ORDER.index(target))`
+- **render.py 集成**: 替换 `char_image_urls = [c.image_url for c in characters]` → 对每个 character 调 `select_asset_for_shot(session, c.id, shot.camera, shot.expression)` → 有 asset 用 asset.image_url, 否则 fallback c.image_url
+- **前端**: `CharacterAssetPicker.tsx` 4×4 网格预览组件 (只读, 不实现手动覆盖选图)
+- **集成**: DAW DetailPanel 加 "查看角色资产" 按钮
+- **不改**: `_build_shot_prompt` 逻辑 (prompt 仍用 character bible)
+- **不实现**: 手动覆盖选图 (P2.2 只做预览 + 自动选)
+- **预计 5-7 文件改动, 1.5-2 天**
+
+### 改动文件 (P2.2 预计, 实施时)
+- `backend/app/services/character_asset_service.py` (加 `select_asset_for_shot`)
+- `backend/app/agents/render.py` (替换 char_image_urls 生成逻辑)
+- `frontend/app/components/assets/CharacterAssetPicker.tsx` (新)
+- `frontend/app/components/daw/DetailPanel.tsx` (加按钮)
+- `backend/tests/test_services/test_character_asset_selection.py` (新)
+- `frontend/app/components/assets/CharacterAssetPicker.test.tsx` (新)
+- `feature_list.json` + `progress.md`
+
+### 阻断
+- 无
+
+### 下次
+- /handoff 启动新会话
+- 新会话: 读 `openanimo-p1-multi-angle-select.md` → 验证前置 → 执行 6 任务 → Gate 通过 → 标 passing → /handoff 给 P3.1
+
 
 
 

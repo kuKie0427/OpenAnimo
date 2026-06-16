@@ -688,9 +688,9 @@
     {
       "id": "f-multi-angle-character-select",
       "name": "P2.2 — 多角度角色库·分镜选图 (前端 picker + bible 集成)",
-      "description": "分镜渲染时按 shot.angle + shot.emotion 从 CharacterAsset 选图（最近邻匹配）。前端 picker UI（4x4 网格 + 表情标签）。bible 注入资产 URL 到 prompt。",
+      "description": "分镜渲染时按 shot.angle + shot.emotion 从 CharacterAsset 选图（最近邻匹配）。前端 picker UI（4×4 网格 + 表情标签）。bible 注入资产 URL 到 prompt。",
       "dependencies": ["f-multi-angle-character-data"],
-      "status": "not_started",
+      "status": "active",
       "domain": "fullstack",
       "verification": "cd backend && uv run pytest tests/test_agents/ -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
       "evidence": "",
