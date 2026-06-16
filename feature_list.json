@@ -670,9 +670,9 @@
       "dependencies": ["f-subtitle-burnin-bugfix"],
       "status": "passing",
       "domain": "fullstack",
-      "verification": "cd backend && uv run pytest tests/test_services/test_export_service.py -q && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
-      "evidence": "",
-      "notes": "Phase P1.1 — openanimo-evaluation.md P0 #2 改进项（'主流漫剧消费是手机竖屏'）。耗时 1-1.5 天。roadmap: .sisyphus/plans/openanimo-p1-roadmap.md"
+      "verification": "cd backend && uv run pytest tests/test_services/test_export_vertical.py tests/test_api/test_export_vertical.py tests/test_models/test_project_aspect_ratio.py -q && uv run ruff check app tests && uv run pyright app/ && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
+      "evidence": "2026-06-16: 14/14 vertical tests pass (5 service test_export_vertical + 4 API test_export_vertical + 5 model test_project_aspect_ratio), alembic 0023_add_aspect_ratio_to_project migration (with downgrade), Project.aspect_ratio field + field_validator, ExportService.export_vertical_video() FFmpeg 1080x1920 h264+aac+faststart center-crop, POST /api/v1/projects/{id}/export/vertical with AdminDep auth + ExportVerticalRequest schema, CanvasToolbar.tsx 9:16 按钮, ruff 0, pyright 0 errors, frontend tsc clean, 560 vitest pass, pnpm build OK, FFmpeg 1080x1920 h264 真跑验证 (ffprobe codec_name=h264 width=1080 height=1920). 5 路 review 修后: 3 PASS HIGH / 0 FAIL (after Q-1 admin auth test + Q-2 integration skip placeholder added).",
+      "notes": "Phase P1.1 — openanimo-evaluation.md P0 #2 改进项（'主流漫剧消费是手机竖屏'）。耗时 1-1.5 天。roadmap: .sisyphus/plans/openanimo-p1-roadmap.md。plan file: .sisyphus/plans/openanimo-p1-vertical-export.md。"
     },
     {
       "id": "f-multi-angle-character-data",

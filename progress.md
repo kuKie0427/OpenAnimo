@@ -1398,4 +1398,43 @@
 - 用户已选: commit roadmap + 启动 P1.1 9:16 竖屏导出
 - 写 `openanimo-p1-vertical-export.md` phase plan (100-150 行, self-contained) → 标 f-vertical-export 为 active → 新会话执行
 
+## 2026-06-16 — Session: p1.1-vertical-export review-fix
+
+### 做了什么
+- **5 路 review 综合**: P1.1 9:16 竖屏导出 (commit `8e5b768`) = 3 PASS / 2 FAIL
+- **PASS**: Goal/Constraint Oracle (PASS HIGH), QA 实战 (PASS HIGH, 14 tests + FFmpeg 1080×1920 h264 真跑通), Security Oracle (PASS MEDIUM, 2 MEDIUM 比 P0b 改善)
+- **FAIL**: Code Quality (FAIL HIGH, 1 MAJOR unused import + noqa), Context Mining (FAIL MEDIUM, evidence 空违反 AGENTS.md gate)
+- **修复** (用户选"推荐修复（含 Q-1 + Q-2）"):
+  - BLOCK-1: 填 `feature_list.json: f-vertical-export.evidence` (从 progress.md 复制 38 backend + 560 frontend + ruff 0 + pyright 0 + tsc 0 + build OK + FFmpeg 1080×1920 h264 验证)
+  - BLOCK-2: 删 `backend/app/services/export_service.py:12` 的 `import subprocess  # noqa: F401` (dead import, 显式 noqa 抑制违反"无 dead code"原则)
+  - BLOCK-3: 改 `feature_list.json: f-vertical-export.verification` 引用 `test_export_vertical.py` 而非 `test_export_service.py`
+  - Q-1: 加 `test_api_export_vertical_requires_admin` 测试 (用 `patch("app.api.deps.get_settings")` 绕过 `@lru_cache` + 测 403 + 202 两路径)
+  - Q-2: 加 `@pytest.mark.skip` integration test placeholder (`TestExportVerticalIntegration`)
+
+### 验证结果
+- 15/15 tests pass + 1 skip (新加 admin test 通过: 无 token → 403, 有 token → 202)
+- ruff: 0 errors (删 noqa 后无 F401 warning)
+- pyright: 0 errors / 0 warnings
+- frontend: tsc clean, 560 vitest pass
+- wider sweep: 664 backend tests pass, 1 skipped
+- 无 P0a/P0b regression
+
+### 改动文件
+- `backend/app/services/export_service.py` (删 1 行 dead import)
+- `backend/tests/test_api/test_export_vertical.py` (加 1 test_admin + 1 skip placeholder)
+- `feature_list.json` (填 evidence + 修 verification command)
+
+### 决策
+- **Admin auth test 用 `patch("app.api.deps.get_settings")`** — `get_settings()` 是 `@lru_cache`d，FastAPI `dependency_overrides[get_app_settings]` 不影响 `require_admin` 内部直接 call。只有 patch 模块级 `get_settings` 才能绕过 cache
+- **集成测试 skip 模式** — 沿用 P0b `test_subtitle_burnin.py` 模式 (`@pytest.mark.skip(reason="Requires FFmpeg on PATH + real video file")`)
+- **不修 Security MEDIUM** (no timeout + stderr leak) — 用户选"推荐修复"不含 Security，按下条 (P2.1) 之前不增加 scope
+
+### 阻断
+- 无
+
+### 下次
+- Re-run 5-way review 验证 P1.1 修复（用户 explicit constraint）
+- 通过后 /handoff 启动 P2.1 (多角度角色库·数据模型)
+
+
 
