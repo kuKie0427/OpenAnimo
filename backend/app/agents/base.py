@@ -312,6 +312,7 @@ class BaseAgent:
         tools: list[dict[str, Any]] | None = None,
         max_tokens: int = 2048,
         stream_to_ws: bool = False,
+        trace: AgentTrace | None = None,
     ) -> LLMResponse:
         """调用 LLM 并返回最终响应。
 
@@ -349,6 +350,10 @@ class BaseAgent:
 
         if final is None:  # pragma: no cover
             raise RuntimeError("LLM stream finished without final response")
+        if trace is not None:
+            trace.tokens_input += final.input_tokens
+            trace.tokens_output += final.output_tokens
+            trace.llm_calls += 1
         return final
 
     @asynccontextmanager

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Query
 
 from app.api.deps import SessionDep, SettingsDep
 from app.services.metrics_service import MetricsService
+from app.services.pricing import parse_pricing_overrides
 
 router = APIRouter(prefix="/metrics", tags=["metrics"])
 
@@ -37,7 +38,10 @@ async def get_cost_breakdown(
     settings=SettingsDep,
 ):
     service = MetricsService(session)
-    return await service.get_cost_breakdown(project_id=project_id, run_id=run_id)
+    overrides = parse_pricing_overrides(settings.pricing_json)
+    return await service.get_cost_breakdown(
+        project_id=project_id, run_id=run_id, pricing_overrides=overrides
+    )
 
 
 @router.get("/quality")

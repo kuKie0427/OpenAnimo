@@ -607,6 +607,17 @@
       "verification": "cd backend && uv run pytest tests/test_services/test_pricing.py tests/test_api/test_metrics.py -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm build",
       "evidence": "2026-06-16: LLMResponse usage fields, text.py+llm.py usage parsing, AgentTrace.model_name, pricing.py DEFAULT_PRICING+estimate_cost, /metrics/cost-breakdown API, frontend MetricsPage with run table+cost breakdown+summary cards, 15 new tests pass",
       "notes": "Phase 0a — 完成所有 7 项任务。前置条件: f-harness-p3 passing。Gate: pytest 24/24, ruff 0, tsc clean, pnpm build OK"
+    },
+    {
+      "id": "f-cost-dashboard-fix-p1",
+      "name": "API 成本仪表板修复 P1 — 数据管线修复 (CRITICAL)",
+      "description": "call_llm 回写 token 到 AgentTrace + pricing_overrides env var 接线。修复生产环境 API 成本一直显示 $0.00 的问题。",
+      "dependencies": ["f-cost-dashboard"],
+      "status": "passing",
+      "domain": "backend",
+      "verification": "cd backend && uv run pytest tests/ -q --ignore=tests/e2e --ignore=tests/integration && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm build && pnpm exec vitest run",
+      "evidence": "2026-06-16: call_llm trace param + token write-back (base.py), 3 call sites wired (outline.py+plan.py), get_cost_breakdown pricing_overrides wiring (metrics_service.py+route), 6 trace unit tests + 3 pricing override tests, ruff 0, 1215 backend tests pass, 560 frontend tests pass, tsc+build green",
+      "notes": "Phase 1 — 数据管线修复。改动范围: base.py/outline.py/plan.py/metrics_service.py/routes/metrics.py + 2 test files。Gate: 全部通过。"
     }
   ]
 }

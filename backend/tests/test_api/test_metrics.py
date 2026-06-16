@@ -505,3 +505,114 @@ async def test_get_cost_breakdown_filter_by_run(
     assert len(data) == 1
     assert data[0]["agent_name"] == "planner"
     assert data[0]["total_input_tokens"] == 100
+
+
+@pytest.mark.asyncio
+async def test_cost_breakdown_with_default_pricing(
+    async_client: AsyncClient, test_session, test_settings
+):
+    test_settings.pricing_json = ""
+
+    project = await create_project(test_session)
+    run = await create_run(test_session, project_id=project.id)
+
+    trace = AgentTrace(
+        run_id=run.id,
+        agent_name="planner",
+        model_name="claude-sonnet-4-5",
+        stage="planning",
+        method="test",
+        start_time=datetime(2025, 1, 1, 10, 0, 0),
+        tokens_input=1000,
+        tokens_output=500,
+        images_generated=0,
+        status="completed",
+    )
+    test_session.add(trace)
+    await test_session.commit()
+
+    res = await async_client.get("/api/v1/metrics/cost-breakdown")
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data) == 1
+    assert data[0]["agent_name"] == "planner"
+    assert data[0]["model_name"] == "claude-sonnet-4-5"
+
+    # claude-sonnet-4-5: input=$3.0/1M, output=$15.0/1M
+    # 1000 input + 500 output = (3*1000/1M) + (15*500/1M) = 0.003 + 0.0075 = 0.0105
+    assert float(data[0]["total_cost_usd"]) == 0.0105
+
+
+@pytest.mark.asyncio
+async def test_cost_breakdown_with_pricing_overrides(
+    async_client: AsyncClient, test_session, test_settings
+):
+    test_settings.pricing_json = '{"gpt-4o": {"input": 99, "output": 99}}'
+
+    project = await create_project(test_session)
+    run = await create_run(test_session, project_id=project.id)
+
+    trace = AgentTrace(
+        run_id=run.id,
+        agent_name="planner",
+        model_name="gpt-4o",
+        stage="planning",
+        method="test",
+        start_time=datetime(2025, 1, 1, 10, 0, 0),
+        tokens_input=1000,
+        tokens_output=500,
+        images_generated=0,
+        status="completed",
+    )
+    test_session.add(trace)
+    await test_session.commit()
+
+    res = await async_client.get("/api/v1/metrics/cost-breakdown")
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data) == 1
+    assert data[0]["agent_name"] == "planner"
+    assert data[0]["model_name"] == "gpt-4o"
+
+    # override: input=$99/1M, output=$99/1M
+    # 1000 input + 500 output = (99*1000/1M) + (99*500/1M) = 0.099 + 0.0495 = 0.1485
+    actual_cost = float(data[0]["total_cost_usd"])
+    assert actual_cost == 0.1485
+
+    # NOT the default (gpt-4o default: $2.5/$10 per 1M → 0.0075)
+    assert actual_cost != 0.0075
+
+
+@pytest.mark.asyncio
+async def test_cost_breakdown_with_invalid_pricing_json(
+    async_client: AsyncClient, test_session, test_settings
+):
+    test_settings.pricing_json = "{invalid"
+
+    project = await create_project(test_session)
+    run = await create_run(test_session, project_id=project.id)
+
+    trace = AgentTrace(
+        run_id=run.id,
+        agent_name="planner",
+        model_name="claude-sonnet-4-5",
+        stage="planning",
+        method="test",
+        start_time=datetime(2025, 1, 1, 10, 0, 0),
+        tokens_input=1000,
+        tokens_output=500,
+        images_generated=0,
+        status="completed",
+    )
+    test_session.add(trace)
+    await test_session.commit()
+
+    res = await async_client.get("/api/v1/metrics/cost-breakdown")
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data) == 1
+    assert data[0]["agent_name"] == "planner"
+
+    # Should fall back to default pricing, not crash
+    # claude-sonnet-4-5 default: 0.0105
+    assert float(data[0]["total_cost_usd"]) == 0.0105

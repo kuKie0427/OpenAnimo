@@ -12,6 +12,7 @@ from app.agents.base import AgentContext, BaseAgent, CompletionInfo
 from app.agents.prompts.plan import SYSTEM_PROMPT
 from app.agents.utils import extract_json
 from app.db.utils import utcnow
+from app.models.agent_trace import AgentTrace
 from app.models.project import Character, Shot
 from app.services.version_service import VersionService, character_snapshot, shot_snapshot
 
@@ -447,6 +448,7 @@ class PlanAgent(BaseAgent):
         *,
         task: str,
         characters: list[Character] | None = None,
+        trace: AgentTrace | None = None,
     ) -> dict[str, Any]:
         """Call LLM for one planning sub-task and cache the result in ctx."""
         is_incremental = ctx.rerun_mode == "incremental"
@@ -491,7 +493,11 @@ class PlanAgent(BaseAgent):
 
         user_prompt = json.dumps(payload, ensure_ascii=False)
         resp = await self.call_llm(
-            ctx, system_prompt=SYSTEM_PROMPT, user_prompt=user_prompt, max_tokens=16384
+            ctx,
+            system_prompt=SYSTEM_PROMPT,
+            user_prompt=user_prompt,
+            max_tokens=16384,
+            trace=trace,
         )
         try:
             data = extract_json(resp.text)
@@ -532,7 +538,7 @@ class PlanAgent(BaseAgent):
         return data
 
     async def run_characters(self, ctx: AgentContext) -> None:
-        async with self.trace_step(ctx, stage="plan_characters", method="run_characters"):
+        async with self.trace_step(ctx, stage="plan_characters", method="run_characters") as trace:
             is_incremental = ctx.rerun_mode == "incremental"
             if is_incremental:
                 await self.send_message(ctx, "正在增量更新角色...", progress=0.0, is_loading=True)
@@ -563,7 +569,7 @@ class PlanAgent(BaseAgent):
                 content="正在根据已确认大纲规划角色设定...",
             )
 
-            data = await self._call_plan_llm(ctx, task="characters")
+            data = await self._call_plan_llm(ctx, task="characters", trace=trace)
             user_message = data.get("user_message") or ""
 
             # Thinking: decision phase — after LLM returns
@@ -645,7 +651,7 @@ class PlanAgent(BaseAgent):
             )
 
     async def run_shots(self, ctx: AgentContext) -> None:
-        async with self.trace_step(ctx, stage="plan_shots", method="run_shots"):
+        async with self.trace_step(ctx, stage="plan_shots", method="run_shots") as trace:
             char_res = await ctx.session.execute(
                 select(Character).where(Character.project_id == ctx.project_id)
             )
@@ -658,7 +664,7 @@ class PlanAgent(BaseAgent):
             ):
                 data = cached_data
             else:
-                data = await self._call_plan_llm(ctx, task="shots", characters=characters)
+                data = await self._call_plan_llm(ctx, task="shots", characters=characters, trace=trace)
 
             is_incremental = ctx.rerun_mode == "incremental"
             visual_bible = data.get("visual_bible") or getattr(ctx.project, "visual_bible", None) or ""

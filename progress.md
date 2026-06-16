@@ -1,5 +1,60 @@
 # Progress Log
 
+## 2026-06-16 — Session: openanimo-p0a-fix-p1-data-pipeline — Phase complete
+
+### 做了什么
+- Task 1: call_llm 签名加 `trace: AgentTrace | None = None` + 回写 tokens_input/tokens_output/llm_calls (base.py)
+- Task 2: 3 处调用方传 `trace=trace` (outline.py run_outline, plan.py run_characters + run_shots 经 _call_plan_llm)
+- Task 3: get_cost_breakdown 加 `pricing_overrides` 参数并传到 estimate_cost (metrics_service.py)
+- Task 4: cost-breakdown 路由解析 settings.pricing_json 并传 overrides (routes/metrics.py)
+- Task 5: 6 个单测覆盖 token 写回 (test_base_call_llm_trace.py)
+- Task 6: 3 个单测覆盖 pricing_overrides 接线 (test_metrics.py)
+- Task 7: feature_list.json + progress.md 更新
+
+### 决策
+- trace 参数用 `AgentTrace | None = None` 默认值，现有调用方零改动
+- `+=` 累计语义支持同一 trace 内多次 LLM 调用
+- service 层不读 Settings，由 route 负责解析 pricing_json 后传入
+- pricing_service 的 `parse_pricing_overrides` 只 import 在 route 层（非 service 层）
+
+### 阻断
+- 无
+
+### 验证结果
+- backend: 1215 tests pass, ruff 0 errors
+- frontend: tsc clean, build succeed, 560 tests pass
+- 关键 grep: tokens_input/tokens_output += 存在, pricing_overrides= 存在, pricing_json 存在于 route
+- feature_list.json: f-cost-dashboard-fix-p1 = passing
+
+### 下次
+- 本 Phase 完成，Gate 全绿。需要新会话加载下一 Phase。
+
+## 2026-06-16 — Session: openanimo-p0a-fix-p1-data-pipeline — Task 2: trace wiring
+
+### 做了什么
+- outline.py: trace_step 捕获 `as trace:` → `call_llm(..., trace=trace)`
+- plan.py: trace_step 捕获 `as trace:` (run_characters + run_shots) → `_call_plan_llm(..., trace=trace)`
+- plan.py: `_call_plan_llm` 签名新增 `trace: AgentTrace | None = None` 参数 → 内部 `call_llm(..., trace=trace)`
+- plan.py: 新增 `from app.models.agent_trace import AgentTrace` import
+
+### 改了什么文件
+- backend/app/agents/outline.py (mod, 2 edits)
+- backend/app/agents/plan.py (mod, 7 edits: import + 6 code)
+
+### 当前状态
+- Task 2 完成 ✅，LSP 0 errors
+- 验证: `trace=trace` 存在于 4 处调用 (outline.py:74, plan.py:500/572/667)
+- Token write-back (`tokens_input +=` / `tokens_output +=`) 在 base.py:354-355 就位
+
+### 决策
+- `_call_plan_llm` 添加 `trace` 可选参数透传，保持 helper 方法签名最小侵入
+
+### 阻断
+- 无
+
+### 下次
+- Task 5: 单测覆盖 token 写回 (test_base_call_llm_trace.py)
+
 ## 2026-06-16 — Session: openanimo-p0a-cost-dashboard — API 成本仪表板
 
 ### 做了什么

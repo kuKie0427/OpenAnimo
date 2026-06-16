@@ -117,7 +117,8 @@ class MetricsService:
         ]
 
     async def get_cost_breakdown(
-        self, project_id: int | None = None, run_id: int | None = None
+        self, project_id: int | None = None, run_id: int | None = None,
+        pricing_overrides: dict | None = None,
     ) -> list[dict]:
         """Cost breakdown grouped by (agent_name, model_name).
 
@@ -153,6 +154,7 @@ class MetricsService:
                 tokens_input=row.total_tokens_input or 0,
                 tokens_output=row.total_tokens_output or 0,
                 images=row.total_images or 0,
+                pricing_overrides=pricing_overrides,
             )
             breakdown.append({
                 "agent_name": row.agent_name,
