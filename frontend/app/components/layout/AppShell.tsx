@@ -7,8 +7,8 @@ interface AppShellProps {
 	children: React.ReactNode;
 	variant?: "default" | "workbench";
 	showStagePipeline?: boolean;
-	onToggleAssets: () => void;
-	onToggleHistory: () => void;
+	onToggleAssets?: () => void;
+	onToggleHistory?: () => void;
 	assetsOpen?: boolean;
 	historyOpen?: boolean;
 	projectId?: number;
@@ -18,22 +18,22 @@ interface AppShellProps {
 	hasRecovery?: boolean;
 	onResume?: () => void;
 	onCancelPipeline?: () => void;
-	onAssetsClose: () => void;
-	onHistoryClose: () => void;
+	onAssetsClose?: () => void;
+	onHistoryClose?: () => void;
 	onHistoryNavigate?: (projectId: number) => void;
-	chatIsGenerating: boolean;
-	onChatSendFeedback: (content: string) => void;
-	onChatConfirm: (feedback?: string) => void;
-	onChatEntityConfirm: (decisions: EntityDecision[]) => void;
-	onChatGenerate: () => void;
-	onChatCancel: () => void;
+	chatIsGenerating?: boolean;
+	onChatSendFeedback?: (content: string) => void;
+	onChatConfirm?: (feedback?: string) => void;
+	onChatEntityConfirm?: (decisions: EntityDecision[]) => void;
+	onChatGenerate?: () => void;
+	onChatCancel?: () => void;
 	chatGenerateDisabled?: boolean;
 	chatGenerateDisabledReason?: string;
-	versionCompareOpen: boolean;
-	versionCompareProjectId: number;
+	versionCompareOpen?: boolean;
+	versionCompareProjectId?: number;
 	versionCompareEntityType?: VersionEntityType;
 	versionCompareEntityId?: number | null;
-	onVersionCompareClose: () => void;
+	onVersionCompareClose?: () => void;
 }
 
 export function AppShell({
@@ -72,10 +72,10 @@ export function AppShell({
 		<div className="h-screen flex flex-col bg-base-100 font-sans overflow-hidden">
 			<TopBar
 				variant={variant}
-				onToggleAssets={onToggleAssets}
-				onToggleHistory={onToggleHistory}
-				assetsOpen={assetsOpen}
-				historyOpen={historyOpen}
+				onToggleAssets={onToggleAssets ?? (() => {})}
+				onToggleHistory={onToggleHistory ?? (() => {})}
+				assetsOpen={assetsOpen ?? false}
+				historyOpen={historyOpen ?? false}
 				projectId={projectId}
 			/>
 			{showStagePipeline && currentStage && (
@@ -91,24 +91,24 @@ export function AppShell({
 			<div className="flex-1 flex overflow-hidden relative">{children}</div>
 			<DrawerPortal
 				assetsOpen={assetsOpen ?? false}
-				onAssetsClose={onAssetsClose}
+				onAssetsClose={onAssetsClose ?? (() => {})}
 				historyOpen={historyOpen ?? false}
-				onHistoryClose={onHistoryClose}
+				onHistoryClose={onHistoryClose ?? (() => {})}
 				onHistoryNavigate={onHistoryNavigate}
 				chatProjectId={projectId}
-				chatIsGenerating={chatIsGenerating}
-				onChatSendFeedback={onChatSendFeedback}
-				onChatConfirm={onChatConfirm}
-				onChatEntityConfirm={onChatEntityConfirm}
-				onChatGenerate={onChatGenerate}
-				onChatCancel={onChatCancel}
+			chatIsGenerating={chatIsGenerating ?? false}
+			onChatSendFeedback={onChatSendFeedback ?? (() => {})}
+			onChatConfirm={onChatConfirm ?? (() => {})}
+			onChatEntityConfirm={onChatEntityConfirm ?? (() => {})}
+			onChatGenerate={onChatGenerate ?? (() => {})}
+			onChatCancel={onChatCancel ?? (() => {})}
 				chatGenerateDisabled={chatGenerateDisabled}
 				chatGenerateDisabledReason={chatGenerateDisabledReason}
-				versionCompareOpen={versionCompareOpen}
-				versionCompareProjectId={versionCompareProjectId}
+			versionCompareOpen={versionCompareOpen ?? false}
+			versionCompareProjectId={versionCompareProjectId ?? 0}
 				versionCompareEntityType={versionCompareEntityType}
 				versionCompareEntityId={versionCompareEntityId}
-				onVersionCompareClose={onVersionCompareClose}
+				onVersionCompareClose={onVersionCompareClose ?? (() => {})}
 			/>
 		</div>
 	);

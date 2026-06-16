@@ -449,10 +449,12 @@ class ComposeAgent(BaseAgent):
         async with self.trace_step(
             ctx, stage="compose_videos", method="run_videos",
             model_name=ctx.settings.video_model,
-        ):
+        ) as trace:
             await self.send_message(ctx, "开始生成分镜视频...", progress=0.0, is_loading=True)
             video_count = await self._generate_videos(ctx)
             if video_count > 0:
+                total_seconds = await self._sum_project_video_seconds(ctx)
+                trace.video_seconds += total_seconds
                 ctx.completion_info = CompletionInfo(
                     completed=f"已生成 {video_count} 个分镜视频",
                     next="接下来拼接完整视频",
@@ -465,6 +467,19 @@ class ComposeAgent(BaseAgent):
                     question="",
                 )
             return video_count
+
+    async def _sum_project_video_seconds(self, ctx: AgentContext) -> float:
+        from sqlalchemy import func, select
+
+        from app.models.project import Shot
+
+        result = await ctx.session.execute(
+            select(func.coalesce(func.sum(Shot.duration), 0.0)).where(
+                Shot.project_id == ctx.project_id,
+                Shot.video_url.isnot(None),
+            )
+        )
+        return float(result.scalar() or 0.0)
 
     async def run_merge(self, ctx: AgentContext) -> None:
         """Merge shot videos into final video (sub-step 2)."""

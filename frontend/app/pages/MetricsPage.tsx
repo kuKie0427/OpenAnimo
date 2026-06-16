@@ -131,6 +131,7 @@ export function MetricsPage() {
 										<th>Tokens</th>
 										<th>Images</th>
 										<th>Duration</th>
+										<th>Cost (USD)</th>
 										<th>Success</th>
 									</tr>
 								</thead>
@@ -148,6 +149,9 @@ export function MetricsPage() {
 											<td className="font-mono">{run.total_images}</td>
 											<td className="font-mono">
 												{formatDuration(run.avg_duration_seconds)}
+											</td>
+											<td className="font-mono text-warning">
+												{formatCost(run.total_cost_usd || "0")}
 											</td>
 											<td>
 												<span
@@ -229,25 +233,7 @@ export function MetricsPage() {
 	);
 
 	return (
-		<AppShell
-			variant="default"
-			onToggleAssets={() => {}}
-			onToggleHistory={() => {}}
-			assetsOpen={false}
-			historyOpen={false}
-			onAssetsClose={() => {}}
-			onHistoryClose={() => {}}
-			onHistoryNavigate={() => {}}
-			chatIsGenerating={false}
-			onChatSendFeedback={() => {}}
-			onChatConfirm={() => {}}
-			onChatEntityConfirm={() => {}}
-			onChatGenerate={() => {}}
-			onChatCancel={() => {}}
-			versionCompareOpen={false}
-			versionCompareProjectId={0}
-			onVersionCompareClose={() => {}}
-		>
+		<AppShell variant="default">
 			<div className="p-4 sm:p-6 max-w-5xl mx-auto">{content}</div>
 		</AppShell>
 	);

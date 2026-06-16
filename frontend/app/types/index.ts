@@ -736,8 +736,10 @@ export interface RunMetricsSummary {
 	total_llm_calls: number;
 	total_tokens: number;
 	total_images: number;
+	total_video_seconds: number;
 	avg_duration_seconds: number | null;
 	success_rate: number;
+	total_cost_usd?: string;
 }
 
 export interface CostBreakdownItem {

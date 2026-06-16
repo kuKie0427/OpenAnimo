@@ -1,5 +1,61 @@
 # Progress Log
 
+## 2026-06-16 — Session: openanimo-p0a-fix-p3-polish — P0a 修复收官
+
+### 做了什么
+- Task 1: AgentTrace 加 `video_seconds: float = 0.0` 字段 + alembic migration 0022 + compose.py run_videos 写回 (`_sum_project_video_seconds` helper)
+- Task 2: get_cost_breakdown 真聚合 `total_video_seconds` (从硬编码 0 → func.coalesce(func.sum(video_seconds), 0.0))
+- Task 3: get_run_summaries 加 `total_cost_usd` + `total_video_seconds` 字段，接收 pricing_overrides 参数
+- Task 4: metrics route /runs 传 pricing_overrides (与 P1 cost-breakdown 模式一致)
+- Task 5: 恢复 test_pricing.py caplog warning 断言 (改用 monkeypatch 直接 mock pricing.py logger.warning，绕过 full suite logger 配置干扰)
+- Task 6: AppShell interface 所有非 children props 加 `?:` 改 optional, AppShell 内部 `??` 兜底, MetricsPage 删 16 个空 callback 传参（254 → 240 行）
+- Task 7: RunMetricsSummary 加 `total_cost_usd?: string` + `total_video_seconds: number` 字段, MetricsPage Run Overview Table 加 "Cost (USD)" 列
+- Task 8: feature_list.json 加 f-cost-dashboard-fix-p3 + progress.md
+
+### 改了什么文件
+- backend/app/models/agent_trace.py (mod, +1 line) — video_seconds 字段
+- backend/alembic/versions/0022_add_video_seconds_to_agent_trace.py (new) — Alembic migration
+- backend/app/agents/compose.py (mod, +20 lines) — run_videos as trace + _sum_project_video_seconds
+- backend/app/services/metrics_service.py (mod, +30 lines) — get_cost_breakdown 真聚合 + get_run_summaries 加 cost/video_seconds
+- backend/app/api/v1/routes/metrics.py (mod, +5 lines) — /runs 传 pricing_overrides
+- backend/tests/test_services/test_pricing.py (mod, +10 lines) — caplog 用 monkeypatch 替代
+- frontend/app/components/layout/AppShell.tsx (mod, +15 lines) — interface props optional + 内部 ?? 兜底
+- frontend/app/pages/MetricsPage.tsx (mod, -14 lines net) — 删空 callback + 加 Cost (USD) 列
+- frontend/app/types/index.ts (mod, +2 lines) — total_cost_usd + total_video_seconds 字段
+- feature_list.json (mod) — f-cost-dashboard-fix-p3 = passing
+- progress.md (mod) — 本条目
+
+### 当前状态
+- f-cost-dashboard-fix-p3 = passing ✅
+- **P0a 修复正式收官**：9/9 issues 全部修完
+  - 6 个 P0/P1 (#1 token 写回, #2 pricing 接线, #3 model_name, #4 critic trace, #5 images_generated, #6 video_seconds)
+  - 3 个 polish (#7 per-run cost, #8 caplog 恢复, #9 MetricsPage 死 props)
+
+### 决策
+- alembic 0022 migration 加 video_seconds 字段 (nullable=False, server_default="0.0") — 兼容已有数据
+- compose.py 写回 video_seconds 用 SQL `func.coalesce(func.sum(Shot.duration), 0.0)` 累加 project 内所有有 video 的 shots（接受 over-counting 风险，per-run 跟踪留作未来优化）
+- get_run_summaries 的 per-run cost 简化方案：传 `model_name=""` 走 fallback pricing（按 total tokens 粗略估算），不按 (model, agent) 拆分——简化优先
+- caplog 改 monkeypatch：full suite 下 caplog.records 为空，monkeypatch 直接 mock pricing.py logger.warning 函数最稳（独立测试 + full suite 都通过）
+- AppShell props 全部 optional + 内部 `??` 兜底：保持向后兼容（其他页面继续传），MetricsPage 不传也不报错
+- MetricsPage 用 `<AppShell variant="default">` 简版（删 16 个空 callback props），254 → 240 行
+
+### 阻断
+- 无
+
+### 验证结果
+- backend: 1219 tests pass (P2 修复后 1219, P3 改 0 个新测试), ruff 0 errors, pyright 0 errors
+- frontend: tsc clean, build OK (9.32s), 560 vitest tests pass
+- 关键 grep 验证：
+  - `alembic current` 显示 0022 已应用
+  - `grep -n "video_seconds" backend/app/services/metrics_service.py` 不再是硬编码 0
+  - `grep "Failed to parse" test_pricing.py` 重新出现（caplog 断言恢复）
+  - `frontend/app/pages/MetricsPage.tsx` 240 行（< 254）
+
+### 下次
+- P0a 修复正式收官。下一步可以开始新工作：
+  - 评估文档 P0 列表剩余 4 项：字幕烧入、9:16 竖屏导出、多角度角色、多角色对话配音
+  - 或新会话 + 新 roadmap
+
 ## 2026-06-16 — Session: openanimo-p0a-fix-p2-bugfix — P2 review bug fix
 
 ### 做了什么

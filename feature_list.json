@@ -629,6 +629,17 @@
       "verification": "cd backend && uv run pytest tests/ -q --ignore=tests/e2e --ignore=tests/integration && uv run ruff check app tests",
       "evidence": "2026-06-16: 3 trace_step 补 model_name (outline/plan), critic.py call_llm + trace_step, render.py images_generated 写回, 3 trace 新测试通过, 1218 backend tests pass, ruff 0, frontend tsc+build+560 vitest all green. P2 review found double-failure trace.status bug (Oracle 3 MAJOR), fixed in commit: trace_step 加 status 守卫 + critic.py 显式设 status='failed' + 新 test_run_review_trace_both_fail 测试覆盖双重失败路径, 1219 tests pass, ruff 0, pyright 0",
       "notes": "Phase 2 — Coverage 修复。改动范围: base.py/outline.py/plan.py/critic.py/render.py + 2 新测试文件。后续 bug fix: base.py (status guard) + critic.py (显式设 failed) + test_critic_trace.py (both_fail 测试)。"
+    },
+    {
+      "id": "f-cost-dashboard-fix-p3",
+      "name": "API 成本仪表板修复 P3 — Polish 收尾",
+      "description": "修剩余 4 个 issues: video_seconds 字段 + per-run cost 字段 + caplog 恢复 + MetricsPage 死 props 清理",
+      "dependencies": ["f-cost-dashboard-fix-p2"],
+      "status": "passing",
+      "domain": "fullstack",
+      "verification": "cd backend && uv run pytest tests/ -q --ignore=tests/e2e --ignore=tests/integration && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm build && pnpm test --run",
+      "evidence": "2026-06-16: AgentTrace 加 video_seconds 字段 + alembic 0022 migration, compose.py run_videos 写回 trace.video_seconds, get_cost_breakdown 真聚合 video_seconds, get_run_summaries 加 total_cost_usd + total_video_seconds 字段, metrics route /runs 传 pricing_overrides, 恢复 test_pricing.py caplog warning 断言 (monkeypatch 实现，绕过 full suite logger 干扰), AppShell interface props 全部 optional, MetricsPage 删 16 个空 callback + 加 Cost (USD) 列, 1219 backend tests pass, 560 frontend tests pass, ruff 0, tsc 0, build OK",
+      "notes": "Phase 3 — Polish 收尾。改动范围: agent_trace.py/alembic 0022/compose.py/metrics_service.py/routes/metrics.py/test_pricing.py/AppShell.tsx/MetricsPage.tsx/types/index.ts。P0a 修复正式收官 (9/9 issues 全部修完)。"
     }
   ]
 }

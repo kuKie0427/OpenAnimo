@@ -15,13 +15,18 @@ class MetricsService:
         self.session = session
 
     async def get_run_summaries(
-        self, project_id: int | None = None, limit: int = 20
+        self,
+        project_id: int | None = None,
+        limit: int = 20,
+        pricing_overrides: dict | None = None,
     ) -> list[dict]:
         """Return recent N runs with per-run aggregates.
 
         Fields: run_id, agent_count, total_llm_calls, total_tokens,
-                total_images, avg_duration_seconds, success_rate.
+                total_images, total_video_seconds, avg_duration_seconds,
+                success_rate, total_cost_usd.
         """
+        from app.services.pricing import estimate_cost
         run_stmt = select(AgentRun.id)
         if project_id is not None:
             run_stmt = run_stmt.where(AgentRun.project_id == project_id)
@@ -49,10 +54,20 @@ class MetricsService:
 
             agent_names = {e.agent_name for e in entries}
             total_llm_calls = sum(e.llm_calls for e in entries)
-            total_tokens = sum(
-                (e.tokens_input or 0) + (e.tokens_output or 0) for e in entries
-            )
+            total_input_tokens = sum(e.tokens_input or 0 for e in entries)
+            total_output_tokens = sum(e.tokens_output or 0 for e in entries)
+            total_tokens = total_input_tokens + total_output_tokens
             total_images = sum(e.images_generated for e in entries)
+            total_video_seconds = sum(e.video_seconds or 0.0 for e in entries)
+
+            run_cost = estimate_cost(
+                model_name="",
+                tokens_input=total_input_tokens,
+                tokens_output=total_output_tokens,
+                images=total_images,
+                video_seconds=total_video_seconds,
+                pricing_overrides=pricing_overrides,
+            )
 
             deltas = []
             for e in entries:
@@ -71,8 +86,10 @@ class MetricsService:
                 "total_llm_calls": total_llm_calls,
                 "total_tokens": total_tokens,
                 "total_images": total_images,
+                "total_video_seconds": total_video_seconds,
                 "avg_duration_seconds": avg_duration_seconds,
                 "success_rate": success_rate,
+                "total_cost_usd": str(run_cost),
             })
 
         return summaries
@@ -133,6 +150,9 @@ class MetricsService:
             func.sum(AgentTrace.tokens_input).label("total_tokens_input"),
             func.sum(AgentTrace.tokens_output).label("total_tokens_output"),
             func.sum(AgentTrace.images_generated).label("total_images"),
+            func.coalesce(func.sum(AgentTrace.video_seconds), 0.0).label(
+                "total_video_seconds"
+            ),
         )
 
         if project_id is not None:
@@ -154,6 +174,7 @@ class MetricsService:
                 tokens_input=row.total_tokens_input or 0,
                 tokens_output=row.total_tokens_output or 0,
                 images=row.total_images or 0,
+                video_seconds=row.total_video_seconds or 0.0,
                 pricing_overrides=pricing_overrides,
             )
             breakdown.append({
@@ -162,7 +183,7 @@ class MetricsService:
                 "total_input_tokens": row.total_tokens_input or 0,
                 "total_output_tokens": row.total_tokens_output or 0,
                 "total_images": row.total_images or 0,
-                "total_video_seconds": 0,
+                "total_video_seconds": float(row.total_video_seconds or 0.0),
                 "total_cost_usd": str(cost),
             })
 

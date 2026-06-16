@@ -20,5 +20,6 @@ class AgentTrace(SQLModel, table=True):
     tokens_input: int = 0
     tokens_output: int = 0
     images_generated: int = 0
+    video_seconds: float = 0.0
     status: str = "running"
     error: Optional[str] = None

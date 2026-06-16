@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 
 
@@ -106,9 +107,14 @@ def test_parse_pricing_overrides_empty_string():
     assert result == {}
 
 
-def test_parse_pricing_overrides_invalid_json():
-    """Invalid JSON returns empty dict without crashing."""
+def test_parse_pricing_overrides_invalid_json(monkeypatch):
+    """Invalid JSON logs a warning and returns empty dict."""
+    warnings: list[str] = []
+
+    def capture_warning(msg: str, *args: object) -> None:
+        warnings.append(msg % args if args else msg)
+
+    monkeypatch.setattr("app.services.pricing.logger.warning", capture_warning)
     result = parse_pricing_overrides("{not valid json")
     assert result == {}
-    # Warning log is verified via logger; caplog may not capture when E2E
-    # tests configure root logger differently in the full suite.
+    assert any("Failed to parse pricing_overrides JSON" in w for w in warnings)

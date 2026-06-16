@@ -17,7 +17,10 @@ async def get_run_summaries(
     settings=SettingsDep,
 ):
     service = MetricsService(session)
-    return await service.get_run_summaries(project_id=project_id, limit=limit)
+    overrides = parse_pricing_overrides(settings.pricing_json)
+    return await service.get_run_summaries(
+        project_id=project_id, limit=limit, pricing_overrides=overrides
+    )
 
 
 @router.get("/costs")
