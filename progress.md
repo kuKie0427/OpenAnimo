@@ -1322,3 +1322,35 @@
   1. 修 6 MAJOR issue (2-3 小时)
   2. 进入 P1+ 后续工作 (WYSIWYG 编辑器 / 9:16 竖屏 / 多角度角色库 / 多角色对话配音分轨)
 
+## 2026-06-16 — Session: p1-roadmap — 4 features 路线图规划
+
+### 做了什么
+- **生成 `openanimo-p1-roadmap.md`** (67 行, 50-80 范围内) — 整体进度规划文档
+- **新增 8 个 feature_list.json 占位条目** (`not_started`):
+  - `f-vertical-export` (P1.1) — 9:16 竖屏视频导出
+  - `f-multi-angle-character-data` (P2.1) — 多角度角色库·数据模型
+  - `f-multi-angle-character-select` (P2.2) — 多角度角色库·分镜选图
+  - `f-voice-tracks-gen` (P3.1) — 多角色配音·分轨生成
+  - `f-voice-tracks-mixer` (P3.2) — 多角色配音·分轨混音
+  - `f-script-editor` (P4.1) — WYSIWYG·剧本编辑器
+  - `f-shotlist-sync` (P4.2) — WYSIWYG·分镜预览+同步
+  - `f-bubble-render` (P4.3) — WYSIWYG·对话气泡渲染
+
+### 决策
+- **排序**: 按用户价值 × 技术复杂度
+  1. P1.1 9:16 竖屏 (⭐⭐⭐⭐⭐ + 🟢 低) — 1-1.5 天
+  2. P2.1-P2.2 多角度 (⭐⭐⭐⭐⭐ + 🟡 中) — 3.5-5 天
+  3. P3.1-P3.2 多角色配音 (⭐⭐⭐⭐ + 🟡 中) — 3-4 天
+  4. P4.1-P4.3 WYSIWYG (⭐⭐⭐ + 🔴 高) — 6-8 天
+- **依赖**: P4.1 依赖 P1.1 (管线稳定); P2.2/P3.2 依赖 P2.1/P3.1; 其他独立
+- **复用现有字段**: `Character.reference_images: list[str]` (P2 数据模型)、`AudioService.generate_tts` (P3 分轨)、`Shot.dialogue` (P4 锚点) — 平滑扩展不引入新概念
+- **总耗时**: 8 phases × ~2 天 ≈ 16-19 天 (WIP=1 串行)
+
+### 阻断
+- 无
+
+### 下次
+- 用户已选: commit roadmap + 启动 P1.1 9:16 竖屏导出
+- 写 `openanimo-p1-vertical-export.md` phase plan (100-150 行, self-contained) → 标 f-vertical-export 为 active → 新会话执行
+
+
