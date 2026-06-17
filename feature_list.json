@@ -796,6 +796,15 @@
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
       "evidence": "",
       "notes": "Phase P4.3 — 续 P4.1+P4.2。耗时 2 天。roadmap: .sisyphus/plans/openanimo-p1-roadmap.md"
+    },
+    {
+      "id": "f-settings-modal-fix",
+      "name": "SettingsModal UX 修复",
+      "description": "修复设置弹窗 Escape/点击外部关闭 + 确认弹窗 + 无障碍",
+      "dependencies": [],
+      "status": "passing",
+      "domain": "frontend",
+      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/settings/ && pnpm build"
     }
   ]
 }

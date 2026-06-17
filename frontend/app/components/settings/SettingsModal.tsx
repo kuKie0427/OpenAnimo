@@ -223,6 +223,16 @@ export function SettingsModal() {
 		closeModal();
 	};
 
+	// Escape 键关闭弹窗
+	useEffect(() => {
+		if (!isModalOpen) return;
+		const handler = (e: KeyboardEvent) => {
+			if (e.key === "Escape") handleCancel();
+		};
+		document.addEventListener("keydown", handler);
+		return () => document.removeEventListener("keydown", handler);
+	}, [isModalOpen, handleCancel]);
+
 	if (!isModalOpen) {
 		return null;
 	}
@@ -824,7 +834,12 @@ export function SettingsModal() {
 	};
 
 	return (
-		<div className="modal modal-open">
+		<div
+			className="modal modal-open"
+			onClick={(e) => {
+				if (e.target === e.currentTarget) handleCancel();
+			}}
+		>
 			<div className="modal-box w-11/12 max-w-5xl max-h-[90vh] border border-base-content/10 shadow-projection bg-base-100 p-0 flex flex-col">
 				{/* 头部 */}
 				<div className="flex items-center justify-between px-6 py-4 border-b border-base-content/10 bg-base-200 shrink-0">
@@ -960,7 +975,15 @@ className="btn btn-primary border border-base-content/30"
 
 			{/* Alert Modal */}
 			{alertState.show && (
-				<div className="modal modal-open">
+				<div
+					className="modal modal-open"
+					onKeyDown={(e) => {
+						if (e.key === "Escape") setAlertState({ ...alertState, show: false });
+					}}
+					onClick={(e) => {
+						if (e.target === e.currentTarget) setAlertState({ ...alertState, show: false });
+					}}
+				>
 					<div className="modal-box border border-base-content/10 shadow-projection">
 						<div className="flex items-start gap-3">
 							{/* Icon */}

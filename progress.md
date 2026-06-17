@@ -1,5 +1,39 @@
 # Progress Log
 
+## 2026-06-17 — Session: f-settings-modal-fix-p0 — SettingsModal UX 修复
+
+### 做了什么
+- **Task 0**: feature_list.json 添加 f-settings-modal-fix 条目 (status: active → passing)
+- **Task 1**: SettingsModal 添加 Escape 键关闭 — useEffect 监听 keydown，isModalOpen + handleCancel 依赖
+- **Task 2**: SettingsModal 添加点击外部关闭 — onClick on modal modal-open div，e.target === e.currentTarget 守卫
+- **Task 3**: 确认弹窗添加 Escape 键关闭 — onKeyDown on alert modal div，setAlertState({ ...alertState, show: false })
+- **Task 4**: 确认弹窗添加点击外部关闭 — onClick on alert modal div
+- **Task 5**: HomePage 发送按钮添加 aria-disabled — 匹配 disabled prop 值
+
+### 改了什么文件
+- `frontend/app/components/settings/SettingsModal.tsx` (mod, +25/-2) — Escape + click outside for main modal + confirmation modal
+- `frontend/app/pages/HomePage.tsx` (mod, +1) — aria-disabled on send button
+- `feature_list.json` (mod, +9) — f-settings-modal-fix entry
+
+### 当前状态
+- f-settings-modal-fix = passing ✅
+- Gate: tsc 0 errors, vitest 32/32 pass (settings), pnpm build OK
+
+### 决策
+- useEffect 放在 handleCancel 定义之后（避免 hoisting 问题）
+- 确认弹窗用 alertState.show 而非单独 open 状态（复用现有状态）
+- aria-disabled 值与 disabled prop 完全一致
+
+### 阻断
+- 无
+
+### 验证结果
+- frontend: tsc 0 errors, vitest 32/32 pass, pnpm build OK
+- LSP diagnostics: 0 errors on SettingsModal.tsx + HomePage.tsx
+
+### 下次
+- 无（单 Phase 任务，全部完成）
+
 ## 2026-06-17 — Session: openanimo-p4-script-editor — Phase P4.1 WYSIWYG·剧本编辑器 完成
 
 ### 做了什么

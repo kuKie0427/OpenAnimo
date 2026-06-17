@@ -261,6 +261,7 @@ export function HomePage() {
 									disabled={!story.trim() || createMutation.isPending}
 									loading={createMutation.isPending}
 									aria-label="开始生成故事"
+									aria-disabled={!story.trim() || createMutation.isPending}
 								>
 									{!createMutation.isPending && (
 										<PaperAirplaneIcon className="w-4 h-4" aria-hidden="true" />
