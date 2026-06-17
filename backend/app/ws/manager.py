@@ -33,6 +33,7 @@ from app.schemas.ws import (
     ShotCreatedEventData,
     ShotDeletedEventData,
     ShotUpdatedEventData,
+    ShotSyncProgressEventData,
     VersionCreatedEventData,
     VersionRollbackEventData,
     WsEvent,
@@ -67,6 +68,7 @@ _EVENT_DATA_MODELS: dict[str, type[Any]] = {
     "version_rollback": VersionRollbackEventData,
     "export_completed": ExportCompletedEventData,
     "consistency_eval_completed": ConsistencyEvalCompletedEventData,
+    "shot_sync_progress": ShotSyncProgressEventData,
 }
 
 

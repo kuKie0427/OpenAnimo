@@ -48,7 +48,39 @@
 - frontend: 570 vitest pass (3 new ScriptEditor tests), tsc clean, pnpm build OK
 
 ### 下次
-- P4.2 分镜预览 + 双向同步（新会话 + 新 roadmap 文件）
+- P4.2 分镜预览 + 双向同步（已完成）
+
+## 2026-06-17 — Session: openanimo-p4-shotlist-sync — Phase P4.2 WYSIWYG·分镜预览+双向同步
+
+### 做了什么
+- **Task 1**: 同步 API — `GET /projects/{id}/script/sync` 返回 shot↔paragraph 映射 (sync_map)，复用 anchor_service.parse_anchors()，Shot 表 cross-reference，AdminDep 鉴权
+- **Task 2**: 前向同步 API — `POST /projects/{id}/script/sync/paragraph` 接受 {paragraph_index, paragraph_text}，更新 script_markdown 后启动 BackgroundTask，AgentContext + PlanAgent.run_shots() incremental 模式，`shot_sync_progress` WS 事件
+- **Task 2 WS**: `shot_sync_progress` 事件类型 + ShotSyncProgressEventData 添加到 backend schemas/ws.py + frontend types/useWebSocket
+- **Task 3**: ShotlistPanel 组件 — 右侧面板 (w-80)，shot 缩略图 + order 标签 + description 截断 + 选中态 ring-primary + 同步按钮 + 空态/加载态，Projection Room 暗色主题
+- **Task 4**: 前端集成 — SyncMapEntry/SyncMapResponse/ShotSyncProgressEventData types, getScriptSyncMap/syncParagraph API, ScriptEditor 新增 selectedLine/onCursorActivity 段落高亮 + 光标检测，ProjectPage split 布局 (ScriptEditor left + ShotlistPanel right)，selectedParagraphIndex/selectedShotId 双向绑定，sync map React Query，WS shot_sync_progress handler
+- **Task 5**: 4 后端测试 (get_sync_map / get_sync_map_empty / sync_paragraph_triggers_replan / sync_paragraph_requires_admin) + 6 前端测试 (ShotlistPanel render/selected/empty/click/sync-btn/syncing)
+
+### 改了什么文件
+- `backend/app/api/v1/routes/script.py` (mod) — SyncMapEntry/SyncMapResponse/SyncParagraphRequest/SyncParagraphResponse + GET /sync + POST /sync/paragraph + _run_shot_sync background task
+- `backend/app/schemas/ws.py` (mod) — `shot_sync_progress` WsEventType + ShotSyncProgressEventData + EVENT_DATA_MODELS entry
+- `backend/app/ws/manager.py` (mod) — ShotSyncProgressEventData import + _EVENT_DATA_MODELS entry
+- `backend/tests/test_api/test_script_sync.py` (new, 135行) — 4 sync API tests
+- `frontend/app/types/index.ts` (mod) — SyncMapEntry/SyncMapResponse/ShotSyncProgressEventData + "shot_sync_progress" in WsEventType
+- `frontend/app/services/api.ts` (mod) — getScriptSyncMap() + syncParagraph() methods
+- `frontend/app/components/script/ShotlistPanel.tsx` (new, 114行) — ShotlistPanel component
+- `frontend/app/components/script/ShotlistPanel.test.tsx` (new, 113行) — 6 tests
+- `frontend/app/components/script/index.ts` (mod) — +ShotlistPanel export
+- `frontend/app/components/script/ScriptEditor.tsx` (mod) — selectedLine prop + onCursorActivity callback + CodeMirror paragraph highlight
+- `frontend/app/components/script/ScriptEditor.test.tsx` (mod) — mock compatibility for new CodeMirror StateEffect/StateField/Decoration
+- `frontend/app/pages/ProjectPage.tsx` (mod) — split layout, sync map query/mutation, bidirectional highlight (selectedParagraphIndex/selectedShotId)
+- `frontend/app/hooks/useWebSocket.ts` (mod) — "shot_sync_progress" handler
+- `frontend/app/stores/editorStore.ts` (mod) — shotSyncCompleted state
+- `frontend/app/styles/globals.css` (mod) — .cm-highlighted-paragraph CSS class
+
+### 当前状态
+- f-shotlist-sync = passing ✅
+- **Phase P4.2 WYSIWYG·分镜预览+双向同步正式完成**
+- Gate: ruff 0, backend 10 script tests pass (6 existing + 4 new), frontend 576 vitest pass (6 new ShotlistPanel + 570 existing), tsc clean, pnpm build OK
 
 ## 2026-06-17 — Session: openanimo-p4-script-editor-integration — Task 5a+5b+5c Script Editor Integration
 
