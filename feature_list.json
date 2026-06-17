@@ -773,11 +773,11 @@
     {
       "id": "f-shotlist-sync",
       "name": "P4.2 — WYSIWYG·分镜预览 + 双向同步",
-      "description": "Shotlist 视图（右侧显示当前段落对应分镜缩略图）。双向 sync API: 改剧本段落 → 重 plan shots；改 shot → 标黄剧本段落。WebSocket 推送 sync 事件。",
+      "description": "Shotlist 视图：右侧显示当前段落对应分镜缩略图 + 双向 sync API（改剧本段落 → 重 plan shots；改 shot → 标黄剧本段落）。",
       "dependencies": [
         "f-script-editor"
       ],
-      "status": "not_started",
+      "status": "active",
       "domain": "fullstack",
       "verification": "cd backend && uv run pytest tests/test_orchestration/ -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
       "evidence": "",

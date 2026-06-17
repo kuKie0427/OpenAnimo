@@ -1948,6 +1948,40 @@
 - /handoff 启动新会话
 - 新会话: 读 `openanimo-p4-script-editor.md` → 验证前置 → 执行 7 任务 → Gate 通过 → 标 passing → /handoff 给 P4.2
 
+## 2026-06-17 — Session: p4.2-shotlist-sync plan
+
+### 做了什么
+- **P4.1 review-fix 完成** (commit 6e45689 修复 ScriptEditor.test.tsx tsc 错误)
+- **P4.1 完整收官**: f-script-editor 正式 passing, 0 regression
+- **生成 P4.2 phase plan**: `openanimo-p4-shotlist-sync.md` (123 行, 100-150 范围内)
+- **Mark active**: `f-shotlist-sync` 状态从 not_started → active
+
+### P4.2 设计决策
+- **同步 API**: `GET /projects/{id}/script/sync` — 返回 shot↔paragraph 映射 (复用 `anchor_service.parse_anchors()`)
+- **前向同步 API**: `POST /projects/{id}/script/sync/paragraph` — 触发段落重规划 (调用现有 `PlanAgent.run_shots()` 单段落)
+- **ShotlistPanel**: 右侧面板显示当前段落对应 shots (缩略图 + order + description + "重 plan shots" 按钮)
+- **双向高亮**: 段落点击 → 高亮 shots; shot 点击 → 滚动到段落; 选中态 ring-primary
+- **不改**: anchor_service.py / PlanAgent 核心逻辑 / canvas/timeline
+- **不实现**: 拖拽重排 (P4.3 再做); 后向同步标记 (deferred)
+- **预计 6-8 文件改动, 2-3 天**
+
+### 改动文件 (P4.2 预计, 实施时)
+- `backend/app/api/v1/routes/script.py` (加 GET /sync + POST /sync/paragraph)
+- `backend/app/services/anchor_service.py` (可能加 sync_map 构建辅助函数)
+- `frontend/app/components/script/ShotlistPanel.tsx` (新)
+- `frontend/app/components/script/index.ts` (更新导出)
+- `frontend/app/pages/ProjectPage.tsx` (双向高亮集成)
+- `backend/tests/test_api/test_script_sync.py` (新)
+- `frontend/app/components/script/ShotlistPanel.test.tsx` (新)
+- `feature_list.json` + `progress.md`
+
+### 阻断
+- 无
+
+### 下次
+- /handoff 启动新会话
+- 新会话: 读 `openanimo-p4-shotlist-sync.md` → 验证前置 → 执行 6 任务 → Gate 通过 → 标 passing → /handoff 给 P4.3
+
 
 
 
