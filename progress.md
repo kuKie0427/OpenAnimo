@@ -1,5 +1,55 @@
 # Progress Log
 
+## 2026-06-17 — Session: openanimo-p4-script-editor — Phase P4.1 WYSIWYG·剧本编辑器 完成
+
+### 做了什么
+- **Task 1**: 数据模型 + API — Project.script_markdown 字段 + alembic 0026 迁移 + GET/PUT /script 端点 (AdminDep 鉴权) + 路由注册
+- **Task 2**: 安装 CodeMirror 6 (view/state/lang-markdown/theme-one-dark/language) — pnpm add
+- **Task 3**: ScriptEditor 组件 — CodeMirror 6 集成 (markdown 语法高亮, one-dark 暗色主题, 2空格缩进), 工具栏 (B/I/H1/H2/🔗), readOnly 模式, 响应式 100%/min-h-400px
+- **Task 4**: 锚点系统 — anchor_service.py (regex `<!-- shot:N -->`, paragraph_index + line_number), GET /script/anchors 端点
+- **Task 5**: 前端集成 — api.ts 3 方法 (getScript/updateScript/getScriptAnchors), types (ScriptMarkdownResponse/AnchorItem/AnchorsResponse), ProjectPage 集成 (📝 剧本 toggle 按钮, useQuery 加载, useMutation 保存, 500ms debounce auto-save, localScript 保 tab 切换不丢内容, 加载态/错误态/重试)
+- **Task 6**: 12 后端测试 (6 API + 6 anchor service) + 3 前端测试 (CodeMirror 渲染/readOnly/工具栏) — 全部通过
+
+### 改了什么文件
+- `backend/app/models/project.py` (mod) — 加 script_markdown 字段
+- `backend/alembic/versions/0026_add_script_markdown_to_project.py` (new) — 可逆迁移
+- `backend/app/api/v1/routes/script.py` (new, 74行) — GET/PUT /script + anchors 端点
+- `backend/app/api/v1/router.py` (mod) — 注册 script 路由
+- `backend/app/services/anchor_service.py` (new, 76行) — parse_anchors()
+- `frontend/app/components/script/ScriptEditor.tsx` (new, 248行) — CodeMirror 6 编辑器组件
+- `frontend/app/components/script/index.ts` (new) — barrel export
+- `frontend/app/pages/ProjectPage.tsx` (mod) — ScriptEditor 集成
+- `frontend/app/services/api.ts` (mod) — getScript/updateScript/getScriptAnchors
+- `frontend/app/types/index.ts` (mod) — ScriptMarkdownResponse/AnchorItem/AnchorsResponse
+- `backend/tests/test_api/test_project_script.py` (new, 150行) — 6 API 测试
+- `backend/tests/test_services/test_anchor_service.py` (new, 63行) — 6 单元测试
+- `frontend/app/components/script/ScriptEditor.test.tsx` (new, 82行) — 3 前端测试
+- `feature_list.json` (mod) — f-script-editor = passing
+
+### 当前状态
+- f-script-editor = passing ✅
+- **Phase P4.1 WYSIWYG·剧本编辑器正式完成**
+- Gate: ruff 0, backend 12 script tests pass, frontend 570 vitest pass (3 new), tsc clean, pnpm build OK
+
+### 决策
+- ScriptEditor 使用 react-codemirror 零 wrapper 模式（原生 useRef + useEffect mount）
+- Tab = 2 空格自定义 keymap（非默认 indentWithTab）
+- 锚点格式 `<!-- shot:N -->` 用 regex + 段落分割（\n\s*\n）实现 paragraph_index
+- GET /script 端点公开（无需 AdminDep），PUT 需 AdminDep 鉴权
+- 前端集成用 "📝 剧本" toggle 按钮 + viewMode 替代 StageTabs 改造（保持 workflow stages 独立）
+- 500ms debounce 用原生 setTimeout/clearTimeout 而非外部库
+- localScript state 保 tab 切换不丢失未保存内容
+
+### 阻断
+- 无
+
+### 验证结果
+- backend: 12 script tests pass, ruff 0 errors
+- frontend: 570 vitest pass (3 new ScriptEditor tests), tsc clean, pnpm build OK
+
+### 下次
+- P4.2 分镜预览 + 双向同步（新会话 + 新 roadmap 文件）
+
 ## 2026-06-17 — Session: openanimo-p4-script-editor-integration — Task 5a+5b+5c Script Editor Integration
 
 ### 做了什么

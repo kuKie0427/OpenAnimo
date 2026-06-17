@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional, cast
 
-from sqlalchemy import Column, JSON
+from sqlalchemy import Column, JSON, Text
 from sqlalchemy.orm import declared_attr
 from sqlmodel import Field, Relationship, SQLModel
 from pydantic import field_validator
@@ -24,6 +24,7 @@ class Project(SQLModel, table=True):
     story_outline: dict = Field(default_factory=dict, sa_column=Column(JSON, nullable=True))
     visual_bible: Optional[str] = None
     outline_approved: bool = Field(default=False)
+    script_markdown: str = Field(default="", sa_column=Column(Text, nullable=True))
     video_url: Optional[str] = None  # 最终拼接视频
     status: str = Field(default="draft")
     text_provider_override: Optional[str] = None

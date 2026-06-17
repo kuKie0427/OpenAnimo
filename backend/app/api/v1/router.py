@@ -8,6 +8,7 @@ from app.api.v1.routes.consistency import router as consistency_router
 from app.api.v1.routes.export import router as export_router
 from app.api.v1.routes.generation import router as generation_router
 from app.api.v1.routes.projects import router as projects_router
+from app.api.v1.routes.script import router as script_router
 from app.api.v1.routes.shots import router as shots_router
 from app.api.v1.routes.style_templates import router as style_templates_router
 from app.api.v1.routes.text import router as text_router
@@ -18,6 +19,7 @@ from app.api.v1.routes.versions import router as versions_router
 
 api_router = APIRouter()
 api_router.include_router(projects_router, prefix="/projects", tags=["projects"])
+api_router.include_router(script_router, prefix="/projects", tags=["script"])
 api_router.include_router(subtitles_router, prefix="/projects", tags=["subtitles"])
 api_router.include_router(generation_router, tags=["generation"])
 api_router.include_router(config_router, prefix="/config", tags=["config"])

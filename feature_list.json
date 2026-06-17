@@ -764,10 +764,10 @@
       "dependencies": [
         "f-vertical-export"
       ],
-      "status": "active",
-      "domain": "frontend",
-      "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
-      "evidence": "2026-06-17: ScriptEditor component integrated into ProjectPage — types (ScriptMarkdownResponse/AnchorItem/AnchorsResponse), API methods (getScript/updateScript/getScriptAnchors), script toggle button, loading/error states, auto-save with 500ms debounce (ref-based setTimeout), local state preserves unsaved content across tab switches. tsc clean, pnpm build OK.",
+      "status": "passing",
+      "domain": "fullstack",
+      "verification": "cd backend && uv run pytest tests/test_api/test_project_script.py tests/test_services/test_anchor_service.py -q && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
+      "evidence": "2026-06-17: Project.script_markdown field + alembic 0026 migration, GET/PUT /script endpoints + anchors endpoint, ScriptEditor CodeMirror 6 component (dark one-dark theme, markdown highlighting, B/I/H1/H2/anchor toolbar, Tab=2spaces, readOnly), anchor_service.py (<!-- shot:N --> parsing by paragraph_index+line_number), ProjectPage integration (script toggle, useQuery/useMutation, 500ms debounce auto-save, localScript preserves unsaved content, loading/error states), 12 backend tests + 3 frontend tests pass. ruff 0, tsc clean, 570 vitest pass, pnpm build OK.",
       "notes": "Phase P4.1 — openanimo-evaluation.md P1 #6 改进项（'当前剧本/分镜割裂'）。耗时 2-3 天。roadmap: .sisyphus/plans/openanimo-p1-roadmap.md"
     },
     {
