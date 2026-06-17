@@ -2056,3 +2056,18 @@
 
 ### 阻断/下次
 - 无阻断。P4.2 shotlist-sync 全部 4 个 task 完成。
+
+## 已知 UX 问题 (2026-06-17 用户反馈)
+
+### 问题 1: StageTabs (生成/合成/审阅) 按钮无实际作用
+- **现象**: 点击顶部"生成"、"合成"、"审阅"按钮无响应
+- **根因**: `ProjectPage.tsx:704` 的 `onStageChange` 只调用 `setCurrentStage(stage)` 更新视觉状态，不触发任何生成
+- **实际生成入口**: ChatDrawer 里的"生成"按钮 (`handleGenerate`)
+- **建议修复**: 点击时触发对应阶段生成，或显示 toast "请从对话面板发起生成"
+- **状态**: 已知问题，暂不修
+
+### 问题 2: ChatDrawer 关闭后无法重新打开
+- **现象**: 右侧对话面板关闭后，用户不知道如何重新打开
+- **根因**: `useChatPanelStore` 的 `isOpen` 持久化到 localStorage，关闭后设为 `false`，但无可见的重新打开按钮
+- **建议修复**: 在 AppShell 加 💬 按钮 toggle ChatDrawer
+- **状态**: 已知问题，暂不修
