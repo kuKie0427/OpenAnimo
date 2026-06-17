@@ -810,3 +810,19 @@ export interface SharedCharacterRead {
 	updated_at: string;
 	reference_images_count: number;
 }
+
+// ── Script ──────────────────────────────────────────────────
+
+export interface ScriptMarkdownResponse {
+	script_markdown: string;
+}
+
+export interface AnchorItem {
+	shot_id: number;
+	paragraph_index: number;
+	line_number: number;
+}
+
+export interface AnchorsResponse {
+	anchors: AnchorItem[];
+}

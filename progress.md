@@ -1,5 +1,51 @@
 # Progress Log
 
+## 2026-06-17 — Session: openanimo-p4-script-editor-integration — Task 5a+5b+5c Script Editor Integration
+
+### 做了什么
+- **Task 5a**: types/index.ts — 添加 `ScriptMarkdownResponse`, `AnchorItem`, `AnchorsResponse` 类型
+- **Task 5b**: services/api.ts — 添加 `getScript`, `updateScript`, `getScriptAnchors` 方法到 `projectsApi`
+- **Task 5c**: ProjectPage.tsx — 集成 ScriptEditor：
+  - `scriptOpen` 状态变量（与 assetsOpen/historyOpen/versionOpen 模式一致）
+  - "📝 剧本" 按钮在 ViewSwitcher 旁（active 态用 bg-primary + shadow-aperture）
+  - scriptOpen 时显示 ScriptEditor 替代 canvas/timeline/list
+  - useQuery 获取脚本（`enabled: !!project && scriptOpen`，仅打开时加载）
+  - useMutation 保存脚本（onError toast 提示）
+  - 500ms debounce auto-save（ref-based setTimeout，无外部库）
+  - loading spinner + error state with retry button
+  - localScript state 保持未保存内容不丢失（tab 切换不丢）
+  - cleanup effect 清除 saveTimerRef
+
+### 改了什么文件
+- `frontend/app/types/index.ts` (mod, +17行) — ScriptMarkdownResponse + AnchorItem + AnchorsResponse
+- `frontend/app/services/api.ts` (mod, +14行) — 3 个 script API 方法 + import AnchorsResponse/ScriptMarkdownResponse
+- `frontend/app/pages/ProjectPage.tsx` (mod, +85行) — ScriptEditor 集成（scriptOpen state + query/mutation + debounce + toggle button + loading/error UI）
+- `feature_list.json` (mod) — f-script-editor evidence 更新
+- `progress.md` (mod) — 本条目
+
+### 当前状态
+- f-script-editor = active（集成部分完成，后续 P4.1 仍有工作）
+- Gate: tsc 0 errors, pnpm build OK (12.04s)
+
+### 决策
+- 脚本按钮放在 ViewSwitcher 旁而非 StageTabs 内（保持工作流阶段 tab 独立）
+- scriptOpen 时完全替换 canvas/timeline/list（非并列显示）
+- useQuery enabled 条件含 `scriptOpen`，仅打开时请求（避免浪费）
+- localScript + scriptData 双层 state：localScript 优先显示（未保存），scriptData 作为初始值
+- debounce 500ms（平衡保存频率与性能）
+- cleanup effect 确保组件卸载时清除 timer
+
+### 阻断
+- 无
+
+### 验证结果
+- frontend: tsc 0 errors, pnpm build OK (12.04s)
+- LSP diagnostics clean on all 3 modified files
+
+### 下次
+- 继续 P4.1 剩余工作（script_markdown 后端 API 路由是否已存在待确认）
+- P4.2 shotlist-sync（双向同步）
+
 ## 2026-06-17 — Session: openanimo-p3-voice-mixer — Phase P3.2 多角色配音·分轨混音
 
 ### 做了什么

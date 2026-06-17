@@ -767,7 +767,7 @@
       "status": "active",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
-      "evidence": "",
+      "evidence": "2026-06-17: ScriptEditor component integrated into ProjectPage — types (ScriptMarkdownResponse/AnchorItem/AnchorsResponse), API methods (getScript/updateScript/getScriptAnchors), script toggle button, loading/error states, auto-save with 500ms debounce (ref-based setTimeout), local state preserves unsaved content across tab switches. tsc clean, pnpm build OK.",
       "notes": "Phase P4.1 — openanimo-evaluation.md P1 #6 改进项（'当前剧本/分镜割裂'）。耗时 2-3 天。roadmap: .sisyphus/plans/openanimo-p1-roadmap.md"
     },
     {

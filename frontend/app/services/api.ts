@@ -1,6 +1,7 @@
 import { ApiError } from "~/types/errors";
 import { getApiBase } from "~/utils/runtimeBase";
 import type {
+	AnchorsResponse,
 	Character,
 	CharacterUpdatePayload,
 	CreateProjectPayload,
@@ -8,6 +9,7 @@ import type {
 	Project,
 	RollbackRequest,
 	RollbackResponse,
+	ScriptMarkdownResponse,
 	Shot,
 	ShotUpdatePayload,
 	StoryOutline,
@@ -263,6 +265,18 @@ export const projectsApi = {
 				}),
 			},
 		),
+
+	getScript: (id: number) =>
+		fetchApi<ScriptMarkdownResponse>(`/api/v1/projects/${id}/script`),
+
+	updateScript: (id: number, data: { script_markdown: string }) =>
+		fetchApi<ScriptMarkdownResponse>(`/api/v1/projects/${id}/script`, {
+			method: "PUT",
+			body: JSON.stringify(data),
+		}),
+
+	getScriptAnchors: (id: number) =>
+		fetchApi<AnchorsResponse>(`/api/v1/projects/${id}/script/anchors`),
 };
 
 // Shots API

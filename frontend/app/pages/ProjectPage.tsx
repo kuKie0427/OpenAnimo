@@ -1,6 +1,6 @@
 import { ArrowPathIcon, StopIcon } from "@heroicons/react/24/outline";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	Link,
 	useNavigate,
@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import { ViewSwitcher } from "~/components/daw/ViewSwitcher";
 import { StageTabs } from "~/components/daw/StageTabs";
+import { ScriptEditor } from "~/components/script/ScriptEditor";
 import { TimelineView } from "~/components/timeline";
 import { ListView } from "~/components/list";
 import { AppShell } from "~/components/layout/AppShell";
@@ -51,6 +52,7 @@ export function ProjectPage() {
 	const [assetsOpen, setAssetsOpen] = useState(false);
 	const [historyOpen, setHistoryOpen] = useState(false);
 	const [versionOpen, setVersionOpen] = useState(false);
+	const [scriptOpen, setScriptOpen] = useState(false);
 	const [versionTarget, setVersionTarget] = useState<{
 		entityType: VersionEntityType;
 		entityId: number;
@@ -135,6 +137,48 @@ export function ProjectPage() {
 		queryFn: () => projectsApi.getMessages(projectId),
 		enabled: !!project,
 	});
+
+	const { data: scriptData, isLoading: scriptLoading, error: scriptError } = useQuery({
+		queryKey: ["script", projectId],
+		queryFn: () => projectsApi.getScript(projectId),
+		enabled: !!project && scriptOpen,
+	});
+
+	const [localScript, setLocalScript] = useState<string | null>(null);
+	const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const updateScriptMutation = useMutation({
+		mutationFn: (scriptMarkdown: string) =>
+			projectsApi.updateScript(projectId, { script_markdown: scriptMarkdown }),
+		onError: (error: Error) => {
+			toast.error({
+				title: "保存剧本失败",
+				message: error.message || "请重试",
+			});
+		},
+	});
+
+	const scriptValue = localScript ?? scriptData?.script_markdown ?? "";
+
+	const handleScriptChange = useCallback((value: string) => {
+		setLocalScript(value);
+		if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+		saveTimerRef.current = setTimeout(() => {
+			updateScriptMutation.mutate(value);
+		}, 500);
+	}, []);
+
+	useEffect(() => {
+		return () => {
+			if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+		};
+	}, []);
+
+	useEffect(() => {
+		if (scriptData?.script_markdown !== undefined && localScript === null) {
+			setLocalScript(scriptData.script_markdown);
+		}
+	}, [scriptData]);
 
 	useEffect(() => {
 		if (characters) {
@@ -566,37 +610,78 @@ export function ProjectPage() {
 						stages={workflowStages}
 						onStageChange={(stage) => useEditorStore.getState().setCurrentStage(stage)}
 					/>
-					<div className="pr-4">
+					<div className="flex items-center gap-2 pr-4">
+						<button
+							type="button"
+							onClick={() => setScriptOpen((v) => !v)}
+							className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-all duration-200 ${
+								scriptOpen
+									? "bg-primary text-primary-content shadow-aperture"
+									: "text-base-content/60 hover:text-base-content hover:bg-base-200"
+							}`}
+							data-testid="script-toggle"
+						>
+							<span>📝</span>
+							<span className="hidden sm:inline">剧本</span>
+						</button>
 						<ViewSwitcher currentView={viewMode} onViewChange={setViewMode} />
 					</div>
 				</div>
 
 				<div className="flex-1 relative overflow-hidden">
-					{viewMode === "canvas" && (
-						<div data-testid="infinite-canvas" className="w-full h-full">
-							<StageView projectId={projectId} />
+					{scriptOpen ? (
+						<div data-testid="script-editor" className="w-full h-full p-4 overflow-auto">
+							{scriptLoading ? (
+								<div className="flex items-center justify-center h-full">
+									<ArrowPathIcon className="w-6 h-6 animate-pulse text-base-content/60" />
+								</div>
+							) : scriptError ? (
+								<div className="flex flex-col items-center justify-center h-full gap-4">
+									<p className="text-base-content/60">加载剧本失败</p>
+									<button
+										type="button"
+										onClick={() => queryClient.invalidateQueries({ queryKey: ["script", projectId] })}
+										className="btn btn-sm btn-primary"
+									>
+										重试
+									</button>
+								</div>
+							) : (
+								<ScriptEditor
+									value={scriptValue}
+									onChange={handleScriptChange}
+								/>
+							)}
 						</div>
-					)}
-					{viewMode === "timeline" && (
-						<div data-testid="timeline-view" className="w-full h-full">
-							<TimelineView
-								projectId={projectId}
-								shapes={timelineShapes}
-								onShapeSelect={(id) => setSelectedShapeId(id)}
-								onTimeChange={(_time) => {}}
-							/>
-						</div>
-					)}
-					{viewMode === "list" && (
-						<div data-testid="list-view" className="w-full h-full">
-							<ListView
-								projectId={projectId}
-								shapes={timelineShapes}
-								onShapeSelect={(id) => setSelectedShapeId(id)}
-								onShapeEdit={(id) => setSelectedShapeId(id)}
-								onShapeDelete={() => {}}
-							/>
-						</div>
+					) : (
+						<>
+							{viewMode === "canvas" && (
+								<div data-testid="infinite-canvas" className="w-full h-full">
+									<StageView projectId={projectId} />
+								</div>
+							)}
+							{viewMode === "timeline" && (
+								<div data-testid="timeline-view" className="w-full h-full">
+									<TimelineView
+										projectId={projectId}
+										shapes={timelineShapes}
+										onShapeSelect={(id) => setSelectedShapeId(id)}
+										onTimeChange={(_time) => {}}
+									/>
+								</div>
+							)}
+							{viewMode === "list" && (
+								<div data-testid="list-view" className="w-full h-full">
+									<ListView
+										projectId={projectId}
+										shapes={timelineShapes}
+										onShapeSelect={(id) => setSelectedShapeId(id)}
+										onShapeEdit={(id) => setSelectedShapeId(id)}
+										onShapeDelete={() => {}}
+									/>
+								</div>
+							)}
+						</>
 					)}
 				</div>
 			</div>
