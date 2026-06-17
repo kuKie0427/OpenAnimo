@@ -5,35 +5,50 @@ import { ScriptEditor } from './ScriptEditor';
 // Mock CodeMirror modules to avoid browser API requirements (jsdom does not
 // provide the full DOM environment CodeMirror needs).
 vi.mock('@codemirror/view', () => {
-  class MockEditorView {
-    destroy = vi.fn();
-    dispatch = vi.fn();
-    focus = vi.fn();
-    state = {
-      doc: { toString: () => '' },
-      selection: { main: { from: 0, to: 0 } },
-      lineAt: vi.fn(() => ({ from: 0, text: '' })),
-    };
-    static updateListener = { of: vi.fn(() => ({})) };
-    static lineWrapping = Symbol('lineWrapping');
-    static editable = { of: vi.fn(() => ({})) };
-  }
-  return {
-    EditorView: MockEditorView,
-    keymap: { of: vi.fn(() => ({})) },
-    lineNumbers: vi.fn(() => ({})),
-    drawSelection: vi.fn(() => ({})),
-    highlightActiveLine: vi.fn(() => ({})),
-  };
+	class MockEditorView {
+		destroy = vi.fn();
+		dispatch = vi.fn();
+		focus = vi.fn();
+		state = {
+			doc: { toString: () => '' },
+			selection: { main: { from: 0, to: 0 } },
+			lineAt: vi.fn(() => ({ from: 0, text: '' })),
+		};
+		static updateListener = { of: vi.fn(() => ({})) };
+		static lineWrapping = Symbol('lineWrapping');
+		static editable = { of: vi.fn(() => ({})) };
+		static decorations = { from: vi.fn(() => ({})) };
+	}
+	return {
+		EditorView: MockEditorView,
+		keymap: { of: vi.fn(() => ({})) },
+		lineNumbers: vi.fn(() => ({})),
+		drawSelection: vi.fn(() => ({})),
+		highlightActiveLine: vi.fn(() => ({})),
+		Decoration: {
+			none: Symbol('none'),
+			set: vi.fn(() => ({})),
+			line: vi.fn(() => ({ range: () => ({}) })),
+		},
+	};
 });
 
 vi.mock('@codemirror/state', () => ({
-  EditorState: {
-    create: vi.fn(() => ({
-      doc: { toString: () => '', lineAt: vi.fn() },
-      selection: { main: { from: 0, to: 0 } },
-    })),
-  },
+	EditorState: {
+		create: vi.fn(() => ({
+			doc: { toString: () => '', lineAt: vi.fn() },
+			selection: { main: { from: 0, to: 0 } },
+		})),
+	},
+	StateEffect: {
+		define: vi.fn(() => ({
+			is: () => false,
+			of: (val: unknown) => ({ type: 'effect', value: val }),
+		})),
+	},
+	StateField: {
+		define: vi.fn(() => ({})),
+	},
 }));
 
 vi.mock('@codemirror/lang-markdown', () => ({ markdown: vi.fn(() => ({})) }));

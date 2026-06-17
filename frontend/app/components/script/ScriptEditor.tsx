@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
-import { EditorView, keymap, lineNumbers, drawSelection, highlightActiveLine } from '@codemirror/view';
-import { EditorState, type Extension } from '@codemirror/state';
+import { EditorView, keymap, lineNumbers, drawSelection, highlightActiveLine, Decoration, type DecorationSet } from '@codemirror/view';
+import { EditorState, StateEffect, StateField, type Extension } from '@codemirror/state';
 import { markdown } from '@codemirror/lang-markdown';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { indentUnit } from '@codemirror/language';
@@ -11,6 +11,8 @@ export interface ScriptEditorProps {
   value: string;
   onChange: (value: string) => void;
   readOnly?: boolean;
+  selectedLine?: number | null;
+  onCursorActivity?: (lineNumber: number) => void;
 }
 
 const INDENT = '  ';
@@ -91,7 +93,30 @@ const tabKeymap = keymap.of([
   },
 ]);
 
-export function ScriptEditor({ value, onChange, readOnly = false }: ScriptEditorProps) {
+const highlightLineEffect = StateEffect.define<number | null>();
+
+const highlightLineField = StateField.define<DecorationSet>({
+	create() { return Decoration.none; },
+	update(decorations, tr) {
+		for (const e of tr.effects) {
+			if (e.is(highlightLineEffect)) {
+				if (e.value === null) return Decoration.none;
+				try {
+					const line = tr.state.doc.line(e.value);
+					return Decoration.set([
+						Decoration.line({ class: 'cm-highlighted-paragraph' }).range(line.from),
+					]);
+				} catch {
+					return decorations;
+				}
+			}
+		}
+		return decorations.map(tr.changes);
+	},
+	provide: (f) => EditorView.decorations.from(f),
+});
+
+export function ScriptEditor({ value, onChange, readOnly = false, selectedLine, onCursorActivity }: ScriptEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
@@ -107,23 +132,29 @@ export function ScriptEditor({ value, onChange, readOnly = false }: ScriptEditor
   useEffect(() => {
     if (!editorRef.current) return;
 
-    const updateListener = EditorView.updateListener.of((update) => {
-      if (update.docChanged) {
-        stableOnChange(update.state.doc.toString());
-      }
-    });
+		const updateListener = EditorView.updateListener.of((update) => {
+			if (update.docChanged) {
+				stableOnChange(update.state.doc.toString());
+			}
+			if (update.selectionSet || update.docChanged) {
+				const pos = update.state.selection.main.head;
+				const line = update.state.doc.lineAt(pos);
+				onCursorActivity?.(line.number);
+			}
+		});
 
-    const extensions: Extension[] = [
-      markdown(),
-      oneDark,
-      lineNumbers(),
-      drawSelection(),
-      highlightActiveLine(),
-      EditorView.lineWrapping,
-      indentUnit.of(INDENT),
-      tabKeymap,
-      updateListener,
-    ];
+		const extensions: Extension[] = [
+			markdown(),
+			oneDark,
+			lineNumbers(),
+			drawSelection(),
+			highlightActiveLine(),
+			EditorView.lineWrapping,
+			indentUnit.of(INDENT),
+			tabKeymap,
+			updateListener,
+			highlightLineField,
+		];
 
     if (readOnly) {
       extensions.push(EditorView.editable.of(false));
@@ -147,14 +178,23 @@ export function ScriptEditor({ value, onChange, readOnly = false }: ScriptEditor
     // eslint-disable-next-line exhaustive-deps -- mount once only
   }, []);
 
-  useEffect(() => {
-    const view = viewRef.current;
-    if (view && value !== view.state.doc.toString()) {
-      view.dispatch({
-        changes: { from: 0, to: view.state.doc.length, insert: value },
-      });
-    }
-  }, [value]);
+	useEffect(() => {
+		const view = viewRef.current;
+		if (view && value !== view.state.doc.toString()) {
+			view.dispatch({
+				changes: { from: 0, to: view.state.doc.length, insert: value },
+			});
+		}
+	}, [value]);
+
+	useEffect(() => {
+		const view = viewRef.current;
+		if (view) {
+			view.dispatch({
+				effects: highlightLineEffect.of(selectedLine ?? null),
+			});
+		}
+	}, [selectedLine]);
 
   const handleBold = useCallback(() => {
     const view = viewRef.current;

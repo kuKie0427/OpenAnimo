@@ -423,7 +423,8 @@ export type WsEventType =
 	| "version_rollback"
 	| "audio_generated"
 	| "export_completed"
-	| "consistency_eval_completed";
+	| "consistency_eval_completed"
+	| "shot_sync_progress";
 
 export interface WsEvent {
 	type: WsEventType;
@@ -825,4 +826,23 @@ export interface AnchorItem {
 
 export interface AnchorsResponse {
 	anchors: AnchorItem[];
+}
+
+export interface SyncMapEntry {
+	shot_id: number;
+	paragraph_index: number;
+	line_number: number;
+	shot_order: number;
+	shot_description: string;
+	shot_image_url: string | null;
+	is_synced: boolean;
+}
+
+export interface SyncMapResponse {
+	sync_map: SyncMapEntry[];
+}
+
+export interface ShotSyncProgressEventData {
+	paragraph_index: number;
+	status: string;
 }

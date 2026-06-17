@@ -14,6 +14,7 @@ import type {
 	ShotUpdatePayload,
 	StoryOutline,
 	StoryOutlineUpdatePayload,
+	SyncMapResponse,
 	UpdateProjectPayload,
 	VersionCompareRead,
 	VersionEntityType,
@@ -277,6 +278,15 @@ export const projectsApi = {
 
 	getScriptAnchors: (id: number) =>
 		fetchApi<AnchorsResponse>(`/api/v1/projects/${id}/script/anchors`),
+
+	getScriptSyncMap: (id: number) =>
+		fetchApi<SyncMapResponse>(`/api/v1/projects/${id}/script/sync`),
+
+	syncParagraph: (id: number, data: { paragraph_index: number; paragraph_text: string }) =>
+		fetchApi<{ status: string; paragraph_index: number }>(
+			`/api/v1/projects/${id}/script/sync/paragraph`,
+			{ method: "POST", body: JSON.stringify(data) },
+		),
 };
 
 // Shots API

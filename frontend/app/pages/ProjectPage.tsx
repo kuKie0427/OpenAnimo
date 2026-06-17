@@ -10,6 +10,8 @@ import {
 import { ViewSwitcher } from "~/components/daw/ViewSwitcher";
 import { StageTabs } from "~/components/daw/StageTabs";
 import { ScriptEditor } from "~/components/script/ScriptEditor";
+import { ShotlistPanel } from "~/components/script/ShotlistPanel";
+import type { ShotSyncItem } from "~/components/script/ShotlistPanel";
 import { TimelineView } from "~/components/timeline";
 import { ListView } from "~/components/list";
 import { AppShell } from "~/components/layout/AppShell";
@@ -53,6 +55,8 @@ export function ProjectPage() {
 	const [historyOpen, setHistoryOpen] = useState(false);
 	const [versionOpen, setVersionOpen] = useState(false);
 	const [scriptOpen, setScriptOpen] = useState(false);
+	const [selectedParagraphIndex, setSelectedParagraphIndex] = useState<number | null>(null);
+	const [selectedShotId, setSelectedShotId] = useState<number | null>(null);
 	const [versionTarget, setVersionTarget] = useState<{
 		entityType: VersionEntityType;
 		entityId: number;
@@ -179,6 +183,86 @@ export function ProjectPage() {
 			setLocalScript(scriptData.script_markdown);
 		}
 	}, [scriptData]);
+
+	const {
+		data: syncMapData,
+		refetch: refetchSyncMap,
+	} = useQuery({
+		queryKey: ["script-sync", projectId],
+		queryFn: () => projectsApi.getScriptSyncMap(projectId),
+		enabled: !!project && scriptOpen,
+	});
+
+	const syncMap = syncMapData?.sync_map ?? [];
+
+	const syncParagraphMutation = useMutation({
+		mutationFn: (data: {
+			paragraph_index: number;
+			paragraph_text: string;
+		}) => projectsApi.syncParagraph(projectId, data),
+		onSuccess: () => {
+			setTimeout(() => {
+				refetchSyncMap();
+				queryClient.invalidateQueries({ queryKey: ["script", projectId] });
+			}, 2000);
+		},
+	});
+
+	const currentParagraphShots: ShotSyncItem[] = useMemo(() => {
+		if (selectedParagraphIndex === null || syncMap.length === 0) {
+			return [];
+		}
+		return syncMap
+			.filter((e) => e.paragraph_index === selectedParagraphIndex)
+			.sort((a, b) => a.shot_order - b.shot_order)
+			.map((e) => ({
+				shot_id: e.shot_id,
+				paragraph_index: e.paragraph_index,
+				shot_order: e.shot_order,
+				shot_description: e.shot_description,
+				shot_image_url: e.shot_image_url,
+				is_synced: e.is_synced,
+			}));
+	}, [selectedParagraphIndex, syncMap]);
+
+	const currentParagraphText = useMemo(() => {
+		if (selectedParagraphIndex === null || !scriptValue) return "";
+		const paragraphs = scriptValue.split(/\n\s*\n/);
+		return paragraphs[selectedParagraphIndex] ?? "";
+	}, [selectedParagraphIndex, scriptValue]);
+
+	const handleCursorActivity = useCallback(
+		(lineNumber: number) => {
+			const matching = syncMap.find((e) => e.line_number === lineNumber);
+			if (matching) {
+				setSelectedParagraphIndex(matching.paragraph_index);
+				const shots = syncMap.filter(
+					(e) => e.paragraph_index === matching.paragraph_index,
+				);
+				setSelectedShotId(shots.length > 0 ? shots[0].shot_id : null);
+			}
+		},
+		[syncMap],
+	);
+
+	const handleShotSelect = useCallback(
+		(shotId: number) => {
+			setSelectedShotId(shotId);
+			const entry = syncMap.find((e) => e.shot_id === shotId);
+			if (entry) {
+				setSelectedParagraphIndex(entry.paragraph_index);
+			}
+		},
+		[syncMap],
+	);
+
+	const handleSyncParagraph = useCallback(() => {
+		if (selectedParagraphIndex === null) return;
+		syncParagraphMutation.mutate({
+			paragraph_index: selectedParagraphIndex,
+			paragraph_text: currentParagraphText,
+		});
+	}, [selectedParagraphIndex, currentParagraphText, syncParagraphMutation]);
 
 	useEffect(() => {
 		if (characters) {
@@ -469,6 +553,14 @@ export function ProjectPage() {
 		}
 	}, [projectUpdatedAt, projectId, queryClient]);
 
+	const shotSyncCompleted = useEditorStore((state) => state.shotSyncCompleted);
+	useEffect(() => {
+		if (shotSyncCompleted) {
+			queryClient.invalidateQueries({ queryKey: ["script-sync", projectId] });
+			queryClient.invalidateQueries({ queryKey: ["script", projectId] });
+		}
+	}, [shotSyncCompleted, projectId, queryClient]);
+
 	useEffect(() => {
 		const autoStart = searchParams.get("autoStart");
 		if (
@@ -630,28 +722,44 @@ export function ProjectPage() {
 
 				<div className="flex-1 relative overflow-hidden">
 					{scriptOpen ? (
-						<div data-testid="script-editor" className="w-full h-full p-4 overflow-auto">
-							{scriptLoading ? (
-								<div className="flex items-center justify-center h-full">
-									<ArrowPathIcon className="w-6 h-6 animate-pulse text-base-content/60" />
-								</div>
-							) : scriptError ? (
-								<div className="flex flex-col items-center justify-center h-full gap-4">
-									<p className="text-base-content/60">加载剧本失败</p>
-									<button
-										type="button"
-										onClick={() => queryClient.invalidateQueries({ queryKey: ["script", projectId] })}
-										className="btn btn-sm btn-primary"
-									>
-										重试
-									</button>
-								</div>
-							) : (
-								<ScriptEditor
-									value={scriptValue}
-									onChange={handleScriptChange}
-								/>
-							)}
+						<div data-testid="script-editor" className="w-full h-full flex overflow-hidden">
+							<div className="flex-1 p-4 overflow-auto">
+								{scriptLoading ? (
+									<div className="flex items-center justify-center h-full">
+										<ArrowPathIcon className="w-6 h-6 animate-pulse text-base-content/60" />
+									</div>
+								) : scriptError ? (
+									<div className="flex flex-col items-center justify-center h-full gap-4">
+										<p className="text-base-content/60">加载剧本失败</p>
+										<button
+											type="button"
+											onClick={() => queryClient.invalidateQueries({ queryKey: ["script", projectId] })}
+											className="btn btn-sm btn-primary"
+										>
+											重试
+										</button>
+									</div>
+								) : (
+									<ScriptEditor
+										value={scriptValue}
+										onChange={handleScriptChange}
+										selectedLine={
+											selectedParagraphIndex !== null
+												? syncMap.find((e) => e.paragraph_index === selectedParagraphIndex)
+														?.line_number ?? null
+												: null
+										}
+										onCursorActivity={handleCursorActivity}
+									/>
+								)}
+							</div>
+							<ShotlistPanel
+								shots={currentParagraphShots}
+								selectedShotId={selectedShotId}
+								onSelectShot={handleShotSelect}
+								onSyncParagraph={handleSyncParagraph}
+								isSyncing={syncParagraphMutation.isPending}
+							/>
 						</div>
 					) : (
 						<>

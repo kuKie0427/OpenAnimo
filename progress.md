@@ -1985,3 +1985,42 @@
 
 
 
+
+## 2026-06-17 — Session: openanimo-p4-shotlist-sync — Task 4: Frontend integration 完成
+
+### 做了什么
+- **Types**: 新增 `SyncMapEntry`, `SyncMapResponse`, `ShotSyncProgressEventData` interface, `"shot_sync_progress"` 加入 `WsEventType` union
+- **API**: `getScriptSyncMap()` 和 `syncParagraph()` 方法加入 `projectsApi`
+- **EditorStore**: `shotSyncCompleted` 状态 + setter, 沿用 `projectUpdatedAt` 模式
+- **WS hook**: `"shot_sync_progress"` case → `status === "completed"` 时 set `shotSyncCompleted`
+- **ScriptEditor**: 新增 optional `selectedLine` / `onCursorActivity` props; CodeMirror `StateEffect`/`StateField` line decoration 高亮 (amber tint); `updateListener` 监 selection 变化 fire `onCursorActivity`
+- **ProjectPage 集成**:
+  - `selectedParagraphIndex` / `selectedShotId` state
+  - sync map `useQuery` (`["script-sync", projectId]`, enabled when scriptOpen)
+  - `syncParagraph` `useMutation` (2s 后 invalidate queries)
+  - `currentParagraphShots` memo: 按 paragraph_index 过滤 + shot_order 排序
+  - `handleCursorActivity`: CodeMirror line → sync map paragraph_index → matching shots → selectedShotId
+  - `handleShotSelect`: shot click → paragraph_index from sync map → selectedParagraphIndex (双向)
+  - Split layout: ScriptEditor (left, flex-1) + ShotlistPanel (right, w-80)
+  - `shotSyncCompleted` watcher `useEffect` → invalidate `["script-sync"]` + `["script"]`
+- **CSS**: `.cm-highlighted-paragraph` amber 背景高亮样式
+- **Test fix**: ScriptEditor mock 补充 `StateEffect`, `StateField`, `Decoration` 导出
+
+### 改了什么文件
+- `frontend/app/types/index.ts` (mod) — 3 新类型 + 1 WS event type
+- `frontend/app/services/api.ts` (mod) — 2 新 API 方法
+- `frontend/app/stores/editorStore.ts` (mod) — shotSyncCompleted state
+- `frontend/app/hooks/useWebSocket.ts` (mod) — shot_sync_progress case
+- `frontend/app/components/script/ScriptEditor.tsx` (mod) — selectedLine/onCursorActivity props, decoration infra
+- `frontend/app/pages/ProjectPage.tsx` (mod) — split layout, sync map query/mutation, 双向 highlight
+- `frontend/app/styles/globals.css` (mod) — .cm-highlighted-paragraph 样式
+- `frontend/app/components/script/ScriptEditor.test.tsx` (mod) — mock 补充
+
+### 验证
+- tsc --noEmit: clean
+- vitest: 69 suites / 576 tests passed
+- pnpm build: success
+- LSP diagnostics: all changed files clean
+
+### 阻断/下次
+- 无阻断。P4.2 shotlist-sync 全部 4 个 task 完成。

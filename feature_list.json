@@ -777,10 +777,10 @@
       "dependencies": [
         "f-script-editor"
       ],
-      "status": "active",
+      "status": "passing",
       "domain": "fullstack",
       "verification": "cd backend && uv run pytest tests/test_orchestration/ -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
-      "evidence": "",
+      "evidence": "2026-06-17: Task 1-4 complete. GET/POST sync API, ShotlistPanel component, ProjectPage split-layout integration with bidirectional highlighting (script↔shot). types OK, tsc clean, 576 vitest pass, build success.",
       "notes": "Phase P4.2 — 续 P4.1。耗时 2-3 天。roadmap: .sisyphus/plans/openanimo-p1-roadmap.md"
     },
     {

@@ -59,6 +59,7 @@ interface EditorState {
 	projectVideoUrl: string | null;
 	projectStatus: string | null;
 	projectUpdatedAt: number | null;
+	shotSyncCompleted: number | null;
 	projectTitle: string | null;
 	projectSummary: string | null;
 	projectStoryOutline: StoryOutline | null;
@@ -100,6 +101,7 @@ interface EditorState {
 	setProjectVideoUrl: (url: string | null) => void;
 	setProjectStatus: (status: string | null) => void;
 	setProjectUpdatedAt: (timestamp: number) => void;
+	setShotSyncCompleted: (timestamp: number) => void;
 	setProjectTitle: (title: string | null) => void;
 	setProjectSummary: (summary: string | null) => void;
 	setProjectStoryOutline: (outline: StoryOutline | null) => void;
@@ -172,6 +174,7 @@ const initialState = {
 	projectVideoUrl: null,
 	projectStatus: null,
 	projectUpdatedAt: null,
+	shotSyncCompleted: null,
 	projectTitle: null,
 	projectSummary: null,
 	projectStoryOutline: null,
@@ -238,6 +241,8 @@ export const useEditorStore = create<EditorState>()(
 				set({ projectStatus: status }, false, "setProjectStatus"),
 			setProjectUpdatedAt: (timestamp) =>
 				set({ projectUpdatedAt: timestamp }, false, "setProjectUpdatedAt"),
+			setShotSyncCompleted: (timestamp) =>
+				set({ shotSyncCompleted: timestamp }, false, "setShotSyncCompleted"),
 			setProjectTitle: (title) =>
 				set({ projectTitle: title }, false, "setProjectTitle"),
 			setProjectSummary: (summary) =>

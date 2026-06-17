@@ -177,6 +177,15 @@
     pointer-events: none;
     z-index: 0;
   }
+
+  /* Script editor paragraph highlight */
+  .cm-highlighted-paragraph {
+    background: oklch(var(--a) / 0.15) !important;
+  }
+
+  .cm-highlighted-paragraph .cm-line {
+    background: oklch(var(--a) / 0.15) !important;
+  }
 }
 
 @layer utilities {

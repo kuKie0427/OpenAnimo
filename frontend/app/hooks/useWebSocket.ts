@@ -19,6 +19,7 @@ import type {
 	RunProgressEventData,
 	RunStartedEventData,
 	Shot,
+	ShotSyncProgressEventData,
 	WsEvent,
 } from "~/types";
 import { toast } from "~/utils/toast";
@@ -721,6 +722,14 @@ export function applyWsEvent(
 				content: `一致性评估完成：综合评分 ${evalData.overall_score.toFixed(1)}/100，${evalData.character_count} 个角色已评估`,
 				timestamp: new Date().toISOString(),
 			});
+			break;
+		}
+
+		case "shot_sync_progress": {
+			const syncData = event.data as unknown as ShotSyncProgressEventData;
+			if (syncData.status === "completed") {
+				store.setShotSyncCompleted(Date.now());
+			}
 			break;
 		}
 
