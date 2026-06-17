@@ -18,7 +18,7 @@ import uuid
 from pathlib import Path
 
 from app.config import Settings
-from app.models.project import Character
+from app.models.project import Character, Shot
 from app.services.tts_voices import get_voice_for_character
 
 logger = logging.getLogger(__name__)
@@ -210,13 +210,16 @@ class AudioService:
             )
             return None
 
+        if not self.settings.tts_enabled:
+            return None
+
         if not text or not text.strip():
             return None
 
         # Map voice_profile to Edge TTS parameters
         if voice_profile is not None:
             speed = voice_profile.get("speed", 1.0)
-            rate = f"{int((speed - 1.0) * 100):+d}%"
+            rate = f"{round((speed - 1.0) * 100):+d}%"
             pitch_val = voice_profile.get("pitch", 0)
             pitch = f"{pitch_val:+d}Hz"
         else:
@@ -243,7 +246,7 @@ class AudioService:
 
     async def generate_tracks(
         self,
-        shot,
+        shot: Shot,
         characters: list[Character],
     ) -> dict[str, str | None]:
         """Generate all audio tracks for a shot: dialogue, narrator, and SFX.
@@ -275,7 +278,7 @@ class AudioService:
             except Exception:  # noqa: BLE001
                 logger.warning(
                     "Failed to generate dialogue track for shot (order=%s)",
-                    getattr(shot, "order", "?"), exc_info=True,
+                    shot.order, exc_info=True,
                 )
         logger.info("Dialogue track result: %s", results["dialogue"])
 
@@ -289,7 +292,7 @@ class AudioService:
             except Exception:  # noqa: BLE001
                 logger.warning(
                     "Failed to generate narrator track for shot (order=%s)",
-                    getattr(shot, "order", "?"), exc_info=True,
+                    shot.order, exc_info=True,
                 )
         logger.info("Narrator track result: %s", results["narrator"])
 
@@ -303,7 +306,7 @@ class AudioService:
             except Exception:  # noqa: BLE001
                 logger.warning(
                     "Failed to generate sfx track for shot (order=%s)",
-                    getattr(shot, "order", "?"), exc_info=True,
+                    shot.order, exc_info=True,
                 )
         logger.info("SFX track result: %s", results["sfx"])
 

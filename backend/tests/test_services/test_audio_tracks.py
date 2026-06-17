@@ -115,7 +115,7 @@ async def test_generate_track_speed_mapping(test_settings):
             "dialogue", "你好", voice_profile={"speed": 0.8},
         )
         mock_comm_class.assert_called_with(
-            "你好", "zh-CN-XiaoxiaoNeural", rate="-19%", pitch="+0Hz",
+            "你好", "zh-CN-XiaoxiaoNeural", rate="-20%", pitch="+0Hz",
         )
 
         await service.generate_track(
