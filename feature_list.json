@@ -710,9 +710,9 @@
     {
       "id": "f-voice-tracks-mixer",
       "name": "P3.2 — 多角色配音·分轨混音 (FFmpeg 3 轨混音器)",
-      "description": "FFmpeg 3 轨混音器：dialogue / narrator / SFX 三轨独立音量 + 渐入渐出 + 静音段填充。导出 wavpack 分轨 zip（PR 后期可单独调轨）。",
+      "description": "FFmpeg 3 轨混音器（每轨独立音量 + 渐入渐出） + 导出 wavpack 分轨 zip（PR 后期可调）。",
       "dependencies": ["f-voice-tracks-gen"],
-      "status": "not_started",
+      "status": "active",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/test_services/test_audio_mixer.py -q && uv run ruff check app tests",
       "evidence": "",

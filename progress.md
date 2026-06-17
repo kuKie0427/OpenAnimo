@@ -1741,6 +1741,37 @@
 - /handoff 启动新会话
 - 新会话: 读 `openanimo-p3-voice-tracks-gen.md` → 验证前置 → 执行 7 任务 → Gate 通过 → 标 passing → /handoff 给 P3.2
 
+## 2026-06-17 — Session: p3.2-voice-mixer plan
+
+### 做了什么
+- **P3.1 review-fix 5 路 re-review 全部 PASS** (commit 78176b0 修复 FP truncation + typed shot + dead getattr + tts_enabled)
+- **P3.1 完整收官**: f-voice-tracks-gen 正式 passing, 0 regression
+- **生成 P3.2 phase plan**: `openanimo-p3-voice-mixer.md` (138 行, 100-150 范围内)
+- **Mark active**: `f-voice-tracks-mixer` 状态从 not_started → active
+
+### P3.2 设计决策
+- **AudioService.mix_tracks()**: 新方法, 4 音频输入 (dialogue/narrator/sfx/bgm) + 视频原始音频 = 5 路 amix, 每轨独立音量, 渐入渐出 (afade=t=in:st=0:d=0.3)
+- **AudioService.export_tracks_zip()**: 新方法, 将 3 轨音频导出为 zip (供 PR 后期精修), 用 Python 标准库 zipfile
+- **compose.py 集成**: 替换 `mix_audio_into_video` → `mix_tracks`, 复用现有 BGM 匹配逻辑
+- **容错**: 任一轨文件不存在 → 跳过该轨; FFmpeg 失败 → 返回原 video_path
+- **不改**: `mix_audio_into_video` / `_ffmpeg_mix` / `match_bgm` / `mix_bgm_into_video` (保留向后兼容)
+- **不引入新依赖**: 用 Python 标准库 zipfile
+- **不实现并发**: 先 sequential
+- **预计 4-6 文件改动, 1.5-2 天**
+
+### 改动文件 (P3.2 预计, 实施时)
+- `backend/app/services/audio_service.py` (加 mix_tracks + export_tracks_zip)
+- `backend/app/agents/compose.py` (替换 mix_audio_into_video → mix_tracks)
+- `backend/tests/test_services/test_audio_mixer.py` (新)
+- `feature_list.json` + `progress.md`
+
+### 阻断
+- 无
+
+### 下次
+- /handoff 启动新会话
+- 新会话: 读 `openanimo-p3-voice-mixer.md` → 验证前置 → 执行 5 任务 → Gate 通过 → 标 passing → /handoff 给 P4.1
+
 
 
 
