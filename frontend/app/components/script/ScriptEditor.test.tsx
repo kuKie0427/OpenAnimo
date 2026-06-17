@@ -5,21 +5,21 @@ import { ScriptEditor } from './ScriptEditor';
 // Mock CodeMirror modules to avoid browser API requirements (jsdom does not
 // provide the full DOM environment CodeMirror needs).
 vi.mock('@codemirror/view', () => {
-  const EditorView = vi.fn(function () {
-    this.destroy = vi.fn();
-    this.dispatch = vi.fn();
-    this.focus = vi.fn();
-    this.state = {
+  class MockEditorView {
+    destroy = vi.fn();
+    dispatch = vi.fn();
+    focus = vi.fn();
+    state = {
       doc: { toString: () => '' },
       selection: { main: { from: 0, to: 0 } },
       lineAt: vi.fn(() => ({ from: 0, text: '' })),
     };
-  });
-  EditorView.updateListener = { of: vi.fn(() => ({})) };
-  EditorView.lineWrapping = Symbol('lineWrapping');
-  EditorView.editable = { of: vi.fn(() => ({})) };
+    static updateListener = { of: vi.fn(() => ({})) };
+    static lineWrapping = Symbol('lineWrapping');
+    static editable = { of: vi.fn(() => ({})) };
+  }
   return {
-    EditorView,
+    EditorView: MockEditorView,
     keymap: { of: vi.fn(() => ({})) },
     lineNumbers: vi.fn(() => ({})),
     drawSelection: vi.fn(() => ({})),
