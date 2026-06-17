@@ -12,9 +12,11 @@ FFmpeg 混流将音频叠加到视频中。
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import subprocess
 import uuid
+import zipfile
 from pathlib import Path
 
 from app.config import Settings
@@ -543,6 +545,275 @@ class AudioService:
 
         logger.info("Audio mixed successfully: %s", output_path)
         return output_path
+
+    async def mix_tracks(
+        self,
+        video_path: str,
+        dialogue_path: str | None = None,
+        narrator_path: str | None = None,
+        sfx_path: str | None = None,
+        bgm_path: str | None = None,
+        volumes: dict[str, float] | None = None,
+    ) -> str:
+        """Mix multiple audio tracks into a video using FFmpeg amix filter.
+
+        Supports up to 5 audio inputs: video original audio + 4 external tracks
+        (dialogue, narrator, SFX, BGM) with per-track volume control and fade-in
+        for speech tracks. Missing tracks are gracefully skipped.
+
+        Args:
+            video_path: Video file path (/static/videos/xxx.mp4 or local path)
+            dialogue_path: Dialogue audio file path
+            narrator_path: Narrator audio file path
+            sfx_path: SFX audio file path
+            bgm_path: BGM audio file path
+            volumes: Per-track volume overrides (0-1). Missing keys use settings defaults.
+
+        Returns:
+            New video path (/static/videos/xxx.mp4), or original video_path on failure
+        """
+        from app.services.file_cleaner import get_local_path
+
+        # 1. If no tracks provided, return immediately
+        tracks: dict[str, str | None] = {
+            "dialogue": dialogue_path,
+            "narrator": narrator_path,
+            "sfx": sfx_path,
+            "bgm": bgm_path,
+        }
+        if not any(tracks.values()):
+            return video_path
+
+        # 2. Resolve video local path
+        video_local = get_local_path(video_path)
+        if video_local is None:
+            logger.warning(
+                "Cannot mix tracks: video is not a local file (%s)", video_path,
+            )
+            return video_path
+
+        # 3. Resolve and verify track local paths; skip missing
+        track_locals: dict[str, Path | None] = {}
+        for name, path in tracks.items():
+            if path:
+                local = get_local_path(path)
+                if local and local.exists():
+                    track_locals[name] = local
+                else:
+                    logger.warning(
+                        "%s track not found: %s, skipping", name, path,
+                    )
+                    track_locals[name] = None
+            else:
+                track_locals[name] = None
+
+        if not any(track_locals.values()):
+            return video_path
+
+        # 4. Build output path
+        output_filename = f"mix_{uuid.uuid4().hex[:8]}.mp4"
+        output_path = AUDIO_OUTPUT_DIR.parent / "videos" / output_filename
+        (AUDIO_OUTPUT_DIR.parent / "videos").mkdir(parents=True, exist_ok=True)
+
+        # 5. Resolve volumes (use settings defaults for missing keys)
+        default_volumes: dict[str, float] = {
+            "dialogue": self.settings.tts_volume,
+            "narrator": self.settings.tts_volume,
+            "sfx": self.settings.tts_volume,
+            "bgm": self.settings.bgm_volume,
+        }
+        vol: dict[str, float] = {
+            k: (volumes or {}).get(k, default_volumes[k]) for k in default_volumes
+        }
+
+        # 6. Build FFmpeg inputs and filter graph
+        track_order = ["dialogue", "narrator", "sfx", "bgm"]
+        inputs: list[str] = ["-i", str(video_local)]
+
+        idx = 1  # next input index (0 = video)
+        track_indices: dict[str, int] = {}
+        for name in track_order:
+            if track_locals.get(name):
+                inputs.extend(["-i", str(track_locals[name])])
+                track_indices[name] = idx
+                idx += 1
+
+        filter_lines: list[str] = []
+        mix_labels: list[str] = []
+
+        # Video original audio
+        filter_lines.append("[0:a]aresample=44100,pan=stereo|c0=c0|c1=c1[vorig]")
+        mix_labels.append("[vorig]")
+
+        fade_tracks = {"dialogue", "narrator"}
+
+        for name in track_order:
+            if name in track_indices:
+                i = track_indices[name]
+                chain = (
+                    f"[{i}:a]aresample=44100,pan=stereo|c0=c0|c1=c1,"
+                    f"volume={vol[name]}"
+                )
+                if name in fade_tracks:
+                    chain += ",afade=t=in:st=0:d=0.3"
+                chain += f"[{name[:4]}]"
+                filter_lines.append(chain)
+                mix_labels.append(f"[{name[:4]}]")
+
+        n_inputs = len(mix_labels)
+        filter_lines.append(
+            f"{''.join(mix_labels)}amix=inputs={n_inputs}:"
+            f"duration=longest:dropout_transition=0[aout]"
+        )
+        filter_chain = ";".join(filter_lines)
+
+        cmd = [
+            "ffmpeg",
+            "-y",
+            *inputs,
+            "-filter_complex", filter_chain,
+            "-map", "0:v",
+            "-map", "[aout]",
+            "-c:v", "copy",
+            "-c:a", "aac",
+            "-b:a", "128k",
+            "-shortest",
+            "-movflags", "+faststart",
+            str(output_path),
+        ]
+
+        logger.info(
+            "Running FFmpeg multi-track mix (%d audio inputs)", n_inputs,
+        )
+
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                error_msg = stderr.decode(errors="replace")
+                logger.warning(
+                    "FFmpeg multi-track mix failed (rc=%d): %s",
+                    process.returncode, error_msg[:300],
+                )
+                return video_path
+
+            logger.info("Multi-track mix successful: %s", output_path)
+            return f"/static/videos/{output_filename}"
+        except OSError:
+            logger.warning(
+                "FFmpeg multi-track mix failed, keeping original video",
+                exc_info=True,
+            )
+            return video_path
+
+    async def export_tracks_zip(
+        self,
+        tracks: dict[str, str | None],
+        project_id: int,
+        run_id: int | None = None,
+    ) -> str | None:
+        """Export individual audio tracks as a downloadable zip file with metadata.json.
+
+        Collects non-None track URLs, reads their local file content, and packages
+        them into a zip archive alongside a metadata.json manifest. Failed or missing
+        tracks are skipped gracefully without blocking the export.
+
+        Args:
+            tracks: Dict mapping track types ("dialogue", "narrator", "sfx") to
+                    audio URLs or None (e.g. from generate_tracks() output).
+            project_id: Project ID used in filename and metadata.
+            run_id: Optional run ID used in filename and metadata.
+
+        Returns:
+            Zip download URL (e.g. /static/exports/tracks_42_1.zip), or None if
+            no valid tracks could be exported.
+        """
+        from app.services.file_cleaner import get_local_path
+        from datetime import datetime
+
+        valid_tracks = {k: v for k, v in tracks.items() if v is not None}
+        if not valid_tracks:
+            logger.debug("export_tracks_zip: no non-None tracks provided")
+            return None
+
+        track_files: dict[str, Path] = {}
+        for name, url in valid_tracks.items():
+            local_path = get_local_path(url)
+            if local_path and local_path.exists():
+                track_files[name] = local_path
+            else:
+                logger.warning(
+                    "export_tracks_zip: %s track not found or file missing: %s",
+                    name, url,
+                )
+
+        if not track_files:
+            return None
+
+        STATIC_DIR = Path(__file__).parent.parent / "static"
+        exports_dir = STATIC_DIR / "exports"
+        exports_dir.mkdir(parents=True, exist_ok=True)
+
+        if run_id is not None:
+            zip_name = f"tracks_{project_id}_{run_id}.zip"
+        else:
+            zip_name = f"tracks_{project_id}.zip"
+        zip_path = exports_dir / zip_name
+
+        metadata_tracks: dict[str, dict[str, str | int]] = {}
+
+        try:
+            with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+                for name, file_path in track_files.items():
+                    try:
+                        file_data = file_path.read_bytes()
+                        file_size = len(file_data)
+                        archive_name = f"{name}{file_path.suffix}"
+                        zf.writestr(archive_name, file_data)
+                        metadata_tracks[name] = {
+                            "filename": archive_name,
+                            "size_bytes": file_size,
+                        }
+                        logger.info(
+                            "export_tracks_zip: added %s (%d bytes)",
+                            archive_name, file_size,
+                        )
+                    except OSError:
+                        logger.warning(
+                            "export_tracks_zip: failed to read %s, skipping",
+                            file_path, exc_info=True,
+                        )
+
+                if not metadata_tracks:
+                    zip_path.unlink(missing_ok=True)
+                    return None
+
+                metadata = {
+                    "project_id": project_id,
+                    "run_id": run_id,
+                    "tracks": metadata_tracks,
+                    "created_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                }
+                zf.writestr(
+                    "metadata.json",
+                    json.dumps(metadata, indent=2, ensure_ascii=False),
+                )
+                logger.info(
+                    "export_tracks_zip: metadata.json written with %d tracks",
+                    len(metadata_tracks),
+                )
+
+        except (OSError, zipfile.BadZipFile) as e:
+            logger.warning("export_tracks_zip: failed to create zip: %s", e)
+            zip_path.unlink(missing_ok=True)
+            return None
+
+        return f"/static/exports/{zip_name}"
 
     async def mix_bgm_into_video(
         self,

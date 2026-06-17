@@ -335,6 +335,8 @@ class ComposeAgent(BaseAgent):
                 )
 
                 tts_url: str | None = None
+                narrator_url: str | None = None
+                sfx_url: str | None = None
                 bgm_type: str | None = None
                 bgm_path: str | None = None
 
@@ -366,11 +368,13 @@ class ComposeAgent(BaseAgent):
                         bgm_type = bgm_path.rsplit("/", 1)[-1].replace(".mp3", "")
                         shot.bgm_type = bgm_type
 
-                # 3. 混入视频（如果有 TTS 或 BGM）
-                if tts_url or bgm_path:
-                    new_video_url = await audio_service.mix_audio_into_video(
+                # 3. 混入视频（多轨混音 + BGM）
+                if tts_url or narrator_url or sfx_url or bgm_path:
+                    new_video_url = await audio_service.mix_tracks(
                         video_path=shot.video_url,
-                        tts_path=tts_url,
+                        dialogue_path=tts_url,
+                        narrator_path=narrator_url,
+                        sfx_path=sfx_url,
                         bgm_path=bgm_path,
                     )
                     if new_video_url != shot.video_url:

@@ -1,5 +1,45 @@
 # Progress Log
 
+## 2026-06-17 — Session: openanimo-p3-voice-mixer — Phase P3.2 多角色配音·分轨混音
+
+### 做了什么
+- **Task 1**: AudioService.mix_tracks() — FFmpeg 5-input amix (dialogue/narrator/sfx/bgm + video original audio) with per-track volume control, fade-in for speech tracks, graceful missing-file tolerance
+- **Task 2**: AudioService.export_tracks_zip() — zip export of tracks with metadata.json (project_id, run_id, per-track file sizes), Python stdlib zipfile only
+- **Task 3**: compose.py _add_audio_to_videos() — replaced mix_audio_into_video with mix_tracks, passes dialogue/narrator/sfx/bgm paths
+- **Task 4**: 6 mixer tests (all_4_inputs/partial_inputs/no_inputs/missing_file + export_tracks_zip/zip_partial)
+- **Task 5**: feature_list.json f-voice-tracks-mixer → passing, progress.md updated
+
+### 改了什么文件
+- `backend/app/services/audio_service.py` (mod, +271行) — mix_tracks() + export_tracks_zip() + json/zipfile imports
+- `backend/app/agents/compose.py` (mod, +14/-4) — _add_audio_to_videos uses mix_tracks, init narrator_url/sfx_url
+- `backend/tests/test_services/test_audio_mixer.py` (new, 266行) — 6 mixer tests
+- `feature_list.json` (mod) — f-voice-tracks-mixer = passing
+- `progress.md` (mod) — 本条目
+
+### 当前状态
+- f-voice-tracks-mixer = passing ✅
+- **Phase P3.2 多角色配音·分轨混音完成**
+- Gate: ruff 0, pytest 1303/1303 pass (6 new mixer tests), pyright 0 errors
+
+### 决策
+- mix_tracks 放在 mix_audio_into_video 和 mix_bgm_into_video 之间（保留向后兼容）
+- Fade-in (afade=t=in:st=0:d=0.3) 仅用于 dialogue/narrator 音轨（SFX/BGM 立即播放）
+- export_tracks_zip 使用 Python stdlib zipfile（无新依赖）
+- narrator_url/sfx_url 初始化为 None 避免 pyright unbound 警告
+- 输出 zip 使用 /static/exports/tracks_{project_id}_{run_id}.zip 命名
+
+### 阻断
+- 无
+
+### 验证结果
+- backend: 1303 tests pass (6 new mixer + 1297 existing), 2 skipped
+- ruff: 0 errors on all changed files
+- pyright: 0 errors
+- 6 mixer tests: all_4_inputs/partial_inputs/no_inputs/missing_file/zip_3tracks/zip_partial 全过
+
+### 下次
+- 无（P3.2 完成，下一 Phase 需新会话）
+
 ## 2026-06-17 — Session: openanimo-p3-voice-tracks-gen — Phase P3.1 多角色配音·分轨生成
 
 ### 做了什么
