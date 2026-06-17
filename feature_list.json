@@ -779,8 +779,8 @@
       ],
       "status": "passing",
       "domain": "fullstack",
-      "verification": "cd backend && uv run pytest tests/test_orchestration/ -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
-      "evidence": "2026-06-17: Task 1-4 complete. GET/POST sync API, ShotlistPanel component, ProjectPage split-layout integration with bidirectional highlighting (script↔shot). types OK, tsc clean, 576 vitest pass, build success.",
+      "verification": "cd backend && uv run pytest tests/test_api/test_script_sync.py -q && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
+      "evidence": "2026-06-17: Task 1-4 complete. GET/POST sync API (AdminDep auth, BackgroundTasks, PlanAgent.run_shots incremental), ShotlistPanel component (thumbnails + order + description + sync button + empty/loading states), ProjectPage split-layout integration with bidirectional highlighting (script<->shot). Code Quality fix: except Exception handler in _run_shot_sync sets run.status=failed. 10 new tests (4 sync API + 6 ShotlistPanel), 576 vitest total. ruff 0, tsc clean, pnpm build OK.",
       "notes": "Phase P4.2 — 续 P4.1。耗时 2-3 天。roadmap: .sisyphus/plans/openanimo-p1-roadmap.md"
     },
     {

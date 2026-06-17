@@ -175,9 +175,11 @@ async def e2e_stub_services(monkeypatch, test_db_engine_sessionmaker):
 
     # 0a. Also patch modules with module-level 'from app.db.session import async_session_maker' bindings
     import app.api.v1.routes.generation as gen_mod
+    import app.api.v1.routes.script as script_mod
     import app.services.agent_runner as agent_runner_mod
 
     monkeypatch.setattr(gen_mod, "async_session_maker", session_maker)
+    monkeypatch.setattr(script_mod, "async_session_maker", session_maker)
     monkeypatch.setattr(agent_runner_mod, "async_session_maker", session_maker)
 
     # 1. Text factory → FakeTextService (stage-aware fake responses)

@@ -6,7 +6,7 @@ import asyncio
 import re
 
 from fastapi import APIRouter, BackgroundTasks
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -61,7 +61,7 @@ class SyncMapResponse(BaseModel):
 
 class SyncParagraphRequest(BaseModel):
     paragraph_index: int
-    paragraph_text: str
+    paragraph_text: str = Field(max_length=100_000)
 
 
 class SyncParagraphResponse(BaseModel):
@@ -146,6 +146,15 @@ async def _run_shot_sync(
                 if run_obj and run_obj.status not in ("cancelled", "failed", "succeeded"):
                     run_obj.status = "cancelled"
                     await cancel_session.commit()
+        raise
+    except Exception:
+        if run_id is not None:
+            async with async_session_maker() as err_session:
+                run_obj = await err_session.get(AgentRun, run_id)
+                if run_obj and run_obj.status not in ("failed", "succeeded"):
+                    run_obj.status = "failed"
+                    run_obj.updated_at = utcnow()
+                    await err_session.commit()
         raise
     finally:
         task_manager.remove(project_id)
