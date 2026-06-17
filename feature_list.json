@@ -486,7 +486,9 @@
       "status": "passing",
       "evidence": "2026-06-08: shots_approval_node merged char+shot summaries, shot_images_approval_node merged char+shot image summaries, helper _build_merged_entity_summaries extracted. Frontend EntityApprovalCard approved entities show green badge (readonly). 3 backend + 3 frontend new tests. ruff 0, 49 approval tests pass, tsc clean, vitest 9/9, build OK.",
       "domain": "fullstack",
-      "dependencies": ["f-entity-approval"],
+      "dependencies": [
+        "f-entity-approval"
+      ],
       "verification": "cd backend && uv run pytest tests/test_orchestration/ -k 'approval or entity' -q && cd ../frontend && pnpm exec vitest run app/components/chat/EntityApprovalCard",
       "description": "shots_approval 展示角色+分镜混合实体列表，shot_images_approval 展示角色图片+分镜图片混合列表。已审批实体以只读态展示（绿色 badge，禁用 toggle）。零图拓扑变更。"
     },
@@ -503,7 +505,9 @@
       "id": "f-ui-layout-fix-p1",
       "name": "UI 排版修复 P1 — 图片/视频容器",
       "description": "修复画布形状图片容器无高度 + 视频元素无 aspect-ratio",
-      "dependencies": ["f-ui-layout-fix-p0"],
+      "dependencies": [
+        "f-ui-layout-fix-p0"
+      ],
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm build"
@@ -512,7 +516,9 @@
       "id": "f-ui-layout-fix-p2",
       "name": "UI 排版修复 P2 — 表格溢出",
       "description": "修复画布形状表格列硬编码宽度 + 无文本截断处理",
-      "dependencies": ["f-ui-layout-fix-p1"],
+      "dependencies": [
+        "f-ui-layout-fix-p1"
+      ],
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm build"
@@ -521,7 +527,9 @@
       "id": "f-ui-layout-fix-p3",
       "name": "UI 排版修复 P3 — 响应式布局",
       "description": "修复 ChatDrawer 固定宽度 + flex-1 缺少 min-w-0 + 抽屉响应式",
-      "dependencies": ["f-ui-layout-fix-p2"],
+      "dependencies": [
+        "f-ui-layout-fix-p2"
+      ],
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm build"
@@ -541,7 +549,9 @@
       "id": "f-daw-ui-p1",
       "name": "DAW UI P1 — 布局架构重构",
       "description": "创建 AppShell 组件，统一 Drawer 系统",
-      "dependencies": ["f-daw-ui-p0"],
+      "dependencies": [
+        "f-daw-ui-p0"
+      ],
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/layout/ && pnpm build",
@@ -551,7 +561,9 @@
       "id": "f-daw-ui-p2",
       "name": "DAW UI P2 — DAW 核心组件",
       "description": "创建 StageTabs/TrackList/DetailPanel/TimelineBar/ViewSwitcher 组件",
-      "dependencies": ["f-daw-ui-p1"],
+      "dependencies": [
+        "f-daw-ui-p1"
+      ],
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/daw/ && pnpm build",
@@ -561,7 +573,9 @@
       "id": "f-canvas-hybrid-p5",
       "name": "Canvas Hybrid P5 — List 视图",
       "description": "列表式管理视图，支持批量操作和搜索筛选",
-      "dependencies": ["f-canvas-hybrid-p3"],
+      "dependencies": [
+        "f-canvas-hybrid-p3"
+      ],
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/list/ && pnpm build",
@@ -571,7 +585,9 @@
       "id": "f-canvas-hybrid-p3",
       "name": "Canvas Hybrid P3 — 画布优化",
       "description": "优化画布体验：导航、搜索、筛选、快捷键",
-      "dependencies": ["f-daw-ui-p2"],
+      "dependencies": [
+        "f-daw-ui-p2"
+      ],
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/canvas/ && pnpm build",
@@ -581,7 +597,9 @@
       "id": "f-canvas-hybrid-p4",
       "name": "Canvas Hybrid P4 — Timeline 视图",
       "description": "从画布数据派生 Timeline 视图，支持动画预览",
-      "dependencies": ["f-canvas-hybrid-p3"],
+      "dependencies": [
+        "f-canvas-hybrid-p3"
+      ],
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run app/components/timeline/ && pnpm build",
@@ -591,7 +609,10 @@
       "id": "f-canvas-hybrid-p6",
       "name": "Canvas Hybrid P6 — 视图集成与测试",
       "description": "三种视图无缝切换，E2E 测试通过",
-      "dependencies": ["f-canvas-hybrid-p4", "f-canvas-hybrid-p5"],
+      "dependencies": [
+        "f-canvas-hybrid-p4",
+        "f-canvas-hybrid-p5"
+      ],
       "status": "passing",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm exec vitest run && pnpm exec playwright test tests/e2e/canvas-hybrid.spec.ts && pnpm build",
@@ -601,7 +622,9 @@
       "id": "f-cost-dashboard",
       "name": "API 成本仪表板 (Phase 0a)",
       "description": "LLM token usage 回填、AgentTrace model_name 字段、pricing 配置、成本分组 API、前端 MetricsPage",
-      "dependencies": ["f-harness-p3"],
+      "dependencies": [
+        "f-harness-p3"
+      ],
       "status": "passing",
       "domain": "fullstack",
       "verification": "cd backend && uv run pytest tests/test_services/test_pricing.py tests/test_api/test_metrics.py -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm build",
@@ -612,7 +635,9 @@
       "id": "f-cost-dashboard-fix-p1",
       "name": "API 成本仪表板修复 P1 — 数据管线修复 (CRITICAL)",
       "description": "call_llm 回写 token 到 AgentTrace + pricing_overrides env var 接线。修复生产环境 API 成本一直显示 $0.00 的问题。",
-      "dependencies": ["f-cost-dashboard"],
+      "dependencies": [
+        "f-cost-dashboard"
+      ],
       "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/ -q --ignore=tests/e2e --ignore=tests/integration && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm build && pnpm exec vitest run",
@@ -623,7 +648,9 @@
       "id": "f-cost-dashboard-fix-p2",
       "name": "API 成本仪表板修复 P2 — Coverage 修复",
       "description": "补全所有 LLM 调用的 trace_step 覆盖 + trace 上 model_name 准确 + images_generated 写回。修复 critic.py 走 text_service.generate() 直调的问题，替换为 call_llm + trace_step。",
-      "dependencies": ["f-cost-dashboard-fix-p1"],
+      "dependencies": [
+        "f-cost-dashboard-fix-p1"
+      ],
       "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/ -q --ignore=tests/e2e --ignore=tests/integration && uv run ruff check app tests",
@@ -634,7 +661,9 @@
       "id": "f-cost-dashboard-fix-p3",
       "name": "API 成本仪表板修复 P3 — Polish 收尾",
       "description": "修剩余 4 个 issues: video_seconds 字段 + per-run cost 字段 + caplog 恢复 + MetricsPage 死 props 清理",
-      "dependencies": ["f-cost-dashboard-fix-p2"],
+      "dependencies": [
+        "f-cost-dashboard-fix-p2"
+      ],
       "status": "passing",
       "domain": "fullstack",
       "verification": "cd backend && uv run pytest tests/ -q --ignore=tests/e2e --ignore=tests/integration && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm build && pnpm test --run",
@@ -645,7 +674,9 @@
       "id": "f-subtitle-burnin",
       "name": "字幕烧入管线 — SRT 生成 + FFmpeg 硬字幕 (Phase 0b)",
       "description": "将 Shot.dialogue 烧入最终视频为硬字幕：SRT 生成器、FFmpeg overlay 烧入、compose.py 流水线衔接、API 端点（POST /burn + GET /srt）、前端 <track> 播放预览",
-      "dependencies": ["f-pipeline-core"],
+      "dependencies": [
+        "f-pipeline-core"
+      ],
       "status": "passing",
       "domain": "fullstack",
       "verification": "cd backend && uv run pytest tests/test_services/test_subtitle_service.py tests/test_orchestration/test_subtitle_burnin.py -q && uv run ruff check app tests && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
@@ -656,7 +687,9 @@
       "id": "f-subtitle-burnin-bugfix",
       "name": "字幕烧入 CRITICAL bug 修复 — SRT 文件名并发冲突",
       "description": "修复 Code Quality review 发现的 CRITICAL bug：compose.py:440 的 `getattr(ctx, 'run_id', None) or ctx.project_id` 因 AgentContext 实际字段是 `run: AgentRun`（不是 `run_id`）永远 fallback 到 ctx.project_id，导致 SRT 文件名恒退化为 {project_id}_{project_id}.srt，并发 run 必冲突。最小修复：1 行 fix + 2 个 regression test。",
-      "dependencies": ["f-subtitle-burnin"],
+      "dependencies": [
+        "f-subtitle-burnin"
+      ],
       "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/test_orchestration/test_subtitle_burnin.py -v && uv run pyright app/agents/compose.py && uv run ruff check app tests",
@@ -667,7 +700,9 @@
       "id": "f-vertical-export",
       "name": "P1.1 — 9:16 竖屏视频导出 (短视频分发命门)",
       "description": "ExportService 加 export_vertical_video() (9:16 H.264 + AAC，1080x1920，智能 reframe 或中心裁切) + Project.aspect_ratio 字段 + API /export/vertical + 前端下载按钮。短视频分发(抖音/B站/YouTube Shorts/TikTok) 的基础能力。",
-      "dependencies": ["f-subtitle-burnin-bugfix"],
+      "dependencies": [
+        "f-subtitle-burnin-bugfix"
+      ],
       "status": "passing",
       "domain": "fullstack",
       "verification": "cd backend && uv run pytest tests/test_services/test_export_vertical.py tests/test_api/test_export_vertical.py tests/test_models/test_project_aspect_ratio.py -q && uv run ruff check app tests && uv run pyright app/ && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
@@ -689,7 +724,9 @@
       "id": "f-multi-angle-character-select",
       "name": "P2.2 — 多角度角色库·分镜选图 (前端 picker + bible 集成)",
       "description": "分镜渲染时按 shot.angle + shot.emotion 从 CharacterAsset 选图（最近邻匹配）。前端 picker UI（4×4 网格 + 表情标签）。bible 注入资产 URL 到 prompt。",
-      "dependencies": ["f-multi-angle-character-data"],
+      "dependencies": [
+        "f-multi-angle-character-data"
+      ],
       "status": "passing",
       "domain": "fullstack",
       "verification": "cd backend && uv run pytest tests/test_agents/test_render.py tests/test_services/test_character_asset_service.py -q && uv run ruff check app/services/character_asset_service.py app/agents/render.py && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
@@ -711,18 +748,22 @@
       "id": "f-voice-tracks-mixer",
       "name": "P3.2 — 多角色配音·分轨混音 (FFmpeg 3 轨混音器)",
       "description": "FFmpeg 3 轨混音器（每轨独立音量 + 渐入渐出） + 导出 wavpack 分轨 zip（PR 后期可调）。",
-      "dependencies": ["f-voice-tracks-gen"],
+      "dependencies": [
+        "f-voice-tracks-gen"
+      ],
       "status": "passing",
       "domain": "backend",
       "verification": "cd backend && uv run pytest tests/test_services/test_audio_mixer.py -q && uv run ruff check app tests",
-      "evidence": "2026-06-17: AudioService.mix_tracks() FFmpeg 5-input amix + export_tracks_zip() zip export; compose.py mix_tracks integration; 6 mixer tests pass; ruff 0; pytest 1303/1303",
+      "evidence": "2026-06-17: AudioService.mix_tracks() FFmpeg 5-input amix (video audio + dialogue/narrator/sfx/bgm) with per-track volume + fade-in for speech tracks + graceful missing-file tolerance. AudioService.export_tracks_zip() zip export with metadata.json, Python stdlib zipfile only. compose.py mix_tracks integration replaces mix_audio_into_video. 7 mixer tests pass (all 4 inputs + partial + none/missing + custom volumes + export_tracks_zip full/partial). datetime.now(timezone.utc) fix for naive datetime. ruff 0, pytest 1304/1304, pyright 0.",
       "notes": "Phase P3.2 — 续 P3.1。耗时 1.5-2 天。roadmap: .sisyphus/plans/openanimo-p1-roadmap.md"
     },
     {
       "id": "f-script-editor",
       "name": "P4.1 — WYSIWYG·剧本编辑器 (CodeMirror 6 Markdown)",
       "description": "Project.script_markdown 字段 + Markdown 编辑器(CodeMirror 6 集成, 暗色主题) + 段落 ↔ shot 段落 ID 锚点系统(<!-- shot:7 --> 锚点 marker)。",
-      "dependencies": ["f-vertical-export"],
+      "dependencies": [
+        "f-vertical-export"
+      ],
       "status": "not_started",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
@@ -733,7 +774,9 @@
       "id": "f-shotlist-sync",
       "name": "P4.2 — WYSIWYG·分镜预览 + 双向同步",
       "description": "Shotlist 视图（右侧显示当前段落对应分镜缩略图）。双向 sync API: 改剧本段落 → 重 plan shots；改 shot → 标黄剧本段落。WebSocket 推送 sync 事件。",
-      "dependencies": ["f-script-editor"],
+      "dependencies": [
+        "f-script-editor"
+      ],
       "status": "not_started",
       "domain": "fullstack",
       "verification": "cd backend && uv run pytest tests/test_orchestration/ -q && cd ../frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
@@ -744,7 +787,10 @@
       "id": "f-bubble-render",
       "name": "P4.3 — WYSIWYG·漫剧对话气泡渲染 (替代 tldraw 阅读模式)",
       "description": "漫剧气泡渲染层: 对话框(角色头像 + 文字 + 气泡形状) + 动作指示(旁白) + 翻页导航(键盘/触屏)。作为 tldraw 画布的'阅读模式'补充。",
-      "dependencies": ["f-script-editor", "f-shotlist-sync"],
+      "dependencies": [
+        "f-script-editor",
+        "f-shotlist-sync"
+      ],
       "status": "not_started",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",

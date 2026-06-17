@@ -264,3 +264,38 @@ async def test_export_tracks_zip_partial(test_settings):
             expected_tracks=["dialogue.mp3", "sfx.mp3"],
             expected_count=2,
         )
+
+
+@pytest.mark.asyncio
+@patch("asyncio.create_subprocess_exec")
+@patch("app.services.file_cleaner.get_local_path")
+async def test_mix_tracks_custom_volumes(
+    mock_get_local_path, mock_subprocess_exec, test_settings,
+):
+    """Custom volumes override settings defaults."""
+    mock_path = MagicMock(spec=Path)
+    mock_path.exists.return_value = True
+    mock_path.__fspath__.return_value = "/tmp/fake/test.mp4"
+    mock_get_local_path.return_value = mock_path
+
+    mock_process = AsyncMock()
+    mock_process.returncode = 0
+    mock_process.communicate.return_value = (b"", b"")
+    mock_subprocess_exec.return_value = mock_process
+
+    service = AudioService(test_settings)
+    custom_volumes = {"dialogue": 0.8, "narrator": 0.6, "sfx": 0.5, "bgm": 0.1}
+    result = await service.mix_tracks(
+        video_path="/static/videos/test.mp4",
+        dialogue_path="/static/audio/dialogue.mp3",
+        bgm_path="/static/bgm/ambient.mp3",
+        volumes=custom_volumes,
+    )
+
+    assert result.startswith("/static/videos/")
+    cmd_str = " ".join(
+        str(a) for a in mock_subprocess_exec.call_args.args if isinstance(a, str)
+    )
+    # Custom volumes should appear in the filter
+    assert "volume=0.8" in cmd_str   # dialogue
+    assert "volume=0.1" in cmd_str   # bgm

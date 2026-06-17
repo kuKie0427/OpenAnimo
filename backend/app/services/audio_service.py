@@ -17,6 +17,7 @@ import logging
 import subprocess
 import uuid
 import zipfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 from app.config import Settings
@@ -655,6 +656,11 @@ class AudioService:
                     f"volume={vol[name]}"
                 )
                 if name in fade_tracks:
+                    # Fade-in only. Fade-out requires knowing track duration at
+                    # filter-construction time (afade=t=out:st=END:d=0.3), but
+                    # duration is determined by amix's duration=longest + -shortest
+                    # and is not available until runtime. Fade-out can be added
+                    # in a future pass by probing track duration with ffprobe first.
                     chain += ",afade=t=in:st=0:d=0.3"
                 chain += f"[{name[:4]}]"
                 filter_lines.append(chain)
@@ -734,7 +740,6 @@ class AudioService:
             no valid tracks could be exported.
         """
         from app.services.file_cleaner import get_local_path
-        from datetime import datetime
 
         valid_tracks = {k: v for k, v in tracks.items() if v is not None}
         if not valid_tracks:
@@ -797,7 +802,7 @@ class AudioService:
                     "project_id": project_id,
                     "run_id": run_id,
                     "tracks": metadata_tracks,
-                    "created_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                    "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 }
                 zf.writestr(
                     "metadata.json",
