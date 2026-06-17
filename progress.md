@@ -1812,6 +1812,46 @@
 - /handoff 启动新会话
 - 新会话: 读 `openanimo-p3-voice-mixer.md` → 验证前置 → 执行 5 任务 → Gate 通过 → 标 passing → /handoff 给 P4.1
 
+## 2026-06-17 — Session: p4.1-script-editor plan
+
+### 做了什么
+- **P3.2 review-fix 5 路 re-review 全部 PASS** (commit 48eda5d 修复 datetime UTC + volumes test + fade-out comment + evidence)
+- **P3.2 完整收官**: f-voice-tracks-mixer 正式 passing, 0 regression
+- **生成 P4.1 phase plan**: `openanimo-p4-script-editor.md` (132 行, 100-150 范围内)
+- **Mark active**: `f-script-editor` 状态从 not_started → active
+
+### P4.1 设计决策
+- **数据模型**: `Project.script_markdown: str` (Text, nullable) — 存储 markdown 格式剧本
+- **alembic 0026**: 加 script_markdown 列到 project 表
+- **CodeMirror 6**: 安装 `@codemirror/view`, `@codemirror/state`, `@codemirror/lang-markdown`, `@codemirror/theme-one-dark`, `@codemirror/language`
+- **ScriptEditor 组件**: 暗色主题 (与 Projection Room 设计系统一致), Markdown 语法高亮, 工具栏 (B/I/H1/H2/锚点), debounce 500ms 自动保存
+- **锚点系统**: `<!-- shot:{shot_id} -->` 格式标记分镜段落, 解析建立 shot_id ↔ paragraph_index 映射
+- **API**: `GET/PUT /api/v1/projects/{id}/script` + `GET /projects/{id}/script/anchors`
+- **集成**: StageTabs 加 "剧本" tab (与"分镜"/"角色"并列)
+- **不改**: story_outline / outline_approved 字段
+- **不实现**: WYSIWYG 渲染 (P4.3 再做); 双向自动同步 (P4.2 再做)
+- **不引入新 npm 依赖**: CodeMirror 6 足够
+- **预计 8-10 文件改动, 2-3 天**
+
+### 改动文件 (P4.1 预计, 实施时)
+- `backend/app/models/project.py` (加 script_markdown 字段)
+- `backend/alembic/versions/0026_add_script_markdown_to_project.py` (新)
+- `backend/app/api/v1/routes/projects.py` (加 GET/PUT /script + GET /script/anchors)
+- `frontend/package.json` (安装 CodeMirror 6)
+- `frontend/app/components/script/ScriptEditor.tsx` (新)
+- `frontend/app/components/script/index.ts` (新)
+- `frontend/app/pages/ProjectPage.tsx` (加 StageTabs "剧本" tab)
+- `backend/tests/test_api/test_project_script.py` (新)
+- `frontend/app/components/script/ScriptEditor.test.tsx` (新)
+- `feature_list.json` + `progress.md`
+
+### 阻断
+- 无
+
+### 下次
+- /handoff 启动新会话
+- 新会话: 读 `openanimo-p4-script-editor.md` → 验证前置 → 执行 7 任务 → Gate 通过 → 标 passing → /handoff 给 P4.2
+
 
 
 

@@ -764,7 +764,7 @@
       "dependencies": [
         "f-vertical-export"
       ],
-      "status": "not_started",
+      "status": "active",
       "domain": "frontend",
       "verification": "cd frontend && pnpm exec tsc --noEmit && pnpm test --run && pnpm build",
       "evidence": "",
