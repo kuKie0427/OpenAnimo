@@ -700,7 +700,14 @@ export function ProjectPage() {
 					<StageTabs
 						currentStage={storeCurrentStage}
 						stages={workflowStages}
-						onStageChange={(stage) => useEditorStore.getState().setCurrentStage(stage)}
+						onStageChange={(stage) => {
+							const stageDef = workflowStages.find((s) => s.key === stage);
+							if (stageDef?.status === "pending") {
+								toast.info({ title: "提示", message: "请从右侧对话面板发起生成" });
+								return;
+							}
+							useEditorStore.getState().setCurrentStage(stage);
+						}}
 					/>
 					<div className="flex items-center gap-2 pr-4">
 						<button

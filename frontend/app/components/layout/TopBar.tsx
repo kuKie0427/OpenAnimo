@@ -6,6 +6,7 @@ import {
 	MoonIcon,
 	SunIcon,
 	SparklesIcon,
+	ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -13,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { projectsApi } from "~/services/api";
 import { useThemeStore } from "~/stores/themeStore";
 import { useSettingsStore } from "~/stores/settingsStore";
+import { useChatPanelStore } from "~/stores/chatPanelStore";
 import type { Project } from "~/types";
 import { Button } from "~/components/ui/Button";
 import { SvgIcon } from "~/components/ui/SvgIcon";
@@ -116,6 +118,7 @@ export function TopBar({
 	const { theme, toggleTheme } = useThemeStore();
 	const isDark = theme.endsWith("dark");
 	const { openModal: openSettingsModal } = useSettingsStore();
+	const { isOpen: chatOpen, toggle: toggleChat } = useChatPanelStore();
 
 	const btnCls = "flex items-center whitespace-nowrap !px-1.5 !min-h-0 !h-6 gap-1 text-base-content/70 hover:text-base-content";
 	const iconCls = "w-3.5 h-3.5";
@@ -205,6 +208,17 @@ export function TopBar({
 						>
 							<SvgIcon name="clock-3" size={14} />
 							<span className="text-xs hidden sm:inline">历史</span>
+						</Button>
+						<Button
+							variant={chatOpen ? "primary" : "ghost"}
+							size="sm"
+							className={btnCls}
+							onClick={toggleChat}
+							title="对话面板"
+							data-testid="chat-toggle"
+						>
+							<ChatBubbleLeftRightIcon className={iconCls} />
+							<span className="text-xs hidden sm:inline">对话</span>
 						</Button>
 						<Button
 							variant="ghost"
