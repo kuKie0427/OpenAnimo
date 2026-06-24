@@ -1,0 +1,115 @@
+"""Universe / IP 宇宙相关 Schema。"""
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from pydantic import BaseModel, Field, model_validator
+
+
+class UniverseCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    description: str | None = None
+    world_setting: str | None = None
+    style_rules: str | None = None
+    cover_image_url: str | None = None
+
+
+class UniverseUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    world_setting: str | None = None
+    style_rules: str | None = None
+    cover_image_url: str | None = None
+    is_active: bool | None = None
+
+
+class UniverseProjectLinkCreate(BaseModel):
+    project_id: int
+    chapter_number: int | None = None
+    chapter_title: str | None = None
+    is_main_story: bool = True
+
+
+class UniverseProjectLinkRead(BaseModel):
+    id: int
+    universe_id: int
+    project_id: int
+    chapter_number: int | None = None
+    chapter_title: str | None = None
+    is_main_story: bool = True
+    created_at: datetime
+    # joined from project
+    project_title: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class SharedCharacterRead(BaseModel):
+    id: int
+    universe_id: int
+    name: str
+    description: str | None = None
+    visual_notes: str | None = None
+    canonical_image_url: str | None = None
+    reference_images: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _compute_has_embedding(cls, data: object) -> object:
+        if isinstance(data, dict):
+            emb = data.get("face_embedding")
+            data["has_embedding"] = bool(emb and isinstance(emb, str) and emb.strip())
+            data.pop("face_embedding", None)
+        return data
+
+    character_tags: str | None = None
+    source_project_id: int | None = None
+    source_character_id: int | None = None
+    version: int = 1
+    is_active: bool = True
+    created_at: datetime
+    updated_at: datetime
+
+    # computed helpers
+    reference_images_count: int = 0
+    has_embedding: bool = False
+
+    model_config = {"from_attributes": True}
+
+
+class SharedCharacterPromote(BaseModel):
+    """从项目角色提升为共享角色的请求"""
+    character_id: int  # 项目角色 ID
+
+
+class SharedCharacterManualCreate(BaseModel):
+    """手动创建共享角色"""
+    name: str = Field(min_length=1)
+    description: str | None = None
+    visual_notes: str | None = None
+    canonical_image_url: str | None = None
+    character_tags: str | None = None
+
+
+class UniverseRead(BaseModel):
+    id: int
+    name: str
+    description: str | None = None
+    world_setting: str | None = None
+    style_rules: str | None = None
+    cover_image_url: str | None = None
+    is_active: bool = True
+    created_at: datetime
+    updated_at: datetime
+    # computed
+    projects_count: int = 0
+    shared_characters_count: int = 0
+
+    model_config = {"from_attributes": True}
+
+
+class UniverseDetailRead(UniverseRead):
+    """Universe 详情，含章节列表和共享角色列表"""
+    chapters: list[UniverseProjectLinkRead] = Field(default_factory=list)
+    shared_characters: list[SharedCharacterRead] = Field(default_factory=list)

@@ -1,0 +1,17 @@
+.env
+.coverage
+.pytest_cache/
+.ruff_cache/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.log
+coverage.json
+coverage.xml
+htmlcov/
+tests/
+alembic.db
+backend.log

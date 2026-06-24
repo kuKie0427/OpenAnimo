@@ -1,0 +1,46 @@
+/**
+ * Design Tokens
+ * Centralized design values for consistent theming
+ */
+
+@layer base {
+  :root {
+    /* Spacing Scale */
+    --space-xs: 0.25rem;  /* 4px */
+    --space-sm: 0.5rem;   /* 8px */
+    --space-md: 1rem;     /* 16px */
+    --space-lg: 1.5rem;   /* 24px */
+    --space-xl: 2rem;     /* 32px */
+    --space-2xl: 3rem;    /* 48px */
+
+    /* Touch Targets */
+    --touch-target-min: 44px;
+
+    /* Animation Durations */
+    --duration-fast: 150ms;
+    --duration-normal: 200ms;
+    --duration-slow: 300ms;
+
+    /* Z-Index Scale */
+    --z-base: 0;
+    --z-dropdown: 10;
+    --z-sticky: 20;
+    --z-drawer-backdrop: 30;
+    --z-drawer: 40;
+    --z-toolbar: 50;
+    --z-modal-backdrop: 60;
+    --z-modal: 70;
+    --z-popover: 80;
+    --z-toast: 90;
+    --z-tooltip: 100;
+  }
+}
+
+/* Utility Classes for Design Tokens */
+@layer utilities {
+  /* Touch Target */
+  .touch-target {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+  }
+}

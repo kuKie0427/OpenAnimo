@@ -1,0 +1,9 @@
+# Local override: avoid port conflict with axonhub-postgres on 5432.
+# Container-internal port stays 5432 so backend service-name access is unchanged.
+services:
+  postgres:
+    ports: !override
+      - "5433:5432"
+  backend:
+    environment:
+      WEB_CONCURRENCY: "1"

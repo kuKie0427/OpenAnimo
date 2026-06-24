@@ -1,0 +1,46 @@
+.ace-tool/
+.claude
+.logs
+.pids
+.serena
+.uv-cache
+.ruff_cache
+.vscode
+.env
+.kiro
+**/__pycache__/
+.shared
+node_modules
+.playwright-mcp
+dist
+static
+*.db
+*.timestamp_*
+playwright-report/
+test-results/
+coverage/
+.coverage
+backend/.coverage
+backend/coverage.json
+.opencode
+.planning/
+backend/.coverage
+dump.rdb
+*.log
+
+# Internal tooling (AI-assisted development artifacts)
+.sisyphus/
+.trellis/
+.impeccable/
+.pi/
+.run/
+feature_list.json
+progress.md
+analysis_pipeline_report.md
+
+# macOS
+.DS_Store
+
+# Test artifacts
+test-report.md
+test-screenshots/

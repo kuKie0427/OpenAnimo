@@ -1,0 +1,36 @@
+from fastapi import APIRouter
+
+from app.api.v1.routes.assets import router as assets_router
+from app.api.v1.routes.character_assets import router as character_assets_router
+from app.api.v1.routes.characters import router as characters_router
+from app.api.v1.routes.config import router as config_router
+from app.api.v1.routes.consistency import router as consistency_router
+from app.api.v1.routes.export import router as export_router
+from app.api.v1.routes.generation import router as generation_router
+from app.api.v1.routes.projects import router as projects_router
+from app.api.v1.routes.script import router as script_router
+from app.api.v1.routes.shots import router as shots_router
+from app.api.v1.routes.style_templates import router as style_templates_router
+from app.api.v1.routes.text import router as text_router
+from app.api.v1.routes.universes import router as universes_router
+from app.api.v1.routes.metrics import router as metrics_router
+from app.api.v1.routes.subtitles import router as subtitles_router
+from app.api.v1.routes.versions import router as versions_router
+
+api_router = APIRouter()
+api_router.include_router(projects_router, prefix="/projects", tags=["projects"])
+api_router.include_router(script_router, prefix="/projects", tags=["script"])
+api_router.include_router(subtitles_router, prefix="/projects", tags=["subtitles"])
+api_router.include_router(generation_router, tags=["generation"])
+api_router.include_router(config_router, prefix="/config", tags=["config"])
+api_router.include_router(characters_router, prefix="/characters", tags=["characters"])
+api_router.include_router(character_assets_router, prefix="/characters", tags=["character-assets"])
+api_router.include_router(shots_router, prefix="/shots", tags=["shots"])
+api_router.include_router(assets_router, prefix="/assets", tags=["assets"])
+api_router.include_router(style_templates_router, prefix="/style-templates", tags=["style-templates"])
+api_router.include_router(text_router)
+api_router.include_router(export_router, prefix="/projects", tags=["export"])
+api_router.include_router(versions_router, tags=["versions"])
+api_router.include_router(consistency_router, prefix="/projects", tags=["consistency"])
+api_router.include_router(universes_router, prefix="/universes", tags=["universes"])
+api_router.include_router(metrics_router, tags=["metrics"])

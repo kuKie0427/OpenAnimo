@@ -1,0 +1,326 @@
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-base-100 text-base-content min-h-screen font-sans;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  :focus-visible {
+    outline: 2px solid oklch(var(--p));
+    outline-offset: 2px;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  [data-theme], .btn, .card-screen, .card-feature, .btn-projection, .input-field, .message-ai, .message-user, a, nav, header, aside {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+  }
+
+  * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+  }
+
+  *[class*="animate-"],
+  *[class*="transition-"] {
+    transition-property: none;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .sr-only:focus,
+  .focus\:not-sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+}
+
+@layer components {
+  /* Card components */
+  .card-screen {
+    @apply bg-base-200 rounded-lg border border-base-content/10;
+    box-shadow: 0 0 0 1px oklch(var(--p) / 0.1), 0 0 3px oklch(var(--p) / 0.15), 0 0 24px oklch(var(--p) / 0.08);
+    transition: box-shadow 200ms ease-out;
+  }
+  .card-screen:hover {
+    box-shadow: 0 0 40px oklch(var(--p) / 0.25), 0 0 80px oklch(var(--p) / 0.12);
+  }
+
+  .card-feature {
+    @apply bg-base-300 rounded-xl border border-primary/10;
+    box-shadow: 0 0 0 1px oklch(var(--p) / 0.12), 0 0 20px oklch(var(--p) / 0.08);
+  }
+
+  /* Button */
+  .btn-projection {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 0.1875rem;
+    border: 1px solid oklch(var(--p) / 0.5);
+    font-family: Cormorant Garamond, Georgia, serif;
+    font-weight: 600;
+    padding: 10px 24px;
+    line-height: 1;
+    transition: box-shadow 200ms ease-out, background-color 150ms ease-out, filter 150ms ease-out;
+  }
+  .btn-projection:focus-visible {
+    outline: 2px solid oklch(var(--p));
+    outline-offset: 2px;
+  }
+  .btn-projection:hover:not(:disabled) {
+    box-shadow: 0 0 40px oklch(var(--p) / 0.15), 0 0 80px oklch(var(--p) / 0.06);
+  }
+  .btn-projection:active:not(:disabled) {
+    box-shadow: none;
+    background-color: oklch(var(--p) / 0.8);
+  }
+  .btn-projection:disabled {
+    @apply opacity-40 cursor-not-allowed;
+  }
+
+  /* Input */
+  .input-field {
+    @apply bg-base-300 rounded-sm border border-base-content/10 outline-none;
+    transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+  }
+  .input-field:focus {
+    @apply border-primary;
+    box-shadow: 0 0 1px oklch(var(--bc) / 0.08), 0 0 8px oklch(var(--bc) / 0.04);
+  }
+
+  /* Chat messages */
+  .message-ai {
+    @apply bg-base-300 rounded-lg border border-base-content/5;
+    border-left: 1px solid oklch(var(--p) / 0.4);
+  }
+
+  .message-user {
+    @apply bg-primary/10 rounded-lg border border-primary/20;
+  }
+
+  /* Film grain textures - using SVG feTurbulence via CSS */
+  .grain-subtle::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .grain-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.06;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), radial-gradient(ellipse at center, transparent 60%, oklch(0% 0 0 / 0.15) 100%);
+    background-repeat: repeat, no-repeat;
+    background-size: 256px 256px, 100% 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .grain-dense::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), repeating-linear-gradient(0deg, transparent, transparent 1px, oklch(0% 0 0 / 0.02) 1px, oklch(0% 0 0 / 0.02) 2px);
+    background-repeat: repeat, repeat;
+    background-size: 256px 256px, 2px 2px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Script editor paragraph highlight */
+  .cm-highlighted-paragraph {
+    background: oklch(var(--a) / 0.15) !important;
+  }
+
+  .cm-highlighted-paragraph .cm-line {
+    background: oklch(var(--a) / 0.15) !important;
+  }
+}
+
+@layer utilities {
+  /* 淡入动画 */
+  .animate-fade-in {
+    animation: fade-in 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    will-change: opacity, transform;
+  }
+
+  @keyframes fade-in {
+    0% { opacity: 0; transform: translateY(-4px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 触摸目标最小尺寸 */
+  .touch-target {
+    @apply min-w-[44px] min-h-[44px];
+  }
+
+  /* 视图切换动画 */
+  .view-enter {
+    animation: view-enter 200ms ease-out;
+  }
+
+  @keyframes view-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+ /* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .view-enter {
+    animation: none;
+  }
+
+  .grain-subtle::before,
+  .grain-hero::before,
+  .grain-dense::before {
+    display: none;
+  }
+
+  [data-theme],
+  .btn,
+  .card-screen,
+  .card-feature,
+  .btn-projection,
+  .input-field,
+  .message-ai,
+  .message-user,
+  a,
+  nav,
+  input,
+  select,
+  textarea {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 键盘焦点指示器 */
+:focus-visible {
+  outline: 2px solid oklch(var(--p));
+  outline-offset: 2px;
+}
+
+.btn:focus-visible {
+  outline: 2px solid oklch(var(--p));
+  outline-offset: 2px;
+}
+
+/* ========== tldraw 无限画布样式覆盖 ========== */
+
+/* 画布容器 */
+.infinite-canvas-container {
+  @apply w-full h-full;
+}
+
+.infinite-canvas-container .tl-container {
+  --tl-font-family: 'Source Sans 3', system-ui, sans-serif;
+  background: transparent !important;
+}
+
+/* tldraw 背景层 - 使用主题色 */
+.infinite-canvas-container .tl-background {
+  background: oklch(var(--b1)) !important;
+}
+
+/* 隐藏 tldraw 默认 UI */
+.infinite-canvas-container .tlui-layout__top,
+.infinite-canvas-container .tlui-layout__bottom,
+.infinite-canvas-container .tlui-navigation-panel,
+.infinite-canvas-container .tlui-help-menu,
+.infinite-canvas-container .tlui-debug-panel,
+.infinite-canvas-container .tlui-menu-panel,
+.infinite-canvas-container .tlui-style-panel {
+  display: none !important;
+}
+
+/* 隐藏 tldraw 水印 */
+.infinite-canvas-container .tlui-watermark,
+.infinite-canvas-container [class*="watermark"],
+.infinite-canvas-container .tl-watermark,
+.infinite-canvas-container .tlui-watermark__inner {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Shape 容器样式 - 允许内容溢出显示 */
+.infinite-canvas-container .tl-shape-container,
+.infinite-canvas-container .tl-shape {
+  overflow: visible !important;
+}
+
+/* 隐藏选中状态指示器（自定义 shapes 已通过 hideSelectionBoundsFg/Bg 禁用） */
+.infinite-canvas-container .tl-selection__fg,
+.infinite-canvas-container .tl-selection__bg {
+  display: none !important;
+}
+
+/* 禁用 tldraw 内部的 hover 效果，使用自定义的 hover */
+.infinite-canvas-container .tl-shape:hover {
+  /* 不添加额外效果 */
+}
+
+/* 确保 Modal 在 tldraw 之上 */
+.infinite-canvas-container ~ [class*="modal"],
+.infinite-canvas-container ~ [class*="fixed"] {
+  z-index: 9999 !important;
+}
