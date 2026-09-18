@@ -49,7 +49,7 @@ export function Toast({ toast }: ToastProps) {
       </div>
 
       {/* 消息内容 */}
-      <p className="text-sm text-base-content/80">{toast.message}</p>
+      <p className="text-sm text-base-content/80 break-words">{toast.message}</p>
 
       {/* 操作按钮 */}
       {toast.actions && toast.actions.length > 0 && (

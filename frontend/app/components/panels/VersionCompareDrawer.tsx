@@ -245,7 +245,7 @@ export function VersionCompareDrawer({
 							</select>
 						</div>
 
-						<div className="grid gap-4 lg:grid-cols-2">
+						<div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
 							<VersionColumn title={`旧版本 v${effectiveLeft ?? "—"}`} version={effectiveLeft ? versionByNumber.get(effectiveLeft) : undefined} />
 							<VersionColumn title={`新版本 v${effectiveRight ?? "—"}`} version={effectiveRight ? versionByNumber.get(effectiveRight) : undefined} />
 						</div>

@@ -242,7 +242,7 @@ export function ChatPanel({
               <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mb-2">
                 <StageIcon className="w-4 h-4 text-primary" aria-hidden="true" />
               </div>
-              <p className="text-xs text-base-content/50 mb-3 max-w-xs">
+              <p className="text-xs text-base-content/50 mb-3 max-w-xs break-words">
                 {isYolo
                   ? "点击开始，AI 全自动生成"
                   : "点击开始，AI 根据你的故事生成漫剧"}
@@ -260,7 +260,7 @@ export function ChatPanel({
                 开始生成
               </Button>
               {generateDisabledReason && (
-                <p id={generateDisabledReasonId} className="mt-1.5 max-w-xs text-xs text-warning" aria-live="polite">
+                <p id={generateDisabledReasonId} className="mt-1.5 max-w-xs text-xs text-warning break-words" aria-live="polite">
                   {generateDisabledReason}
                 </p>
               )}

@@ -87,7 +87,7 @@ export function DetailPanel({
 
         {/* Content area */}
         <div className="card-screen p-4 mb-4">
-          <p className="text-sm whitespace-pre-wrap">{item.content}</p>
+          <p className="text-sm whitespace-pre-wrap break-words">{item.content}</p>
         </div>
 
         {/* Images section */}
@@ -126,9 +126,9 @@ export function DetailPanel({
             <h3 className="text-sm font-heading mb-2">元数据</h3>
             <dl className="space-y-1">
               {Object.entries(item.metadata).map(([key, value]) => (
-                <div key={key} className="flex gap-2 text-sm">
-                  <dt className="text-base-content/60">{key}:</dt>
-                  <dd className="text-base-content">
+                <div key={key} className="flex gap-2 text-sm min-w-0">
+                  <dt className="text-base-content/60 flex-shrink-0">{key}:</dt>
+                  <dd className="text-base-content min-w-0 break-words">
                     {typeof value === "string" ? value : JSON.stringify(value)}
                   </dd>
                 </div>

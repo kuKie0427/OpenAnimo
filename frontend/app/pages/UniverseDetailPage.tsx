@@ -153,7 +153,7 @@ export function UniverseDetailPage() {
 						{u.name}
 					</h1>
 					{u.description && (
-						<p className="text-base-content/60 mt-2">{u.description}</p>
+						<p className="text-base-content/60 mt-2 break-words">{u.description}</p>
 					)}
 				</div>
 
@@ -164,7 +164,7 @@ export function UniverseDetailPage() {
 							<GlobeAltIcon className="w-5 h-5" aria-hidden="true" />
 							世界观设定
 						</h2>
-						<p className="text-sm text-base-content/70 whitespace-pre-wrap">
+						<p className="text-sm text-base-content/70 whitespace-pre-wrap break-words">
 							{u.world_setting}
 						</p>
 					</Card>
@@ -177,7 +177,7 @@ export function UniverseDetailPage() {
 							<PaintBrushIcon className="w-5 h-5" aria-hidden="true" />
 							统一风格规则
 						</h2>
-						<p className="text-sm text-base-content/70 whitespace-pre-wrap">
+						<p className="text-sm text-base-content/70 whitespace-pre-wrap break-words">
 							{u.style_rules}
 						</p>
 					</Card>
@@ -217,7 +217,7 @@ export function UniverseDetailPage() {
 											</span>
 											<Link
 												to={`/project/${ch.project_id}`}
-												className="font-heading font-bold text-sm hover:text-primary transition-colors"
+												className="font-heading font-bold text-sm hover:text-primary transition-colors min-w-0 truncate"
 											>
 												{ch.chapter_title || ch.project_title || "未命名"}
 											</Link>

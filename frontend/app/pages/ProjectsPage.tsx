@@ -204,7 +204,7 @@ export function ProjectsPage() {
                             </span>
                           </div>
                           {project.story && (
-                            <p className="text-sm text-base-content/60 truncate mt-1">
+                            <p className="text-sm text-base-content/60 truncate mt-1 overflow-hidden">
                               {project.story}
                             </p>
                           )}

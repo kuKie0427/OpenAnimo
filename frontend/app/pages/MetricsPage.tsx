@@ -137,22 +137,22 @@ export function MetricsPage() {
 								</thead>
 								<tbody>
 									{runsData.map((run) => (
-										<tr key={run.run_id} className="hover">
-											<td className="font-mono text-primary">
-												#{run.run_id}
-											</td>
-											<td className="font-mono">{run.agent_count}</td>
-											<td className="font-mono">{run.total_llm_calls}</td>
-											<td className="font-mono">
-												{formatTokens(run.total_tokens)}
-											</td>
-											<td className="font-mono">{run.total_images}</td>
-											<td className="font-mono">
-												{formatDuration(run.avg_duration_seconds)}
-											</td>
-											<td className="font-mono text-warning">
-												{formatCost(run.total_cost_usd || "0")}
-											</td>
+											<tr key={run.run_id} className="hover">
+												<td className="font-mono text-primary truncate">
+													#{run.run_id}
+												</td>
+												<td className="font-mono truncate">{run.agent_count}</td>
+												<td className="font-mono truncate">{run.total_llm_calls}</td>
+												<td className="font-mono truncate">
+													{formatTokens(run.total_tokens)}
+												</td>
+												<td className="font-mono truncate">{run.total_images}</td>
+												<td className="font-mono truncate">
+													{formatDuration(run.avg_duration_seconds)}
+												</td>
+												<td className="font-mono text-warning truncate">
+													{formatCost(run.total_cost_usd || "0")}
+												</td>
 											<td>
 												<span
 													className={`badge badge-sm ${
@@ -199,10 +199,10 @@ export function MetricsPage() {
 									<tbody>
 										{breakdownData.map((item, i) => (
 											<tr key={`${item.agent_name}-${item.model_name}-${i}`} className="hover">
-												<td className="text-base-content/80">
+												<td className="text-base-content/80 truncate">
 													{item.agent_name}
 												</td>
-												<td className="font-mono text-xs text-base-content/60">
+												<td className="font-mono text-xs text-base-content/60 truncate">
 													{item.model_name}
 												</td>
 												<td className="font-mono">

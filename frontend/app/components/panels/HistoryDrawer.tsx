@@ -108,10 +108,10 @@ function ProjectRow({
 								{statusLabel(project.status)}
 							</span>
 						</div>
-						<div className="flex items-center gap-2 text-xs text-base-content/40">
-							<span>{new Date(project.updated_at).toLocaleDateString("zh-CN")}</span>
-							{project.style && <span>{project.style}</span>}
-							{project.target_shot_count && <span>{project.target_shot_count} 镜头</span>}
+						<div className="flex items-center gap-2 text-xs text-base-content/40 min-w-0 overflow-hidden">
+							<span className="flex-shrink-0">{new Date(project.updated_at).toLocaleDateString("zh-CN")}</span>
+							{project.style && <span className="truncate">{project.style}</span>}
+							{project.target_shot_count && <span className="flex-shrink-0">{project.target_shot_count} 镜头</span>}
 						</div>
 					</button>
 				)}

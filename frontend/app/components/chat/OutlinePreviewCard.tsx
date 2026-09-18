@@ -42,7 +42,7 @@ export function OutlinePreviewCard({
 				<h3 className="font-heading font-bold text-base">故事大纲待确认</h3>
 			</div>
 
-			<p className="leading-relaxed text-base-content/80">{outline.logline}</p>
+			<p className="leading-relaxed text-base-content/80 break-words">{outline.logline}</p>
 
 			{outline.genre.length > 0 && (
 				<div className="flex flex-wrap gap-1">
@@ -60,7 +60,7 @@ export function OutlinePreviewCard({
 						<p className="font-bold text-xs">
 							第 {act.act} 幕 · {act.title}
 						</p>
-						<p className="text-xs text-base-content/60">{act.summary}</p>
+						<p className="text-xs text-base-content/60 break-words">{act.summary}</p>
 					</div>
 				))}
 			</div>

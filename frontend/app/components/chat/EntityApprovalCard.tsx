@@ -58,7 +58,7 @@ function EntityRow({
 				<div className="flex-1 min-w-0">
 					<h4 className="font-bold text-sm truncate">{entity.entity_name}</h4>
 					{entity.description && (
-						<p className="text-xs text-base-content/60 truncate">
+						<p className="text-xs text-base-content/60 truncate" title={entity.description}>
 							{truncateText(entity.description, 60)}
 						</p>
 					)}

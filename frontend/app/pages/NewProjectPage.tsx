@@ -206,7 +206,7 @@ export function NewProjectPage() {
           >
             <div className="space-y-4">
               <div className="bg-base-300 rounded-lg p-4">
-                <h3 className="font-semibold text-lg">{formData.title}</h3>
+                <h3 className="font-semibold text-lg min-w-0 break-words">{formData.title}</h3>
                 <div className="badge badge-outline mt-2 flex items-center gap-2 text-base-content">
                   <PaintBrushIcon className="w-5 h-5" aria-hidden="true" />
                   {formData.style}

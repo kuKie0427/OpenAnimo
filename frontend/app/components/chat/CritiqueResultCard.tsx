@@ -197,7 +197,7 @@ function EntityRow({
 							<p className="text-xs font-bold text-error mb-1">检测到的问题</p>
 							<ul className="space-y-1">
 								{entity.issues.slice(0, 3).map((issue, idx) => (
-									<li key={idx} className="text-xs text-error/90">
+									<li key={idx} className="text-xs text-error/90 break-words">
 										• {issue}
 									</li>
 								))}
@@ -215,7 +215,7 @@ function EntityRow({
 							<p className="text-xs font-bold text-info mb-1">改进建议</p>
 							<ul className="space-y-1">
 								{entity.suggestions.slice(0, 3).map((suggestion, idx) => (
-									<li key={idx} className="text-xs text-info/90">
+									<li key={idx} className="text-xs text-info/90 break-words">
 										• {suggestion}
 									</li>
 								))}
